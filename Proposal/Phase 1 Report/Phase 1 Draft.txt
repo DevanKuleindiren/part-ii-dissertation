@@ -1,0 +1,68 @@
+Project title ideas:
+- Predicting the next word
+- Language modelling in a mobile setting
+- Language modelling over text with errors
+- Implementing, benchmarking and extending language models
+- Benchmarking language models
+- Benchmarking and extending language models
+- Language modelling for next word prediction
+
+*******************************************************************************
+
+Subject: Phase 1 - Kuleindiren: Language Modelling for Next-Word Prediction
+
+Phase 1 Project Selection Status Report
+
+Name: Devan Kuleindiren
+
+College: Robinson College
+
+User Identifier: dk503
+
+Director of Studies: Dr Alastair Beresford
+
+Please complete 1, 2 and 3 below.
+
+1. Please write 100 words on your current project ideas.
+
+Through discussion with Dr Marek Rei, my project idea is to implement and
+benchmark existing language modelling (LM) algorithms. As an extension to the
+project, I also hope to include in this comparison an original LM extension
+that aims to improve performance on text containing errors (e.g. spelling
+mistakes, grammatical errors, etc).
+
+As well as benchmarking such LMs, I will build a simple console application
+that demonstrates their capability in the context of predicting the next word
+in a sentence.
+
+2. Please list names of potential project supervisors.
+
+Primary supervisor: Dr Marek Rei
+Secondary supervisor: Dr Ekaterina Shutova
+
+I have spoken to my proposed supervisors, and they have both informally agreed
+to take on their respective roles.
+
+3. Is there any chance that your project will involve any
+computing resources other than the Computing Service's MCS and
+software that is already installed there, for example: your own
+machine, machines in College, special peripherals, imported
+software packages, special hardware, network access, substantial
+extra disc space on the MCS.
+
+If so indicate below what, and what it is needed for.
+
+* Various publicly-available datasets for language modelling, such as the Penn
+Treebank dataset, the One Billion Word Benchmark, the CLC FCE dataset, and so
+on.
+
+* My laptop, which will be used for the development of my project.
+
+* TensorFlow, which is an open-source machine learning library. I intend to use
+it for implementing some of the neural network based LMs.
+
+* For training the LMs on large datasets (e.g. the One Billion Word dataset),
+it would also be useful to have access to some powerful machines. Google's
+Compute Engine offers non-preemptable machines with 32 virtual CPUs and 120GB
+memory for just over $1 an hour, which I'm happy to pay for. Alternatively, I
+could search for something in the Computer Lab.

@@ -1,0 +1,8 @@
+# Apple
+.DS_Store
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.synctex.gz
