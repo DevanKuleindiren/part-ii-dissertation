@@ -86,7 +86,7 @@
 \newcommand{\horrule}[1]{\rule{\linewidth}{#1}}
 
 % TO DO macro
-\newcommand{\todo}{\textbf{\textit{\textcolor{red}{TO DO: }}}}
+\newcommand{\todo}{\textbf{\textit{\textcolor{red}{TODO: }}}}
 
 % Shorten textbf
 \newcommand{\tbf}[1]{\textbf{#1}}
@@ -99,6 +99,12 @@
 
 % Blue, underlined hyperlinks
 \newcommand{\hlink}[2]{{\color{blue}\underline{\href{#1}{#2}}}}
+
+% Bullet point
+\newcommand{\bpt}[0]{\textbullet~}
+
+% White bullet point
+\newcommand{\wbpt}[0]{$\circ$~}
 
 \begin{document}
 
@@ -148,19 +154,228 @@
 \end{titlepage}
 
 \section*{Introduction}
+A language model is a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. The predictive power of such models is useful in speech recognition, text prediction, machine translation, handwriting recognition, part-of-speech tagging and information retrieval. For instance, in a text prediction context, if a user has typed:
+
+\begin{center}
+	\ttt{`Do you want to grab a '}
+\end{center}
+
+\noindent
+then a language model could be used to suggest probable next words such as \ttt{`coffee'}, \ttt{`drink'} or \ttt{`bite'}, and these predictions could further be narrowed down when the user starts typing the next word. \\
+
+\noindent
+With the recent shift from desktop to mobile computing, it has become increasingly important to facilitate accurate, high-speed language models that aren't too energy or memory hungry. The aim of this project is to investigate this area by implementing and benchmarking existing language models, with an aim of providing useful insights into how their the accuracy, speed and resource consumption compare.
 
 \section*{Starting point}
 
+\subsection*{Code}
+There is no prior codebase, and so the project will be written from scratch. TensorFlow, an open-source machine learning library, will assist in the construction of the neural network-based language models.
+
+\subsection*{Knowledge}
+Language modelling draws ideas from natural language processing and machine learning. I have no prior experience in the former field, but in the latter I have an understanding of neural networks (including RNNs) that comes from both the Artificial Intelligence I course and personal reading. \\
+
+\noindent
+The following Computer Science Tripos courses will be useful when undertaking my project:
+\begin{itemize}
+\item
+	\tbf{Natural Language Processing} - n-gram language models.
+\item
+	\tbf{Artificial Intelligence I} - neural networks.
+\item
+	\tbf{Machine Learning and Bayesian Inference} - tips and tricks around supervised learning.
+\item
+	\tbf{Mathematical Methods for Computer Science} - Markov chains.
+\item
+	\tbf{Information Theory} - entropy.
+\end{itemize}
+\tbf{Algorithms}, \tbf{Object-Oriented Programming}, \tbf{Software and Interface Design}, and \tbf{Software Engineering} will also prove useful for general programming and software engineering. \\
+
+\noindent
+There are aspects of language modelling not covered by the Tripos, including various smoothing techniques for n-gram LMs and recurrent neural networks. I will fill this gap with personal reading.
+
+
 \section*{Resources required}
 
-I accept full responsibility for this machine and I have made contingency plans to protect myself against hardware and/or software failure.
+\subsection*{Machines}
+The development of my project will be carried out on my personal laptop, a 2015 MacBook Pro running macOS Sierra. I accept full responsibility for this machine and I have made contingency plans to protect myself against hardware and/or software failure. \\
+
+\noindent
+In order to train language models on large datasets, I will make use of Cambridge's HPCS \todo{confirm this with Computer Lab and check HPC supports TensorFlow.}
+
+\subsection*{Datasets}
+In order to train and evaluate the various language models, I will need to make use of various datasets, including, but not limited to:
+\begin{itemize}
+\item
+	The Penn Treebank (PTB) dataset. \cite{PTB}
+\item
+	The One Billion Word dataset. \cite{1BW}
+\item
+	The CLC FCE dataset. \cite{CLC}
+\end{itemize}
+
+\subsection*{Version Control \& Backup}
+I will use Git for version control, with one Git repository for all project documentation and another for all project source code. Both repositories will be hosted on GitHub, and all local commits will be pushed no more than a few hours after they are created, meaning that I should never lose more than half a day's worth of work. \\
+
+\noindent
+I will also make weekly backups on an external hard drive, so that in the unlikely event that both GitHub goes down and my laptop fails, I will be able to recover my project on a new machine. \todo{Check whether MCS supports TensorFlow.}
 
 \section*{Work to be done}
 
+\subsection*{Language models}
+The first stage of the project is to implement a variety of language modelling algorithms. Starting with the simplest, I will implement $n$-gram models with varying values of $n$. I will also investigate the effect of add-1 smoothing \cite{add1}, Katz smoothing \cite{katz}, absolute discounting \cite{absdisc}, Kneser-Ney smoothing \cite{kneser} and modified Kneser-Ney smoothing \cite{modkneser}. \\
+
+Once the $n$-gram models along with their corresponding smoothing techniques have been implemented, I will implement some neural network based language models, which have recently proven very effective. I will start with the first incarnation of neuro-probablistic language models from Bengio et al. \cite{bengio} which utilises a feed-forward neural network. Next, I will progress to an RNN-based language model \cite{mikolov}, and finally, I will advance to the slightly more complex LSTM (long short-term memory) architecture \cite{lstm}.
+
+In order to implement the neural network-based language models, I will make use of TensorFlow, Google's open-source machine learning library. TensorFlow has APIs for both Python and C++, so I will implement my language models in either one of those languages.
+
+\subsection*{Benchmarking framework}
+Once a series of language models have been implemented, the next stage would be to implement a framework into which each language model can be inserted. The framework should run a series of tests and generate evaluation for:
+\begin{itemize}
+\item
+	\tbf{Accuracy:} Perplexity, cross-entropy, direct comparison of models.
+\item
+	\tbf{Speed:} Training times, inference times.
+\item
+	\tbf{Resource usage:} Memory (and energy?) usage during both training and inference.
+\end{itemize}
+
+\subsection*{Demonstration application}
+In order to demonstrate the language models in a practical context, I aim to integrate them into a simple console application that predicts the next word in the user's sentence.
+
 \section*{Success criteria}
+
+This project will be deemed successful if the following criteria are reached:
+
+\begin{itemize}
+\item
+	Language models (LMs) using the following techniques are implemented:
+	\begin{itemize}
+	\item
+		n-gram LMs with add-one, Katz, absolute discounting, Kneser-Ney, modified Kneser-Ney and no smoothing.
+	\item
+		Bengio's NN-based LM.
+	\item
+		A vanilla RNN-based LM.
+	\item
+		LSTM (long short-term memory)-based LM.
+	\end{itemize}
+\item
+	Comprehensible and reliable comparisons between the various LM implementations are made across the following factors:
+	\begin{itemize}
+	\item
+		The accuracy of the model's text prediction.
+	\item
+		The resources (time and space) required to train the model.
+	\item
+		The resources (time and space) to run inference on the model after training.
+	\end{itemize}
+\item
+	A simple console application is developed to demonstrate the capability of the aforementioned language models in the context of next-word prediction.
+\end{itemize}
 
 \section*{Possible extensions}
 
+\begin{itemize}
+\item
+	Implement more language models.
+\item
+	Integrate the language models into a mobile keyboard.
+\end{itemize}
+
 \section*{Timetable}
+
+Preliminary reading for the project begun on 6/10/2016, however, the project more officially begins on 22/10/2016, the day after the deadline of the project proposal.
+
+\subsection*{Michaelmas term}
+\begin{tabular}{l | l}
+	Week 1 - 2 & \bpt Refine project idea and start project proposal. \\
+	& \bpt Background reading on n-gram language models and smoothing \\
+	&~~~techniques. \\
+	\tbf{Milestone} & \tit{Project proposal finished.} \\ \hline
+	Week 3 & \bpt Background reading on recurrent neural networks and long short-term \\
+	&~~~memory in particular. \\
+	Week 4 & \bpt Implement a simple bigram language model, without any smoothing. \\
+	\tbf{Milestone} & \tit{A working implementation of a basic language model completed.} \\ \hline
+	Week 5 - 6 & \bpt Implement further n-gram language models, with: \\
+	&~~\wbpt Add-1 smoothing \\
+	&~~\wbpt Good-Turing smoothing \\
+	&~~\wbpt Kneser-Ney smoothing \\
+	&~~\wbpt Modified Kneser-Ney smoothing \\
+	\tbf{Milestone} & \tit{A working implementation of n-gram language models with various} \\
+	& \tit{smoothing techniques completed.} \\ \hline
+	Week 7 - 8 & \bpt Implement Bengio's NN-language model. \\
+	& \bpt Start implementation of vanilla RNN language model. \\
+	\tbf{Milestone} & \tit{A working implementation of Bengio's NN-based language model.} \\
+\end{tabular}
+
+\subsection*{Christmas vacation}
+\begin{tabular}{l | l}
+	& \bpt Finish implementation of RNN language model. \\
+	& \bpt Implement LSTM language model. \\
+	& \bpt Implement framework to benchmark a given language model over the \\
+	&~~evaluation metrics highlighted in the `Work to be done' section. \\
+	& \bpt Start implementing an application to demonstrate the capability of the \\
+	&~~language models in the context of next-word prediction. \\
+	\tbf{Milestone} & \tit{RNN and LSTM language models, and test framework complete.} \\
+\end{tabular}
+
+\subsection*{Lent term}
+\begin{tabular}{l | l}
+	Week 1 - 2 & \bpt Write progress report. \\
+	& \bpt Complete demonstration application. \\
+	\tbf{Milestone} & \tit{Progress report complete.} \\ \hline
+	Week 3 - 5 & \bpt Rigorous testing and bug fixing of project. \\
+	& \bpt If time allows, implement project extensions. \\
+	& \bpt Present project to overseers. \\
+	\tbf{Milestone} & \tit{Project presentation given and implementation complete.} \\ \hline
+	Week 6 - 8 & \bpt Start writing dissertation. \\
+\end{tabular}
+
+\subsection*{Easter vacation}
+\begin{tabular}{l | l}
+	& \bpt Finish writing dissertation. \\
+	& \bpt Proof-read dissertation. \\
+	\tbf{Milestone} & \tit{Final dissertation draft submitted to supervisor and Director of Studies.} \\
+\end{tabular}
+
+~\\~\\~\\
+\noindent
+\todo{Format references properly.}
+\begin{thebibliography}{99}
+
+\bibitem{PTB}
+	http://www.cis.upenn.edu/~treebank/
+
+\bibitem{1BW}
+	http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41880.pdf
+
+\bibitem{CLC}
+	http://ilexir.co.uk/applications/clc-fce-dataset/
+
+\bibitem{add1}
+	\todo{}
+	
+\bibitem{katz}
+	\todo{}
+	
+\bibitem{absdisc}
+	\todo{}
+	
+\bibitem{kneser}
+	\todo{}
+	
+\bibitem{modkneser}
+	http://www.speech.sri.com/projects/srilm/manpages/pdfs/chen-goodman-tr-10-98.pdf
+	
+\bibitem{bengio}
+	\todo{}
+
+\bibitem{mikolov}
+	http://www.iro.umontreal.ca/~felipe/IFT6010-Automne2011/resources/tp3/kombrink\_interspeech2011\_792.pdf
+	
+\bibitem{lstm}
+	https://arxiv.org/abs/1409.2329
+
+\end{thebibliography}
 
 \end{document}
