@@ -98,7 +98,7 @@
 \newcommand{\tit}[1]{\textit{#1}}
 
 % Blue, underlined hyperlinks
-\newcommand{\hlink}[2]{{\color{blue}\underline{\href{#1}{#2}}}}
+\newcommand{\hlink}[2]{{\href{#1}{#2}}}
 
 % Bullet point
 \newcommand{\bpt}[0]{\textbullet~}
@@ -154,7 +154,7 @@
 \end{titlepage}
 
 \section*{Introduction}
-A language model is a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. The predictive power of such models is useful in speech recognition, text prediction, machine translation, handwriting recognition, part-of-speech tagging and information retrieval. For instance, in a text prediction context, if a user has typed:
+Language models produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. The predictive power of such models is useful in speech recognition, text prediction, machine translation, handwriting recognition, part-of-speech tagging and information retrieval. For instance, in a text prediction context, if a user has typed:
 
 \begin{center}
 	\ttt{`Do you want to grab a '}
@@ -164,21 +164,19 @@ A language model is a probability distribution over a sequence of words, which c
 then a language model could be used to suggest probable next words such as \ttt{`coffee'}, \ttt{`drink'} or \ttt{`bite'}, and these predictions could further be narrowed down when the user starts typing the next word. \\
 
 \noindent
-With the recent shift from desktop to mobile computing, it has become increasingly important to facilitate accurate, high-speed language models that aren't too energy or memory hungry. The aim of this project is to investigate this area by implementing and benchmarking existing language models, with an aim of providing useful insights into how their the accuracy, speed and resource consumption compare.
+With the recent shift from desktop to mobile computing, it has become increasingly important to facilitate accurate, high-speed language models that aren't too energy or memory hungry. The aim of this project is to investigate this area by implementing and benchmarking existing language models, with an aim of providing useful insights into how their the accuracy, speed and resource consumption compare. Combinations of such models will also be investigated, in order to explore how differing techniques can complement one another.
 
 \section*{Starting point}
 
 \subsection*{Code}
-There is no prior codebase, and so the project will be written from scratch. TensorFlow, an open-source machine learning library, will assist in the construction of the neural network-based language models.
+TensorFlow, an open-source machine learning library, will assist in the construction of the neural network-based language models.
 
-\subsection*{Knowledge}
-Language modelling draws ideas from natural language processing and machine learning. I have no prior experience in the former field, but in the latter I have an understanding of neural networks (including RNNs) that comes from both the Artificial Intelligence I course and personal reading. \\
+\subsection*{Computer Science Tripos}
 
-\noindent
-The following Computer Science Tripos courses will be useful when undertaking my project:
+The following Tripos courses will be useful when undertaking my project:
 \begin{itemize}
 \item
-	\tbf{Natural Language Processing} - n-gram language models.
+	\tbf{Natural Language Processing} - $n$-gram language models.
 \item
 	\tbf{Artificial Intelligence I} - neural networks.
 \item
@@ -191,8 +189,10 @@ The following Computer Science Tripos courses will be useful when undertaking my
 \tbf{Algorithms}, \tbf{Object-Oriented Programming}, \tbf{Software and Interface Design}, and \tbf{Software Engineering} will also prove useful for general programming and software engineering. \\
 
 \noindent
-There are aspects of language modelling not covered by the Tripos, including various smoothing techniques for n-gram LMs and recurrent neural networks. I will fill this gap with personal reading.
+There are aspects of language modelling not covered by the Tripos, including various smoothing techniques for $n$-gram LMs and recurrent neural networks. I will fill this gap with personal reading.
 
+\subsection*{Experience}
+Language modelling draws ideas from natural language processing and machine learning. I have no prior experience in the former field, but in the latter I have an understanding of neural networks (including RNNs) that comes from both the Artificial Intelligence I course and personal reading. \\
 
 \section*{Resources required}
 
@@ -200,43 +200,45 @@ There are aspects of language modelling not covered by the Tripos, including var
 The development of my project will be carried out on my personal laptop, a 2015 MacBook Pro running macOS Sierra. I accept full responsibility for this machine and I have made contingency plans to protect myself against hardware and/or software failure. \\
 
 \noindent
-In order to train language models on large datasets, I will make use of Cambridge's HPCS \todo{confirm this with Computer Lab and check HPC supports TensorFlow.}
+I intend to train the language models on my laptop. When experimenting with the neural network-based language models on larger datasets, I may utilise the University's High Performance Computing Service\footnote{\hlink{https://www.cl.cam.ac.uk/local/sys/resources/hpc/}{https://www.cl.cam.ac.uk/local/sys/resources/hpc/}} in order to run the models on a GPU cluster.
 
 \subsection*{Datasets}
 In order to train and evaluate the various language models, I will need to make use of various datasets, including, but not limited to:
 \begin{itemize}
 \item
-	The Penn Treebank (PTB) dataset. \cite{PTB}
+	The Penn Treebank (PTB) dataset.\footnote{\hlink{http://www.cis.upenn.edu/~treebank/}{http://www.cis.upenn.edu/$\sim$treebank/}}
 \item
-	The One Billion Word dataset. \cite{1BW}
+	The One Billion Word dataset.\footnote{\hlink{http://www.statmt.org/lm-benchmark/}{http://www.statmt.org/lm-benchmark/}}
 \item
-	The CLC FCE dataset. \cite{CLC}
+	The CLC FCE dataset.\footnote{\hlink{http://ilexir.co.uk/applications/clc-fce-dataset/}{http://ilexir.co.uk/applications/clc-fce-dataset/}}
 \end{itemize}
 
 \subsection*{Version Control \& Backup}
 I will use Git for version control, with one Git repository for all project documentation and another for all project source code. Both repositories will be hosted on GitHub, and all local commits will be pushed no more than a few hours after they are created, meaning that I should never lose more than half a day's worth of work. \\
 
 \noindent
-I will also make weekly backups on an external hard drive, so that in the unlikely event that both GitHub goes down and my laptop fails, I will be able to recover my project on a new machine. \todo{Check whether MCS supports TensorFlow.}
+I will also make weekly backups on an external hard drive, so that in the unlikely event that both GitHub goes down and my laptop fails, I will be able to recover my project on a new machine.
 
 \section*{Work to be done}
 
 \subsection*{Language models}
 The first stage of the project is to implement a variety of language modelling algorithms. Starting with the simplest, I will implement $n$-gram models with varying values of $n$. I will also investigate the effect of add-1 smoothing \cite{add1}, Katz smoothing \cite{katz}, absolute discounting \cite{absdisc}, Kneser-Ney smoothing \cite{kneser} and modified Kneser-Ney smoothing \cite{modkneser}. \\
 
-Once the $n$-gram models along with their corresponding smoothing techniques have been implemented, I will implement some neural network based language models, which have recently proven very effective. I will start with the first incarnation of neuro-probablistic language models from Bengio et al. \cite{bengio} which utilises a feed-forward neural network. Next, I will progress to an RNN-based language model \cite{mikolov}, and finally, I will advance to the slightly more complex LSTM (long short-term memory) architecture \cite{lstm}.
+\noindent
+Once the $n$-gram models along with their corresponding smoothing techniques have been implemented, I will implement some neural network based language models, which have recently proven very effective. I will start with an RNN (recurrent neural network) based language model \cite{mikolov}, and then I will advance to the more complex LSTM (long short-term memory) architecture \cite{lstm}. Combinations of the neural network and $n$-gram based language models will also be investigated. \\
 
+\noindent
 In order to implement the neural network-based language models, I will make use of TensorFlow, Google's open-source machine learning library. TensorFlow has APIs for both Python and C++, so I will implement my language models in either one of those languages.
 
 \subsection*{Benchmarking framework}
 Once a series of language models have been implemented, the next stage would be to implement a framework into which each language model can be inserted. The framework should run a series of tests and generate evaluation for:
 \begin{itemize}
 \item
-	\tbf{Accuracy:} Perplexity, cross-entropy, direct comparison of models.
+	\tbf{Accuracy:} Perplexity, cross-entropy and direct comparison of models.
 \item
-	\tbf{Speed:} Training times, inference times.
+	\tbf{Speed:} Training and inference times.
 \item
-	\tbf{Resource usage:} Memory (and energy?) usage during both training and inference.
+	\tbf{Resource usage:} Memory and energy usage during both training and inference.
 \end{itemize}
 
 \subsection*{Demonstration application}
@@ -244,31 +246,23 @@ In order to demonstrate the language models in a practical context, I aim to int
 
 \section*{Success criteria}
 
-This project will be deemed successful if the following criteria are reached:
+This project will be deemed successful if the following criteria are met:
 
 \begin{itemize}
 \item
 	Language models (LMs) using the following techniques are implemented:
 	\begin{itemize}
 	\item
-		n-gram LMs with add-one, Katz, absolute discounting, Kneser-Ney, modified Kneser-Ney and no smoothing.
-	\item
-		Bengio's NN-based LM.
+		$N$-gram LMs with various smoothing techniques.
 	\item
 		A vanilla RNN-based LM.
 	\item
-		LSTM (long short-term memory)-based LM.
+		An LSTM-based LM.
 	\end{itemize}
 \item
-	Comprehensible and reliable comparisons between the various LM implementations are made across the following factors:
-	\begin{itemize}
-	\item
-		The accuracy of the model's text prediction.
-	\item
-		The resources (time and space) required to train the model.
-	\item
-		The resources (time and space) to run inference on the model after training.
-	\end{itemize}
+	Comprehensible and reliable comparisons between the various LM implementations are made regarding their accuracy, speed and resource consumption during both training and inference.
+\item
+	Combinations of the $n$-gram and neural-network based LMs are examined.
 \item
 	A simple console application is developed to demonstrate the capability of the aforementioned language models in the context of next-word prediction.
 \end{itemize}
@@ -277,9 +271,9 @@ This project will be deemed successful if the following criteria are reached:
 
 \begin{itemize}
 \item
-	Implement more language models.
-\item
 	Integrate the language models into a mobile keyboard.
+\item
+	Experiment with extending the language models to improve performance over text with errors.
 \end{itemize}
 
 \section*{Timetable}
@@ -289,42 +283,40 @@ Preliminary reading for the project begun on 6/10/2016, however, the project mor
 \subsection*{Michaelmas term}
 \begin{tabular}{l | l}
 	Week 1 - 2 & \bpt Refine project idea and start project proposal. \\
-	& \bpt Background reading on n-gram language models and smoothing \\
+	& \bpt Background reading on $n$-gram language models and smoothing \\
 	&~~~techniques. \\
 	\tbf{Milestone} & \tit{Project proposal finished.} \\ \hline
-	Week 3 & \bpt Background reading on recurrent neural networks and long short-term \\
+	Week 3 & \bpt Implement a simple bigram language model, without any smoothing. \\
+	& \bpt Background reading on recurrent neural networks and long short-term \\
 	&~~~memory in particular. \\
-	Week 4 & \bpt Implement a simple bigram language model, without any smoothing. \\
-	\tbf{Milestone} & \tit{A working implementation of a basic language model completed.} \\ \hline
-	Week 5 - 6 & \bpt Implement further n-gram language models, with: \\
-	&~~\wbpt Add-1 smoothing \\
-	&~~\wbpt Good-Turing smoothing \\
-	&~~\wbpt Kneser-Ney smoothing \\
-	&~~\wbpt Modified Kneser-Ney smoothing \\
-	\tbf{Milestone} & \tit{A working implementation of n-gram language models with various} \\
+	\tbf{Milestone} & \tit{A working implementation of a basic bigram language model completed.} \\ \hline
+	Week 4 - 5 & \bpt Start implementing the various smoothing techniques outlined in \\
+	&~~~`Work to be done'. \\
+	\tbf{Milestone} & \tit{A working implementation of $n$-gram language models with various} \\
 	& \tit{smoothing techniques completed.} \\ \hline
-	Week 7 - 8 & \bpt Implement Bengio's NN-language model. \\
-	& \bpt Start implementation of vanilla RNN language model. \\
-	\tbf{Milestone} & \tit{A working implementation of Bengio's NN-based language model.} \\
+	Week 6 - 7 & \bpt Implement vanilla RNN language model. \\
+	\tbf{Milestone} & \tit{A working implementation of RNN-based language model.} \\ \hline
+	Week 8 & \bpt Start implementation of LSTM-based language model. \\
 \end{tabular}
 
 \subsection*{Christmas vacation}
 \begin{tabular}{l | l}
-	& \bpt Finish implementation of RNN language model. \\
-	& \bpt Implement LSTM language model. \\
+	& \bpt Finish implementation of LSTM language model. \\
 	& \bpt Implement framework to benchmark a given language model over the \\
-	&~~evaluation metrics highlighted in the `Work to be done' section. \\
+	&~~~evaluation metrics highlighted in the `Work to be done' section. \\
+	& \bpt Investigate any performance enhancements in combining the various \\
+	&~~~language models. \\
 	& \bpt Start implementing an application to demonstrate the capability of the \\
-	&~~language models in the context of next-word prediction. \\
-	\tbf{Milestone} & \tit{RNN and LSTM language models, and test framework complete.} \\
+	&~~~language models in the context of next-word prediction. \\
+	\tbf{Milestone} & \tit{LSTM LM, combination investigation and test framework complete.} \\
 \end{tabular}
 
 \subsection*{Lent term}
 \begin{tabular}{l | l}
 	Week 1 - 2 & \bpt Write progress report. \\
 	& \bpt Complete demonstration application. \\
-	\tbf{Milestone} & \tit{Progress report complete.} \\ \hline
-	Week 3 - 5 & \bpt Rigorous testing and bug fixing of project. \\
+	\tbf{Milestone} & \tit{Progress report and demonstration application complete.} \\ \hline
+	Week 3 - 5 & \bpt Rigorous testing and bug-fixing of project. \\
 	& \bpt If time allows, implement project extensions. \\
 	& \bpt Present project to overseers. \\
 	\tbf{Milestone} & \tit{Project presentation given and implementation complete.} \\ \hline
@@ -338,43 +330,34 @@ Preliminary reading for the project begun on 6/10/2016, however, the project mor
 	\tbf{Milestone} & \tit{Final dissertation draft submitted to supervisor and Director of Studies.} \\
 \end{tabular}
 
-~\\~\\~\\
-\noindent
-\todo{Format references properly.}
+\subsection*{Easter Term}
+\begin{tabular}{l | l}
+	\tbf{Milestone} & \tit{Submission deadline on 19/05/2017.}
+\end{tabular}
+
 \begin{thebibliography}{99}
 
-\bibitem{PTB}
-	http://www.cis.upenn.edu/~treebank/
-
-\bibitem{1BW}
-	http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41880.pdf
-
-\bibitem{CLC}
-	http://ilexir.co.uk/applications/clc-fce-dataset/
-
 \bibitem{add1}
-	\todo{}
+	W.E. Johnson. Probability: deductive and inductive problems
+	\tit{Mind}, Vol. 41, No. 164, pp. 409-423, 1932.
 	
 \bibitem{katz}
-	\todo{}
+	S.M. Katz. Estimation of probabilities from sparse data for the language model component of a speech recognizer. \tit{IEEE Transactions on Acoustics, Speech and Signal Processing}, Vol. 35, No. 3, pp. 400-401, 1987.
 	
 \bibitem{absdisc}
-	\todo{}
+	H. Ney, U. Essen and R. Kneser. On structuring probabilistic dependences in stochastic language modeling. \tit{Computer, Speech, and Language}, Vol. 8, No. 1, pp. 1-38, 1994.   
 	
 \bibitem{kneser}
-	\todo{}
-	
+	R. Kneser and H. Ney. Improved backing-off for m-gram language modeling. In \tit{Proceedings of the IEEE International Conference on Acoustics, Speech and Signal Processing}, Vol. 1, pp. 181-184, 1995.
+
 \bibitem{modkneser}
-	http://www.speech.sri.com/projects/srilm/manpages/pdfs/chen-goodman-tr-10-98.pdf
-	
-\bibitem{bengio}
-	\todo{}
+	S.F. Chen and J. Goodman. An empirical study of smoothing techniques for language modeling. \tit{Computer Speech \& Language}, Vol. 13, No. 4, pp. 359-394, 1999.
 
 \bibitem{mikolov}
-	http://www.iro.umontreal.ca/~felipe/IFT6010-Automne2011/resources/tp3/kombrink\_interspeech2011\_792.pdf
+	T. Mikolov, M. Karafi\'{a}t, L. Burget, J. Cernock\'{y}, and S. Khudanpur. Recurrent neural network based language model. In \tit{Interspeech}, Vol. 2, pp. 3, 2010.
 	
 \bibitem{lstm}
-	https://arxiv.org/abs/1409.2329
+	S. Hochreiter and J. Schmidhuber. Long short-term memory. \tit{Neural Computation}, Vol. 9, No. 8, pp. 1735-1780, 1997.
 
 \end{thebibliography}
 
