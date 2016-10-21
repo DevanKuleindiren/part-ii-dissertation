@@ -138,23 +138,16 @@
 	
 	\vfill
 	
-	\begin{tabular}{ll}
-	\textbf{Project Originators:} & Devan Kuleindiren \& Dr. Marek Rei \\ \\
-	\textbf{Project Supervisor:} & Dr. Marek Rei \\
-	\textit{Signature:} & \\ \\ \\ \\
-	\textbf{Project Co-Supervisor:} & Dr. Ekaterina Shutova \\
-	\textit{Signature:} & \\ \\ \\ \\
-	\textbf{Director of Studies:} & Dr. Alastair Beresford \\
-	\textit{Signature:} & \\ \\ \\ \\
-	\textbf{Project Overseers:} & Dr. Markus Kuhn \& Prof. Peter Sewell \\
-	\textit{Signatures:} & \\ \\ \\ \\
-	\end{tabular}
+	\begin{center}
+	supervised by \\
+	Dr. Marek Rei \& Dr. Ekaterina Shutova
+	\end{center}
 	
 	\vspace{1.5cm}
 \end{titlepage}
 
 \section*{Introduction}
-Language models produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. The predictive power of such models is useful in speech recognition, text prediction, machine translation, handwriting recognition, part-of-speech tagging and information retrieval. For instance, in a text prediction context, if a user has typed:
+Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. The predictive power of such models is useful in speech recognition, text prediction, machine translation, handwriting recognition, part-of-speech tagging and information retrieval. For instance, in a text prediction context, if a user has typed:
 
 \begin{center}
 	\ttt{`Do you want to grab a '}
@@ -166,7 +159,7 @@ With the recent shift from desktop to mobile computing, it has become increasing
 
 I will begin with the traditional $n$-gram language models and their various smoothing techniques, before proceeding onto neural network-based language models. Combinations of such models, which can be achieved by interpolating their probability distributions, will also be included in the benchmark. \\
 
-In the context of text prediction, one issue with existing language models is that they assume that their input is error (such as spelling or grammatical errors) free. With the presence of typos, human error and people learning new languages, this assumption often is not so strong. I aim to include some extensions to existing language models that seek to provide better predictions over error-prone text, and I will assess whether they offer any performance improvements by including them in the benchmark.
+In the context of text prediction, one issue with existing language models is that they assume that their input is error (such as spelling or grammatical errors) free. With the presence of typos, human error and people learning new languages, this assumption is often not so reliable. I aim to include some extensions to existing language models that seek to provide better predictions over error-prone text, and I will assess whether they offer any performance improvements by including them in the benchmark.
 
 \section*{Starting point}
 
@@ -284,8 +277,8 @@ One possible extension would be to integrate the language model implementations 
 	27/10 - 09/11 & \bpt Implement a test framework for generating evaluation metrics for a \\
 	&~~~given language model. \\
 	\tbf{Milestone} & \tit{Test framework complete.} \\ \hline
-	10/11 - 16/11 & \bpt Implement the various smoothing techniques outlined in \\
-	&~~~`Work to be done'. \\
+	10/11 - 16/11 & \bpt Implement the various smoothing techniques outlined in `Work to \\
+	&~~~be done'. \\
 	\tbf{Milestone} & \tit{A working implementation of $n$-gram language models with various} \\
 	& \tit{smoothing techniques completed.} \\ \hline
 	17/11 - 23/11 & \bpt Implement vanilla RNN language model. \\
