@@ -1,0 +1,220 @@
+% The document class
+\documentclass[a4paper, 12pt]{report}
+
+% The geometry of the pages
+\usepackage[a4paper, margin=25mm]{geometry}
+
+% For maths
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathpartir}
+
+% For algorithms
+\usepackage{algpseudocode}
+
+% For lists
+\usepackage{enumitem}
+\usepackage{listings}
+
+% For trees
+\usepackage{qtree}
+
+% For hyperlinks
+\usepackage{hyperref}
+
+% For formatting columns in a table
+\usepackage{array}
+
+% For graphics and colour
+\usepackage{graphicx}
+\usepackage{color}
+
+% For temporarily splitting the document into multiple columns
+\usepackage{multicol}
+
+% For circuit/logic diagrams
+\usepackage{circuitikz}
+
+% Enables spacing in file paths when inserting images
+\usepackage[space]{grffile}
+
+% Remove paragraph indentation
+\setlength\parindent{0pt}
+
+% The colours used by lstlisting
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+% For blocks of code
+\lstset{ %
+  aboveskip=1em,
+  backgroundcolor=\color{white},	% choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\ttfamily\scriptsize,		% the size of the fonts that are used for the code
+  belowskip=-2em,
+  breakatwhitespace=false,		% sets if automatic breaks should only happen at whitespace
+  breaklines=true,				% sets automatic line breaking
+  captionpos=b,					% sets the caption-position to bottom
+  commentstyle=\color{mygreen},	% comment style
+  deletekeywords={...},			% if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},			% if you want to add LaTeX within your code
+  extendedchars=true,			% lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,					% adds a frame around the code
+  keepspaces=true,				% keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},		% keyword style
+  language=Java,				% the language of the code
+  otherkeywords={},				% if you want to add more keywords to the set, e.g. for ML you might have {fun, let, ...}
+  numbers=left,					% where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,				% how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray},	% the style that is used for the line-numbers
+  rulecolor=\color{black},			% if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,				% show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,			% underline spaces within strings only
+  showtabs=false,				% show tabs within strings adding particular underscores
+  stepnumber=1,				% the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},		% string literal style
+  tabsize=2,					% sets default tabsize to 2 spaces
+  title=\lstname					% show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+% Defines \ip{arg1}{arg2} to mean (arg1, arg2).
+\newcommand{\ip}[2]{(#1, #2)}
+
+% Horizontal rule command used for title
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}}
+
+% TO DO macro
+\newcommand{\todo}{\textbf{\textit{\textcolor{red}{TODO: }}}}
+
+% Shorten textbf
+\newcommand{\tbf}[1]{\textbf{#1}}
+
+% Shorten texttt
+\newcommand{\ttt}[1]{\texttt{#1}}
+
+% Shorten textit
+\newcommand{\tit}[1]{\textit{#1}}
+
+% Blue, underlined hyperlinks
+\newcommand{\hlink}[2]{{\href{#1}{#2}}}
+
+% Bullet point
+\newcommand{\bpt}[0]{\textbullet~}
+
+% White bullet point
+\newcommand{\wbpt}[0]{$\circ$~}
+
+% \cmark and \xmark can be used as a tick and a cross respectively
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+\begin{document}
+
+\begin{titlepage}
+	\noindent
+	\begin{minipage}[t][][t]{0.5\textwidth}
+		\includegraphics[width=40mm]{./Images/CamLogo.jpg}
+	\end{minipage}
+	\begin{minipage}{0.5\textwidth}
+	\begin{flushright}
+		\large
+		\textit{Devan Kuleindiren}
+		\\
+		\textit{Robinson College}
+		\\
+		\texttt{dk503}
+	\end{flushright}
+	\end{minipage}
+	
+	\begin{center}
+	\vspace{6cm}
+	{\scshape\large Computer Science Tripos - Part II Project\par}
+	\vspace{0.5cm}
+	{\huge\bfseries Language Modelling for Text Prediction\par}
+	\vspace{0.5cm}
+	{\large \today \par}
+	\end{center}
+	
+	\vfill
+	
+	\begin{center}
+	supervised by \\
+	Dr Marek Rei \& Dr Ekaterina Shutova
+	\end{center}
+	
+	\vspace{1.5cm}
+\end{titlepage}
+
+% Proforma, table of contents and list of figures
+
+\pagestyle{plain}
+
+\chapter*{Proforma}
+
+{\large
+\begin{tabular}{ll}
+Name:               & \bf Devan Kuleindiren \\
+College:            & \bf Robinson College \\
+Project Title:      & \bf Language Modelling for Text Prediction \\
+Examination:        & \bf Computer Science Tripos -- Part II, June 2017 \\
+Word Count:         & \bf ? \\
+Project Originator: & Devan Kuleindiren \& Dr Marek Rei \\
+Supervisors:         & Dr Marek Rei \& Dr Ekaterina Shutova \\
+\end{tabular}
+}
+\stepcounter{footnote}
+
+\section*{Original Aims of the Project}
+
+\section*{Work Completed}
+
+\section*{Special Difficulties}
+
+ 
+\newpage
+\section*{Declaration}
+
+I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the Computer Science Tripos, hereby declare that this dissertation and the work described in it are my own work, unaided except as may be specified below, and that the dissertation does not contain material that has already been used to any substantial extent for a comparable purpose.
+
+\bigskip
+\leftline{Signed:}
+
+\medskip
+\leftline{Date:}
+
+\tableofcontents
+
+\listoffigures
+
+\newpage
+\section*{Acknowledgements}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% now for the chapters
+
+\pagestyle{headings}
+
+\chapter{Introduction}
+
+\chapter{Preparation}
+
+\chapter{Implementation}
+
+\chapter{Evaluation}
+
+\chapter{Conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the bibliography
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{refs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the appendices
+\appendix
+
+\chapter{Project Proposal}
+
+\end{document}
