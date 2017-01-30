@@ -1,0 +1,195 @@
+% The document class
+\documentclass[a4paper, 12pt]{article}
+
+% The geometry of the pages
+\usepackage[a4paper, margin=25mm]{geometry}
+
+% For maths
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathpartir}
+
+% For algorithms
+\usepackage{algpseudocode}
+
+% For lists
+\usepackage{enumitem}
+\usepackage{listings}
+
+% For trees
+\usepackage{qtree}
+
+% For hyperlinks
+\usepackage{hyperref}
+
+% For formatting columns in a table
+\usepackage{array}
+
+% For graphics and colour
+\usepackage{graphicx}
+\usepackage{color}
+
+% For temporarily splitting the document into multiple columns
+\usepackage{multicol}
+
+% For circuit/logic diagrams
+\usepackage{circuitikz}
+
+% Enables spacing in file paths when inserting images
+\usepackage[space]{grffile}
+
+% Remove paragraph indentation
+\setlength\parindent{0pt}
+
+% The colours used by lstlisting
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+% For blocks of code
+\lstset{ %
+  aboveskip=1em,
+  backgroundcolor=\color{white},	% choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\ttfamily\scriptsize,		% the size of the fonts that are used for the code
+  belowskip=-2em,
+  breakatwhitespace=false,		% sets if automatic breaks should only happen at whitespace
+  breaklines=true,				% sets automatic line breaking
+  captionpos=b,					% sets the caption-position to bottom
+  commentstyle=\color{mygreen},	% comment style
+  deletekeywords={...},			% if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},			% if you want to add LaTeX within your code
+  extendedchars=true,			% lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,					% adds a frame around the code
+  keepspaces=true,				% keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},		% keyword style
+  language=Java,				% the language of the code
+  otherkeywords={},				% if you want to add more keywords to the set, e.g. for ML you might have {fun, let, ...}
+  numbers=left,					% where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,				% how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray},	% the style that is used for the line-numbers
+  rulecolor=\color{black},			% if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,				% show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,			% underline spaces within strings only
+  showtabs=false,				% show tabs within strings adding particular underscores
+  stepnumber=1,				% the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},		% string literal style
+  tabsize=2,					% sets default tabsize to 2 spaces
+  title=\lstname					% show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+% Defines \ip{arg1}{arg2} to mean (arg1, arg2).
+\newcommand{\ip}[2]{(#1, #2)}
+
+% Horizontal rule command used for title
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}}
+
+% TO DO macro
+\newcommand{\todo}{\textbf{\textit{\textcolor{red}{TODO: }}}}
+
+% Shorten textbf
+\newcommand{\tbf}[1]{\textbf{#1}}
+
+% Shorten texttt
+\newcommand{\ttt}[1]{\texttt{#1}}
+
+% Shorten textit
+\newcommand{\tit}[1]{\textit{#1}}
+
+% Blue, underlined hyperlinks
+\newcommand{\hlink}[2]{{\href{#1}{#2}}}
+
+% Bullet point
+\newcommand{\bpt}[0]{\textbullet~}
+
+% White bullet point
+\newcommand{\wbpt}[0]{$\circ$~}
+
+% \cmark and \xmark can be used as a tick and a cross respectively
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+\begin{document}
+
+\begin{titlepage}
+	\noindent
+	\begin{minipage}[t][][t]{0.5\textwidth}
+		\includegraphics[width=40mm]{./Images/CamLogo.jpg}
+	\end{minipage}
+	\begin{minipage}{0.5\textwidth}
+	\begin{flushright}
+		\large
+		\textit{Devan Kuleindiren}
+		\\
+		\textit{Robinson College}
+		\\
+		\texttt{dk503}
+	\end{flushright}
+	\end{minipage}
+	
+	\begin{center}
+	\vspace{6cm}
+	{\scshape\large Computer Science Tripos - Part II Project Progress Report\par}
+	\vspace{0.5cm}
+	{\huge\bfseries Language Modelling for Text Prediction\par}
+	\vspace{0.5cm}
+	{\large \today \par}
+	\end{center}
+	
+	\vfill
+	
+	\begin{center}
+	supervised by \\
+	Dr. Marek Rei \& Dr. Ekaterina Shutova
+	\end{center}
+	
+	\begin{center}
+	with Director of Studies \\
+	Dr. Alastair Beresford
+	\end{center}
+	
+	\begin{center}
+	and Overseers \\
+	Dr. Markus Kuhn \& Prof. Peter Sewell
+	\end{center}
+	
+	\vspace{1.5cm}
+\end{titlepage}
+
+Overall, my project is roughly on schedule. There is one bullet point on my timetable up to this point that I have not yet covered (experimentation with language models on error-prone text), but I don't foresee this being an issue because there are other parts of my timetable that I have completed ahead of time.
+
+\section*{Work completed}
+
+\begin{itemize}
+\item
+	I have implemented $n$-gram language models with various smoothing techniques. These include add-1 smoothing~\cite{add1_smoothing:johnson1932}, Katz smoothing~\cite{katz_smoothing:katz1987}, absolute discounting~\cite{absolute_discounting:ney1994}, Kneser-Ney smoothing~\cite{kneser_ney_smoothing:kneser1995} and modified Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999}, as set out in the proposal.
+	
+\item
+	Alongside the $n$-gram models, I have also implemented some recurrent neural network (RNN)-based language models. The differences in the RNN architectures arise in the way that the weighted inputs and hidden activations from the previous time step are wired up. I explored three such architectures: the first being the standard RNN\cite{rnn_lm:mikolov2010}, the second the gated recurrent unit (GRU)~\cite{gru:cho2014} and the third long short-term memory (LSTM)~\cite{lstm:hochreiter1997}.
+
+\item
+	I have built a generic benchmarking framework into which you can plug-in any of the aforementioned language models and generate a series of metrics. So far, these metrics include: perplexity, average keys saved\footnote{The average number of characters per word that the language model would save you from typing as a result of it getting the correct next word in its top 3 predictions.}, guessing entropy, physical memory usage and average inference time.
+
+\item
+	In order to demonstrate the capability of such models, I have also constructed a fun command-line application that can predict your next word, finish your sentence or generate text.
+	
+\item
+	Tests have been written for all of the above.
+\end{itemize}
+
+\section*{Work to complete}
+
+As mentioned at the top of this page, I am yet to explore the performance of language models on error-prone text, and so I will be working on this over the next few weeks. \\
+
+Apart from this, the only other work set out in my proposal is the extension of embedding a language model in a mobile keyboard on iOS. I have partially implemented this, but there are still some blocking issues, and I am still investigating whether TensorFlow can actually run inside an app extension\footnote{\href{https://developer.apple.com/app-extensions/}{https://developer.apple.com/app-extensions/}} (the subtle difference between apps and app extensions is something I did not foresee at the start of this project). For now, this will be low priority, and I will only complete it if I establish that it's possible.
+
+\section*{Challenges faced}
+
+One of the earliest challenges I faced was inferring exactly how some of the n-gram smoothing techniques should be written in code, because there were some implementation details omitted in the respective papers. \\
+
+Another particularly challenging aspect of my project has been working with the C++ API for TensorFlow, which has very little documentation.
+
+\bibliographystyle{ieeetr}
+\bibliography{bibliography}
+
+\end{document}

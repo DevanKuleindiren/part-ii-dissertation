@@ -2,6 +2,8 @@
 .DS_Store
 
 # LaTeX
+*.bbl
+*.blg
 *.aux
 *.lof
 *.log
