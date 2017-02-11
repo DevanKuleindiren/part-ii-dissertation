@@ -168,6 +168,9 @@ Overall, my project is roughly on schedule. There is one bullet point on my time
 	Alongside the $n$-gram models, I have also implemented some recurrent neural network (RNN)-based language models. The differences in the RNN architectures arise in the way that the weighted inputs and hidden activations from the previous time step are wired up. I explored three such architectures: the first being the standard RNN\cite{rnn_lm:mikolov2010}, the second the gated recurrent unit (GRU)~\cite{gru:cho2014} and the third long short-term memory (LSTM)~\cite{lstm:hochreiter1997}.
 
 \item
+	I have briefly explored combining $n$-gram and RNN-based models, so far by just interpolating the probabilities between the two.
+
+\item
 	I have built a generic benchmarking framework into which you can plug-in any of the aforementioned language models and generate a series of metrics. So far, these metrics include: perplexity, average keys saved\footnote{The average number of characters per word that the language model would save you from typing as a result of it getting the correct next word in its top 3 predictions.}, guessing entropy, physical memory usage and average inference time.
 
 \item
