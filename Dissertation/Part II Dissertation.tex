@@ -109,6 +109,9 @@
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
+% Set the Table of Contents depth.
+\setcounter{tocdepth}{2}
+
 \begin{document}
 
 \begin{titlepage}
@@ -197,12 +200,119 @@ I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the C
 \pagestyle{headings}
 
 \chapter{Introduction}
+\section{Motivation}
+\section{Related Work}
 
 \chapter{Preparation}
+\section{N-Gram Models}
+\subsection{An Overview of N-Gram Models}
+Describe how they work, and the motivation for smoothing and backoff.
+\subsection{Smoothing Techniques}
+\subsubsection{Add-One Smoothing}
+\subsubsection{Katz Smoothing}
+\subsubsection{Absolute Discounting}
+\subsubsection{Kneser-Ney}
+\subsubsection{Modified Kneser-Ney}
+\section{Recurrent Neural Network Models}
+\subsection{An Overview of Neural Networks}
+Give a brief introduction to neural networks. Explain backpropagation. Motivate why we need RNNs for language modelling.
+\subsection{Recurrent Neural Networks}
+Explain RNNs.
+\subsubsection{Vanilla Recurrent Neural Networks}
+\subsubsection{Gated Recurrent Unit}
+\subsubsection{Long Short-Term Memory}
+\subsection{Word Embeddings}
+\subsection{Backpropagation Through Time}
+\section{Software Engineering}
+\subsection{Starting Point}
+\subsection{Requirements}
+\subsection{Tools and Technologies Used}
 
 \chapter{Implementation}
+\section{Development Strategy}
+\subsection{Version Control and Build Tools}
+\subsection{Testing Strategy}
+\section{System Overview}
+\subsection{Interface to Language Models}
+\section{N-Gram Models}
+\subsection{Counting N-Grams Efficiently}
+\subsection{Precomputing Smoothing Coefficients}
+\section{Recurrent Neural Network Models}
+\subsection{The Forward Pass}
+\subsection{Gradient Updates}
+\subsection{Network Architectures}
+\subsection{Parameter Tuning}
+\subsection{The Balance Between Underfitting and Overfitting}
+Dropout, embedding, learning rate decay, momentum?, gradient clipping
+\section{Extending Models to Tackle Error-Prone Text}
+\subsection{Preprocessing the CLC Dataset}
+\subsection{Error Correction on Word Context}
+\section{Benchmarking Framework}
+\subsection{Metrics for Accuracy}
+\subsection{Metrics for Resource Consumption}
+\section{Mobile Keyboard}
+\subsection{Updating Language Model Predictions On the Fly}
 
 \chapter{Evaluation}
+\tit{`Accuracy' could be any one of perplexity, average-keys-saved or guessing entropy.}
+\section{Evaluation Methodology}
+\section{Results}
+\subsection{Existing Models}
+Things I aim to evaluate here are: \\
+\tbf{N-Gram Models:}
+\begin{itemize}
+\item
+	Accuracy as a function of the amount of training data used (one line per LM), for various smoothing techniques \tit{(on subset of 1BN word dataset)}.
+\item
+	The effect of increasing N.
+\end{itemize}
+
+\tbf{Neural Models}
+\begin{itemize}
+\item
+	Accuracy as a function of the amount of training data used (one line per LM), for various RNN architectures \tit{(on subset of 1BN word dataset)}.
+\item
+	The effect of changing the number of hidden neurons.
+\end{itemize}
+
+\tbf{All Models}
+\begin{itemize}
+\item
+	A comparison of the performance of all models \tit{(on the PTB dataset)}.
+\end{itemize}
+
+\tbf{Combinations of Models}
+\begin{itemize}
+\item
+	How combinations of models compare with respect to standalone ones \tit{(on the PTB dataset)}.
+\end{itemize}
+
+
+\subsection{On a Mobile Device}
+Here, I want to focus on the tradeoff between accuracy and resource consumption. Specifically, I could look at the following: \\
+\begin{itemize}
+\item
+	The effect of increasing the minimum frequency for a word to be considered in the vocabulary. (I.e. the effect of changing the vocabulary size).
+\item
+	The effect of changing the number of hidden layer neurons.
+\item
+	The effect of using RNN vs GRU vs LSTM.
+\item
+	(Perhaps also the effect of pruning on n-gram models).
+\end{itemize}
+
+\subsection{On Error-Prone Text}
+Things I aim to evaluate here are: \\
+\begin{itemize}
+\item
+	The hypothetical upper and lower bounds on accuracy (i.e. the LM results on correct input and on incorrect input respectively).
+\item
+	The effect of using the vocabulary vs different sized dictionaries for determining if a word should be replaced or not.
+\item
+	The effect of edit distance on performance.
+\item
+	An intuitive explanation behind the gap remaining between the current performance and the upper bound. Perhaps some suggestions for future work.
+\end{itemize}
 
 \chapter{Conclusion}
 
