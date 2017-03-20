@@ -30,6 +30,9 @@
 \usepackage{graphicx}
 \usepackage{color}
 
+% For plotting graphs.
+\usepackage{pgfplots}
+
 % For temporarily splitting the document into multiple columns
 \usepackage{multicol}
 
@@ -169,10 +172,13 @@ Supervisors:         & Dr Marek Rei \& Dr Ekaterina Shutova \\
 \stepcounter{footnote}
 
 \section*{Original Aims of the Project}
+The primary aim of the project was to implement and benchmark a variety of language models, comparing the quality of their predictions as well as the time and space that they consume. More specifically, I aimed to build an $n$-gram language model along with several smoothing techniques, and a variety of recurrent neural network-based language models. An additional aim was to investigate ways to improve the performance of existing language models on error-prone text.
 
 \section*{Work Completed}
+All of the project aims set out in the proposal have been met, resulting in a series of language model implementations and a generic benchmarking framework for comparing their performance. I have also proposed and evaluated a novel extension to an existing language model which improves its performance on error-prone text. Additionally, as an extension, I implemented a mobile keyboard on iOS that uses my language model implementations as a library.
 
 \section*{Special Difficulties}
+None.
 
  
 \newpage
@@ -180,18 +186,23 @@ Supervisors:         & Dr Marek Rei \& Dr Ekaterina Shutova \\
 
 I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the Computer Science Tripos, hereby declare that this dissertation and the work described in it are my own work, unaided except as may be specified below, and that the dissertation does not contain material that has already been used to any substantial extent for a comparable purpose.
 
-\bigskip
-\leftline{Signed:}
+\vspace{1cm}
+\begin{multicols}{2}
 
-\medskip
-\leftline{Date:}
+\rule{5cm}{0.15mm} \\
+\leftline{\scshape{Signed}}
+
+\columnbreak
+
+\rule{5cm}{0.15mm} \\
+\leftline{\scshape{Date}}
+
+\end{multicols}
+
 
 \tableofcontents
 
 \listoffigures
-
-\newpage
-\section*{Acknowledgements}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -200,8 +211,58 @@ I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the C
 \pagestyle{headings}
 
 \chapter{Introduction}
+
+My project investigates the performance of various language models in the context of text prediction. I started by implementing a series of well-established models and comparing their performance, before assessing the tradeoffs that occur when you attempt to apply them in a practical context, such as in a mobile keyboard. Finally, I propose a novel extension to an existing model which aims to improve its performance on error-prone text.
+
+\section{Language Models}
+
+Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. This predictive power is useful in a variety of applications. For example, in speech recognition, if the speech recogniser has estimated two candidate word sequences from an acoustic signal \tit{`it's not easy to wreck a nice beach'} and \tit{`it's not easy to recognise speech'}, then a language model can be used to determine that the second candidate is more probable than the first. Language models are also used in machine translation, handwriting recognition, part-of-speech tagging and information retrieval.
+
+\begin{alignat*}{2}
+	\overbrace{\tit{Do you want to grab a }}^{w_1^k}&\overbrace{\underline{\tit{drink}}}^{w_{k+1}} &&\hspace{0.5mm}\overbrace{(0.327)}^{\mathbb{P}(w_{k + 1} | w_1^k)} \\
+	&\tit{coffee} &&\ \ (0.211) \\
+	&\tit{bite} &&\ \ (0.190) \\
+	&\tit{spot} &&\ \ (0.084) \\
+	&\vdots &&\ \ \vdots
+\end{alignat*}
+
+My project focuses on language modelling in the context of text prediction. That is, given a sequence of words $w_1w_2...w_k = w_1^k$, I want to estimate $\mathbb{P}(w_{k + 1} | w_1^k)$. For instance, if a user has typed \tit{`do you want to grab a '}, then a language model could be used to suggest probable next words such as \tit{`coffee'}, \tit{`drink'} or \tit{`bite'}, and these predictions could further be narrowed down as the user continues typing.
+
 \section{Motivation}
+
+
+\subsection*{Benchmarking}
+
+\begin{itemize}
+\item
+	Variety of language models, that vary in accuracy, memory consumption and speed.
+\item
+	Combinations can be considered.
+\item
+	Important tradeoffs when applying them to mobile.
+\end{itemize}
+
+There are two prominent approaches to language modelling, the first of which is the $n$-gram approach and the second of which is based on (recurrent) neural networks.
+
+ language models and their various smoothing techniques, before proceeding onto neural network-based language models. Combinations of such models, which can be achieved by interpolating their probability distributions, will also be included in the benchmark. \\
+
+New techniques for facilitating better predictions are constantly being developed for language models. However, it is important to realise that such models are being used increasingly in a mobile environment, where the computational and memory resources aren't as abundant.
+
+\subsection*{Error-prone Text}
+
+One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. This isn't surprising, because they are only ever trained on sentences that do not contain any errors.
+
+Unfortunately, humans are not perfect, and they will make typographical mistakes, spelling mistakes and occasionally grammatical errors too. In this project I investigate ways to bridge the gap in performance between language model predictions on error-prone text and error-free text. 
+
 \section{Related Work}
+\begin{itemize}
+\item
+	Google 1-Billion Word benchmark
+\item
+	Chen and Goodman smoothing paper
+\item
+	Work that's been done on language models with error-prone text 
+\end{itemize}
 
 \chapter{Preparation}
 \section{N-Gram Models}
@@ -254,8 +315,70 @@ Dropout, embedding, learning rate decay, momentum?, gradient clipping
 \subsection{Updating Language Model Predictions On the Fly}
 
 \chapter{Evaluation}
-\tit{`Accuracy' could be any one of perplexity, average-keys-saved or guessing entropy.}
+
+In this chapter, I will first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I will present the performance of the existing language models that I implemented, secondly I will focus on the tradeoffs faced when employing those models on a mobile device, and finally I will display my findings in language modelling on error-prone text.
+
 \section{Evaluation Methodology}
+
+In the context of text prediction, there are essentially two questions one might want to answer when evaluating a language model:
+\begin{enumerate}
+\item
+	How accurately does the language model predict text?
+\item
+	How much resource, such as CPU or memory, does the language model consume?
+\end{enumerate}
+
+In order to answer these questions, I implemented a generic benchmarking framework that can return a series of metrics that fall into one of the two aforementioned categories when given a language model. These metrics are outlined below.
+
+\subsection{Accuracy Metrics}
+
+\subsubsection*{Perplexity}
+
+Perplexity is the most widely-used metric for language models, and is therefore an essential one to include so that my results can be compared with those of other authors. Given a sequence of words $w_1^{N} = w_1w_2...w_N$ as test data, the perplexity PP of a language model $L$ is defined as:
+\begin{gather}
+	\text{PP}_L(w_1^N) = \sqrt[N]{\frac{1}{\mathbb{P}_L(w_1^N)}} = \sqrt[N]{\prod_{i=1}^{N}\frac{1}{\mathbb{P}_L(w_i | w_1^{i-1})}}
+\end{gather}
+where $\mathbb{P}_L(w_i | w_1^{i-1})$ is the probability computed by the language model $L$ of the word $w_i$ following the words $w_1^{i-1}$. The key point is that \tbf{lower values of perplexity indicate better prediction accuracy} for language models trained on a particular training set. \\
+
+This somewhat arbitrary-looking formulation can be better understood from a touch of information theory. In information theory, the cross-entropy $H(p, q)$ between a true probability distribution $p$ and an estimate of that distribution $q$ is defined as:\footnote{Note that $H(p, q)$ is often also used to denote the joint entropy of $p$ and $q$, which is a different concept.}
+\begin{gather*}
+	H(p, q) = -\sum_x p(x) \log_2 q(x)
+\end{gather*}
+It can be shown that $H(p, q) = H(p) + D_{KL}(p || q)$ where $D_{KL}(p || q) \geq 0$ is the Kullback-Leibler distance between $p$ and $q$. Generally speaking, the better an estimate $q$ is of $p$, the lower $H(p, q)$ will be, with a lower bound of $H(p)$, the entropy of $p$. \\
+
+The perplexity PP of a model $q$, with respect to the true distribution $p$ it is attempting to estimate, is defined as:
+\begin{gather*}
+	\text{PP} = 2^{H(p, q)}
+\end{gather*}
+
+Language models assign probability distributions over sequences of words, and so it seems reasonable to use perplexity as a motivation for a measure of their performance. In the context of language modelling, however, we do not know what the underlying distribution of $p$ is, so it is approximated with Monte Carlo estimation by taking samples of $p$ (i.e. sequences of words from the test data) as follows:
+\begin{gather*}
+	\text{PP}_L(w_1^N) = 2^{-\frac{1}{N}\sum_i \log_2 \mathbb{P}_L(w_i | w_1^{i-1})}
+\end{gather*}
+With a little algebra, this can be rearranged to give equation (4.1). \\
+
+One issue with perplexity is that it is undefined if $\mathbb{P}_L(w_i | w_1^{i-1})$ is 0 at any point. To get around this in my implementation, I replaced probability values of 0 with the small constant \ttt{1e-9}. Results that use this approximation are marked.
+
+\subsubsection*{Guessing Entropy}
+
+If a language model $L_1$ has assigned a higher probability to the correct next word $w_c$ than another language model $L_2$, then it does not necessarily follow that $w_c$ is ranked higher in the predictions of $L_1$ than in the predictions of $L_2$.\footnote{To see this, consider the following example: $L_1$ and $L_2$ both have a vocabulary of 5 words; $L_1$ assigns a probability of 0.3 to $w_c$, and assigns 0.35, 0.35, 0 and 0 to the remaining words; $L_2$ assigns a probability of 0.25 to $w_c$, and assigns 0.2, 0.2, 0.2 and 0.15 to the remaining words. In this example, $w_c$ is given a higher probability by $L_1$ but ranked higher by $L_2$.} \\
+
+Guessing entropy is a metric which focuses more on the final ordering of the word predictions made by a language model. It is defined as the binary logarithm of how far down a list of predictions (when sorted by probability) the actual next word is, averaged across the test data.
+
+\subsubsection*{Average-Keys-Saved}
+
+It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section \todo{XXX}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user would be saved from typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
+
+As an example, if the user is typing \ttt{science} and the word \ttt{science} appears in the top three predictions after they have typed \ttt{sc}, then that would count as 5 characters being saved, averaging at $\frac{5}{7}$ keys saved per character. Averaging over the number of characters in the test data ensures that the results are not biased by the data containing particularly long words, which are easier to save characters on.
+
+\subsection{Resource Consumption Metrics}
+
+\subsubsection*{Memory Consumption}
+This is measured as the amount of physical memory occupied by the process in which the language model under test is instantiated.
+
+\subsubsection*{Inference Time}
+This is measured as the amount of time in microseconds that the language model takes to assign a probability to all of the words in its vocabulary given a sequence of words, averaged over a large number of sequences.
+
 \section{Results}
 \subsection{Existing Models}
 Things I aim to evaluate here are: \\
