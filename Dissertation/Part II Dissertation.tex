@@ -26,6 +26,13 @@
 % For formatting columns in a table
 \usepackage{array}
 
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% For centering wide tables.
+\usepackage{adjustbox}
+
 % For graphics and colour
 \usepackage{graphicx}
 \usepackage{color}
@@ -287,6 +294,8 @@ Explain RNNs.
 \section{Software Engineering}
 \subsection{Starting Point}
 \subsection{Requirements}
+\subsection{TensorFlow}
+Perhaps this could go in the implementation section.
 \subsection{Tools and Technologies Used}
 
 \chapter{Implementation}
@@ -299,18 +308,15 @@ Explain RNNs.
 \subsection{Counting N-Grams Efficiently}
 \subsection{Precomputing Smoothing Coefficients}
 \section{Recurrent Neural Network Models}
-\subsection{The Forward Pass}
-\subsection{Gradient Updates}
-\subsection{Network Architectures}
+\subsection{Long Short-Term Memory}
+\subsection{Gated Recurrent Units}
+\subsection{Word Embeddings}
+Show some cool embedding plots with PCA.
 \subsection{Parameter Tuning}
-\subsection{The Balance Between Underfitting and Overfitting}
 Dropout, embedding, learning rate decay, momentum?, gradient clipping
 \section{Extending Models to Tackle Error-Prone Text}
 \subsection{Preprocessing the CLC Dataset}
 \subsection{Error Correction on Word Context}
-\section{Benchmarking Framework}
-\subsection{Metrics for Accuracy}
-\subsection{Metrics for Resource Consumption}
 \section{Mobile Keyboard}
 \subsection{Updating Language Model Predictions On the Fly}
 
@@ -373,11 +379,11 @@ As an example, if the user is typing \ttt{science} and the word \ttt{science} ap
 
 \subsection{Resource Consumption Metrics}
 
-\subsubsection*{Memory Consumption}
-This is measured as the amount of physical memory occupied by the process in which the language model under test is instantiated.
+\subsubsection*{Memory Usage}
+This is measured as the amount of physical memory in megabytes occupied by the process in which the language model under test is instantiated.
 
-\subsubsection*{Inference Time}
-This is measured as the amount of time in microseconds that the language model takes to assign a probability to all of the words in its vocabulary given a sequence of words, averaged over a large number of sequences.
+\subsubsection*{Average Inference Time}
+This is measured as the amount of time in milliseconds that the language model takes to assign a probability to all of the words in its vocabulary given a sequence of words, averaged over a large number of sequences.
 
 \section{Results}
 \subsection{Existing Models}
@@ -389,6 +395,39 @@ Things I aim to evaluate here are: \\
 \item
 	The effect of increasing N.
 \end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=1.2]
+\begin{axis}[
+    title={Perplexity of N-gram models trained on the PTB dataset.},
+    xlabel={N},
+    ylabel={Perplexity},
+    xmin=2, xmax=5,
+    ymin=100, ymax=340,
+    xtick={2, 3, 4, 5},
+    ytick={100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340},
+    legend pos=outer north east,
+    ymajorgrids=true,
+    grid style=dashed,
+]
+ 
+\addplot[color=blue, mark=square]
+coordinates {(2, 194.81)(3, 256.95)(4, 305.33)(5, 314.49)};
+
+\addplot[color=red, mark=square]
+coordinates {(2, 195.28)(3, 166.03)(4, 165.09)(5, 167.38)};
+
+\addplot[color=green, mark=square]
+coordinates {(2, 186.80)(3, 150.73)(4, 146.02)(5, 146.35)};
+
+\addplot[color=violet, mark=square]
+coordinates {(2, 185.72)(3, 149.54)(4, 144.38)(5, 142.68)};
+
+\legend{Katz, Absolute Discounting, Kneser-Ney, Modified Kneser-Ney}
+ 
+\end{axis}
+\end{tikzpicture}
+\end{center}
 
 \tbf{Neural Models}
 \begin{itemize}
@@ -403,6 +442,32 @@ Things I aim to evaluate here are: \\
 \item
 	A comparison of the performance of all models \tit{(on the PTB dataset)}.
 \end{itemize}
+
+\begin{adjustbox}{center}
+\begin{tabular}{| L{5cm} | C{2.5cm} | C{2cm} | C{2cm} | C{2cm} | C{2cm} |}
+	\hline
+	\tbf{Language Model} & \tbf{Perplexity} & \tbf{Guessing Entropy} & \tbf{Average-Keys-Saved} & \tbf{Memory Usage (MB)} & \tbf{Average Inference Time (ms)} \\ \hline
+	3-gram & 454267.15 & 1.97123 & 0.35014 & \tbf{266.91} & 62 \\
+	3-gram + add-one & 3764.96 & 1.97123 & 0.53063 & 266.94 & \tbf{41} \\
+	3-gram + Katz & 256.95 & 4.45221 & 0.68482 & 266.71 & 88 \\
+	3-gram + absolute disc. & 166.03 & 4.10462 & 0.72178 & 266.78 & 63 \\
+	3-gram + KN & 150.73 & 4.06848 & 0.72466 & 266.88 & 54 \\
+	3-gram + modified KN & 149.54 & 4.08662 & 0.72355 & 266.97 & 54 \\
+	5-gram & 195857061.27 & 0.23265 & 0.07167 & 737.36 & 130 \\
+	5-gram + add-one & 8610.45 & 0.23265 & 0.33886 & 737.30 & 63 \\
+	5-gram + Katz & 314.49 & 4.53360 & 0.67154 & 737.43 & 156 \\
+	5-gram + absolute disc. & 167.38 & 4.06856 & 0.72333 & 737.43 & 126 \\
+	5-gram + KN & 146.35 & 4.01120 & \tbf{0.72598} & 737.37 & 114 \\
+	5-gram + modified KN & \tbf{142.68} & 4.03443 & 0.72554 & 737.53 & 116 \\ \hline
+	Vanilla RNN 256 & & & & & \\
+	Vanilla RNN 512 & & & & & \\
+	GRU 256 & & & & & \\
+	GRU 512 & & & & & \\
+	LSTM 256 & & & & & \\
+	LSTM 512 & & & & & \\ \hline
+	LSTM 512 interpolated with 5-gram + mod. KN & & & & & \\ \hline
+\end{tabular}
+\end{adjustbox}
 
 \tbf{Combinations of Models}
 \begin{itemize}
@@ -422,6 +487,8 @@ Here, I want to focus on the tradeoff between accuracy and resource consumption.
 	The effect of using RNN vs GRU vs LSTM.
 \item
 	(Perhaps also the effect of pruning on n-gram models).
+\item
+	ALSO: Perhaps compare using float 32 vs float 16 in terms of memory vs accuracy.
 \end{itemize}
 
 \subsection{On Error-Prone Text}
@@ -436,6 +503,36 @@ Things I aim to evaluate here are: \\
 \item
 	An intuitive explanation behind the gap remaining between the current performance and the upper bound. Perhaps some suggestions for future work.
 \end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=1.2]
+\pgfplotsset{every axis legend/.append style={        at={(0.5, -0.2)},        anchor=north}}
+\begin{axis}[
+    title={Perplexity on Cambridge Learner Corpus},
+    xlabel={Edit Distance},
+    ylabel={Perplexity},
+    xmin=1, xmax=3,
+    ymin=70, ymax=100,
+    xtick={1, 2, 3},
+    ytick={70, 75, 80, 85, 90, 95, 100},
+    ymajorgrids=true,
+    grid style=dashed,
+]
+ 
+\addplot[color=black]
+coordinates {(1, 89.70)(2, 89.70)(3, 89.70)};
+
+\addplot[color=red, mark=square]
+coordinates {(1, 88.47)(2, 88.47)(3, 88.47)};
+
+\addplot[color=black]
+coordinates {(1, 77.83)(2, 77.83)(3, 77.83)};
+
+\legend{LSTM (error-free input), Error-Correcting LSTM (error-prone input), LSTM (error-prone input)}
+ 
+\end{axis}
+\end{tikzpicture}
+\end{center}
 
 \chapter{Conclusion}
 
