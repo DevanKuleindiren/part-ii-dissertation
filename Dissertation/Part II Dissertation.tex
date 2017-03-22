@@ -272,8 +272,8 @@ Unfortunately, humans are not perfect, and they will make typographical mistakes
 \end{itemize}
 
 \chapter{Preparation}
-\section{N-Gram Models}
-\subsection{An Overview of N-Gram Models}
+\section{$n$-gram Models}
+\subsection{An Overview of $n$-gram Models}
 Describe how they work, and the motivation for smoothing and backoff.
 \subsection{Smoothing Techniques}
 \subsubsection{Add-One Smoothing}
@@ -297,6 +297,24 @@ Explain RNNs.
 \subsection{TensorFlow}
 Perhaps this could go in the implementation section.
 \subsection{Tools and Technologies Used}
+\begin{itemize}
+\item
+	Google Test (C++ unit testing)
+\item
+	Google Protocol Buffers
+\item
+	Bazel
+\item
+	TensorFlow
+\item
+	SLURM (open source job scheduler used by the HPCS)
+\item
+	NLTK
+\item
+	GitHub
+\item
+	Git
+\end{itemize}
 
 \chapter{Implementation}
 \section{Development Strategy}
@@ -304,8 +322,8 @@ Perhaps this could go in the implementation section.
 \subsection{Testing Strategy}
 \section{System Overview}
 \subsection{Interface to Language Models}
-\section{N-Gram Models}
-\subsection{Counting N-Grams Efficiently}
+\section{$n$-gram Models}
+\subsection{Counting $n$-grams Efficiently}
 \subsection{Precomputing Smoothing Coefficients}
 \section{Recurrent Neural Network Models}
 \subsection{Long Short-Term Memory}
@@ -326,6 +344,8 @@ In this chapter, I will first describe the benchmarking framework that I built t
 
 \section{Evaluation Methodology}
 
+\subsection{Metrics}
+
 In the context of text prediction, there are essentially two questions one might want to answer when evaluating a language model:
 \begin{enumerate}
 \item
@@ -334,11 +354,9 @@ In the context of text prediction, there are essentially two questions one might
 	How much resource, such as CPU or memory, does the language model consume?
 \end{enumerate}
 
-In order to answer these questions, I implemented a generic benchmarking framework that can return a series of metrics that fall into one of the two aforementioned categories when given a language model. These metrics are outlined below.
+In order to answer these questions, I implemented a generic benchmarking framework that can return a series of metrics that fall into one of the two aforementioned categories when given a language model. These metrics include perplexity, average-keys-saved, memory usage and average inference time. The first two are concerned with the accuracy of language models and the latter two relate to the resource usage.
 
-\subsection{Accuracy Metrics}
-
-\subsubsection*{Perplexity}
+\subsubsection{Perplexity}
 
 Perplexity is the most widely-used metric for language models, and is therefore an essential one to include so that my results can be compared with those of other authors. Given a sequence of words $w_1^{N} = w_1w_2...w_N$ as test data, the perplexity PP of a language model $L$ is defined as:
 \begin{gather}
@@ -353,9 +371,9 @@ This somewhat arbitrary-looking formulation can be better understood from a touc
 It can be shown that $H(p, q) = H(p) + D_{KL}(p || q)$ where $D_{KL}(p || q) \geq 0$ is the Kullback-Leibler distance between $p$ and $q$. Generally speaking, the better an estimate $q$ is of $p$, the lower $H(p, q)$ will be, with a lower bound of $H(p)$, the entropy of $p$. \\
 
 The perplexity PP of a model $q$, with respect to the true distribution $p$ it is attempting to estimate, is defined as:
-\begin{gather*}
+\begin{gather}
 	\text{PP} = 2^{H(p, q)}
-\end{gather*}
+\end{gather}
 
 Language models assign probability distributions over sequences of words, and so it seems reasonable to use perplexity as a motivation for a measure of their performance. In the context of language modelling, however, we do not know what the underlying distribution of $p$ is, so it is approximated with Monte Carlo estimation by taking samples of $p$ (i.e. sequences of words from the test data) as follows:
 \begin{gather*}
@@ -365,95 +383,104 @@ With a little algebra, this can be rearranged to give equation (4.1). \\
 
 One issue with perplexity is that it is undefined if $\mathbb{P}_L(w_i | w_1^{i-1})$ is 0 at any point. To get around this in my implementation, I replaced probability values of 0 with the small constant \ttt{1e-9}. Results that use this approximation are marked.
 
-\subsubsection*{Guessing Entropy}
+%\subsubsection{Guessing Entropy}~\\
+%If a language model $L_1$ has assigned a higher probability to the correct next word $w_c$ than another language model $L_2$, then it does not necessarily follow that $w_c$ is ranked higher in the predictions of $L_1$ than in the predictions of $L_2$.\footnote{To see this, consider the following example: $L_1$ and $L_2$ both have a vocabulary of 5 words; $L_1$ assigns a probability of 0.3 to $w_c$, and assigns 0.35, 0.35, 0 and 0 to the remaining words; $L_2$ assigns a probability of 0.25 to $w_c$, and assigns 0.2, 0.2, 0.2 and 0.15 to the remaining words. In this example, $w_c$ is given a higher probability by $L_1$ but ranked higher by $L_2$.} \\
+%
+%Guessing entropy is a metric which focuses more on the final ordering of the word predictions made by a language model. It is defined as the binary logarithm of how far down a list of predictions (when sorted by probability) the actual next word is, averaged across the test data.
 
-If a language model $L_1$ has assigned a higher probability to the correct next word $w_c$ than another language model $L_2$, then it does not necessarily follow that $w_c$ is ranked higher in the predictions of $L_1$ than in the predictions of $L_2$.\footnote{To see this, consider the following example: $L_1$ and $L_2$ both have a vocabulary of 5 words; $L_1$ assigns a probability of 0.3 to $w_c$, and assigns 0.35, 0.35, 0 and 0 to the remaining words; $L_2$ assigns a probability of 0.25 to $w_c$, and assigns 0.2, 0.2, 0.2 and 0.15 to the remaining words. In this example, $w_c$ is given a higher probability by $L_1$ but ranked higher by $L_2$.} \\
-
-Guessing entropy is a metric which focuses more on the final ordering of the word predictions made by a language model. It is defined as the binary logarithm of how far down a list of predictions (when sorted by probability) the actual next word is, averaged across the test data.
-
-\subsubsection*{Average-Keys-Saved}
+\subsubsection{Average-Keys-Saved}
 
 It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section \todo{XXX}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user would be saved from typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
 
 As an example, if the user is typing \ttt{science} and the word \ttt{science} appears in the top three predictions after they have typed \ttt{sc}, then that would count as 5 characters being saved, averaging at $\frac{5}{7}$ keys saved per character. Averaging over the number of characters in the test data ensures that the results are not biased by the data containing particularly long words, which are easier to save characters on.
 
-\subsection{Resource Consumption Metrics}
+\subsubsection{Memory Usage}
 
-\subsubsection*{Memory Usage}
 This is measured as the amount of physical memory in megabytes occupied by the process in which the language model under test is instantiated.
 
-\subsubsection*{Average Inference Time}
+\subsubsection{Average Inference Time}
+
 This is measured as the amount of time in milliseconds that the language model takes to assign a probability to all of the words in its vocabulary given a sequence of words, averaged over a large number of sequences.
 
-\section{Results}
-\subsection{Existing Models}
-Things I aim to evaluate here are: \\
-\tbf{N-Gram Models:}
-\begin{itemize}
-\item
-	Accuracy as a function of the amount of training data used (one line per LM), for various smoothing techniques \tit{(on subset of 1BN word dataset)}.
-\item
-	The effect of increasing N.
-\end{itemize}
+\subsection{Datasets}
 
-\begin{center}
-\begin{tikzpicture}[scale=1.2]
+I used three datasets throughout the evaluation of my project:
+
+\subsubsection{Penn Treebank Dataset}
+
+\subsubsection{Google's 1-Billion-Word Dataset}
+
+\subsubsection{Cambridge Learner Corpus}
+
+\section{Results}
+
+\subsection{Existing Models}
+
+\subsubsection*{Smoothing techniques and the value of $n$ in $n$-gram models}
+
+The first set of language models that I built were $n$-gram models, along with a series of smoothing techniques for improving their predictions on less frequent $n$-grams.
+
+
+\begin{figure}[h]
+\begin{tikzpicture}[scale=1.0]
 \begin{axis}[
-    title={Perplexity of N-gram models trained on the PTB dataset.},
-    xlabel={N},
-    ylabel={Perplexity},
+    xlabel={$n$},
+    ylabel={Cross-entropy ($\log_2$ perplexity)},
     xmin=2, xmax=5,
-    ymin=100, ymax=340,
+    ymin=6, ymax=14,
     xtick={2, 3, 4, 5},
-    ytick={100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340},
+    ytick={6, 8, 10, 12, 14},
     legend pos=outer north east,
     ymajorgrids=true,
     grid style=dashed,
 ]
- 
+
+\addplot[color=lightgray, mark=x]
+coordinates {(2, 10.52)(3, 18.79)(4, 24.95)(5, 27.55)};
+
+\addplot[color=brown, mark=|]
+coordinates {(2, 9.69)(3, 11.88)(4, 12.79)(5, 13.07)};
+
 \addplot[color=blue, mark=square]
-coordinates {(2, 194.81)(3, 256.95)(4, 305.33)(5, 314.49)};
+coordinates {(2, 7.61)(3, 8.01)(4, 8.25)(5, 8.30)};
 
-\addplot[color=red, mark=square]
-coordinates {(2, 195.28)(3, 166.03)(4, 165.09)(5, 167.38)};
+\addplot[color=red, mark=triangle]
+coordinates {(2, 7.61)(3, 7.38)(4, 7.37)(5, 7.39)};
 
-\addplot[color=green, mark=square]
-coordinates {(2, 186.80)(3, 150.73)(4, 146.02)(5, 146.35)};
+\addplot[color=green, mark=o]
+coordinates {(2, 7.55)(3, 7.24)(4, 7.19)(5, 7.19)};
 
-\addplot[color=violet, mark=square]
-coordinates {(2, 185.72)(3, 149.54)(4, 144.38)(5, 142.68)};
+\addplot[color=violet, mark=diamond]
+coordinates {(2, 7.54)(3, 7.22)(4, 7.17)(5, 7.16)};
 
-\legend{Katz, Absolute Discounting, Kneser-Ney, Modified Kneser-Ney}
+\legend{No Smoothing, Add-One, Katz, Absolute Discounting, Kneser-Ney, Modified Kneser-Ney}
  
 \end{axis}
 \end{tikzpicture}
-\end{center}
+\caption{Cross-entropy of $n$-gram models trained on the PTB dataset.}
+\end{figure}
 
-\tbf{Neural Models}
+Recall from equation (4.2) that cross-entropy is just the binary logarithm of perplexity, and that lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that modified Kneser-Ney smoothing offers the best prediction performance amongst the $n$-gram models. \\
+
+The change in performance with the value of $n$ is interesting. Intuitively, one might expect that increasing $n$ will always yield better results, because this corresponds to increasing the number of words you use to make a prediction. However, for $n$-gram models with no smoothing, add-one smoothing or Katz smoothing, this is not the case. For $n$-gram models with add-one or no smoothing, this is because they do not employ backoff. At higher values of $n$, $n$-grams are much more sparse, so without any backoff higher $n$-gram models can only rely on sparse counts, resulting is lower probabilities being assigned to plausible sequences of words. Katz smoothing does employ backoff, and achieves much better performance, but it still distributes too much probability to rare $n$-grams.
+
+
 \begin{itemize}
 \item
-	Accuracy as a function of the amount of training data used (one line per LM), for various RNN architectures \tit{(on subset of 1BN word dataset)}.
-\item
-	The effect of changing the number of hidden neurons.
-\end{itemize}
-
-\tbf{All Models}
-\begin{itemize}
-\item
-	A comparison of the performance of all models \tit{(on the PTB dataset)}.
+	Plot perplexity (or cross-entropy) and average-keys-saved as a function of the amount of training data used.
 \end{itemize}
 
 \begin{adjustbox}{center}
 \begin{tabular}{| L{5cm} | C{2.5cm} | C{2cm} | C{2cm} | C{2cm} | C{2cm} |}
 	\hline
 	\tbf{Language Model} & \tbf{Perplexity} & \tbf{Guessing Entropy} & \tbf{Average-Keys-Saved} & \tbf{Memory Usage (MB)} & \tbf{Average Inference Time (ms)} \\ \hline
-	3-gram & 454267.15 & 1.97123 & 0.35014 & \tbf{266.91} & 62 \\
+	3-gram & 4.54 $\times 10^5$$^*$ & 1.97123 & 0.35014 & \tbf{266.91} & 62 \\
 	3-gram + add-one & 3764.96 & 1.97123 & 0.53063 & 266.94 & \tbf{41} \\
 	3-gram + Katz & 256.95 & 4.45221 & 0.68482 & 266.71 & 88 \\
 	3-gram + absolute disc. & 166.03 & 4.10462 & 0.72178 & 266.78 & 63 \\
 	3-gram + KN & 150.73 & 4.06848 & 0.72466 & 266.88 & 54 \\
 	3-gram + modified KN & 149.54 & 4.08662 & 0.72355 & 266.97 & 54 \\
-	5-gram & 195857061.27 & 0.23265 & 0.07167 & 737.36 & 130 \\
+	5-gram & 1.96 $\times 10^8$$^*$ & 0.23265 & 0.07167 & 737.36 & 130 \\
 	5-gram + add-one & 8610.45 & 0.23265 & 0.33886 & 737.30 & 63 \\
 	5-gram + Katz & 314.49 & 4.53360 & 0.67154 & 737.43 & 156 \\
 	5-gram + absolute disc. & 167.38 & 4.06856 & 0.72333 & 737.43 & 126 \\
@@ -468,13 +495,25 @@ coordinates {(2, 185.72)(3, 149.54)(4, 144.38)(5, 142.68)};
 	LSTM 512 interpolated with 5-gram + mod. KN & & & & & \\ \hline
 \end{tabular}
 \end{adjustbox}
+\begin{center}
+	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section 4.1.1 where 0-valued probabilities are replaced with a small constant to avoid division by 0.}}
+\end{center}
 
-\tbf{Combinations of Models}
+Points to discuss:
 \begin{itemize}
 \item
-	How combinations of models compare with respect to standalone ones \tit{(on the PTB dataset)}.
+	Average-keys-saved and guessing entropy taken over first 1000 words, whereas perplexity over whole test set.
+\item
+	Note $n$-gram models are unpruned (hence large size).
+\item
+	Katz beaten by absolute-discounting-derived methods on all fronts.
+\item
+	Modified Kneser-Ney only offers marginal gain in perplexity.
+\item
+	Reduction in performance of $n$-gram, add-one and Katz with N, due to sparsity of $n$-grams at higher lengths.
+\item
+	Combination via average.
 \end{itemize}
-
 
 \subsection{On a Mobile Device}
 Here, I want to focus on the tradeoff between accuracy and resource consumption. Specifically, I could look at the following: \\
@@ -486,7 +525,7 @@ Here, I want to focus on the tradeoff between accuracy and resource consumption.
 \item
 	The effect of using RNN vs GRU vs LSTM.
 \item
-	(Perhaps also the effect of pruning on n-gram models).
+	(Perhaps also the effect of pruning on $n$-gram models).
 \item
 	ALSO: Perhaps compare using float 32 vs float 16 in terms of memory vs accuracy.
 \end{itemize}
@@ -506,7 +545,9 @@ Things I aim to evaluate here are: \\
 
 \begin{center}
 \begin{tikzpicture}[scale=1.2]
-\pgfplotsset{every axis legend/.append style={        at={(0.5, -0.2)},        anchor=north}}
+\pgfplotsset{every axis legend/.append style={
+        at={(0.5, -0.2)},
+        anchor=north}}
 \begin{axis}[
     title={Perplexity on Cambridge Learner Corpus},
     xlabel={Edit Distance},
