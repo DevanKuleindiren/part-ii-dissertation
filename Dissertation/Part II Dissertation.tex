@@ -406,11 +406,19 @@ This is measured as the amount of time in milliseconds that the language model t
 
 I used three datasets throughout the evaluation of my project:
 
-\subsubsection{Penn Treebank Dataset}
+\subsubsection{Penn Tree Bank (PTB) Dataset}
 
-\subsubsection{Google's 1-Billion-Word Dataset}
+The Penn Tree Bank is a popular dataset for measuring the quality of language models, created from text from the Wall Street Journal. It has already been preprocessed such that numbers are replaced with \ttt{N}, rare words are replaced with \ttt{<unk>} and the text has been split up into one sentence per line. It has been split up into a training, validation and test set. The training set has 10,000 unique words and 887,521 words overall. \\
 
-\subsubsection{Cambridge Learner Corpus}
+Given that the Penn Tree Bank is so widely adopted, I used it for all tests in which the size of the training data is fixed, and will refer to it as PTB.
+
+\subsubsection{One Billion Word (1BW) Benchmark}
+
+This is a much larger dataset produced by Google of approximately 1 billion words \cite{1bw:chelba2013}. I used this dataset for tests in which the size of the training data is a variable under investigation, and will refer to it as 1BW.
+
+\subsubsection{Cambridge Learner Corpus (CLC)}
+
+The Cambridge Learner Corpus is a dataset of 1,244 exam scripts written by candidates sitting the Cambridge ESOL First Certificate in English (FCE) examination in 2000 and 2001 \cite{clc:yannakoudakis2011}. The original dataset contains the scripts annotated with corrections to all of the mistakes by the candidates. In this project I make use of a preprocessed version of the dataset, in which there is one file containing the error-free version of the exam scripts and there is another file containing the original exam scripts with their errors. These two files are aligned line by line. I used this dataset when exploring the performance of language models on error-prone text, and will refer to it as CLC.
 
 \section{Results}
 
@@ -464,12 +472,88 @@ Recall from equation (4.2) that cross-entropy is just the binary logarithm of pe
 
 The change in performance with the value of $n$ is interesting. Intuitively, one might expect that increasing $n$ will always yield better results, because this corresponds to increasing the number of words you use to make a prediction. However, for $n$-gram models with no smoothing, add-one smoothing or Katz smoothing, this is not the case. For $n$-gram models with add-one or no smoothing, this is because they do not employ backoff. At higher values of $n$, $n$-grams are much more sparse, so without any backoff higher $n$-gram models can only rely on sparse counts, resulting is lower probabilities being assigned to plausible sequences of words. Katz smoothing does employ backoff, and achieves much better performance, but it still distributes too much probability to rare $n$-grams.
 
+\subsubsection*{A comparison of RNN-based models with $n$-gram models}
+
+As described in the implementation chapter, I also implemented three RNN-based language models which differ in the RNN cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory.
 
 \begin{itemize}
 \item
 	Plot perplexity (or cross-entropy) and average-keys-saved as a function of the amount of training data used.
 \end{itemize}
 
+
+\begin{figure}[h]
+\begin{tikzpicture}[scale=1.0]
+\begin{semilogxaxis}[
+    xlabel={Number of words used in training set},
+    ylabel={Cross-entropy ($\log_2$ perplexity)},
+    xmin=1e3, xmax=1e7,
+    ymin=6, ymax=18,
+    legend pos=outer north east,
+    ymajorgrids=true,
+    grid style=dashed,
+]
+
+% 3gram
+%\addplot[color=lightgray, mark=x]
+%coordinates {(1e3, 29.33)(1e4, 28.22)(1e5, 25.58)(1e6, 21.29)(1e7, 16.25)};
+
+% 3gram + add-one
+%\addplot[color=brown, mark=|]
+%coordinates {(1e3, 15.97)(1e4, 15.87)(1e5, 15.59)(1e6, 14.93)(1e7, 13.77)};
+
+% 3gram + Katz
+%\addplot[color=blue, mark=square]
+%coordinates {(1e3, 17.40)(1e4, 13.48)(1e5, 10.83)(1e6, 9.28)(1e7, 8.14)};
+
+% 3gram + absolute discounting
+%\addplot[color=red, mark=triangle]
+%coordinates {(1e3, 16.46)(1e4, 12.61)(1e5, 9.92)(1e6, 8.54)(1e7, 7.68)};
+
+% 3gram + Kneser-Ney
+%\addplot[color=green, mark=o]
+%coordinates {(1e3, 16.45)(1e4, 12.60)(1e5, 9.85)(1e6, 8.41)(1e7, 7.54)};
+
+% 3gram + modified Kneser-Ney
+%\addplot[color=violet, mark=diamond]
+%coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.84)(1e6, 8.40)(1e7, 7.53)};
+
+% 5gram
+\addplot[color=lightgray, mark=x]
+coordinates {(1e3, 29.89)(1e4, 29.83)(1e5, 29.58)(1e6, 28.86)(1e7, 27.10)};
+
+% 5gram + add-one
+\addplot[color=brown, mark=|]
+coordinates {(1e3, 16.00)(1e4, 16.00)(1e5, 15.99)(1e6, 15.93)(1e7, 15.76)};
+
+% 5gram + Katz
+\addplot[color=blue, mark=square]
+coordinates {(1e3, 17.46)(1e4, 13.48)(1e5, 10.87)(1e6, 9.58)(1e7, 8.59)};
+
+% 5gram + absolute discounting
+\addplot[color=red, mark=triangle]
+coordinates {(1e3, 16.49)(1e4, 12.67)(1e5, 10.00)(1e6, 8.61)(1e7, 7.71)};
+
+% 5gram + Kneser-Ney
+\addplot[color=green, mark=o]
+coordinates {(1e3, 16.48)(1e4, 12.65)(1e5, 9.93)(1e6, 8.46)(1e7, 7.50)};
+
+% 5gram + modified Kneser-Ney
+\addplot[color=violet, mark=diamond]
+coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
+
+\legend{
+%	3gram, 3gram + add-one, 3gram + Katz, 3gram + absolute discounting, 3gram + Kneser-Ney, 3gram + Modified Kneser-Ney,
+	5gram, 5gram + add-one, 5gram + Katz, 5gram + absolute discounting, 5gram + Kneser-Ney, 5gram + Modified Kneser-Ney,
+}
+ 
+\end{semilogxaxis}
+\end{tikzpicture}
+\caption{Cross-entropy of various language models with respect to the training set size.}
+\end{figure}
+
+
+\begin{figure}[h]
 \begin{adjustbox}{center}
 \begin{tabular}{| L{5cm} | C{2.5cm} | C{2cm} | C{2cm} | C{2cm} | C{2cm} |}
 	\hline
@@ -486,9 +570,9 @@ The change in performance with the value of $n$ is interesting. Intuitively, one
 	5-gram + absolute disc. & 167.38 & 4.06856 & 0.72333 & 737.43 & 126 \\
 	5-gram + KN & 146.35 & 4.01120 & \tbf{0.72598} & 737.37 & 114 \\
 	5-gram + modified KN & \tbf{142.68} & 4.03443 & 0.72554 & 737.53 & 116 \\ \hline
-	Vanilla RNN 256 & & & & & \\
+	Vanilla RNN 256 & 131.03 & 3.99270 & 0.72776 & 253.67 & 39 \\
 	Vanilla RNN 512 & & & & & \\
-	GRU 256 & & & & & \\
+	GRU 256 & 114.52 & 3.79196 & 0.73993 & 271.39 & 37 \\
 	GRU 512 & & & & & \\
 	LSTM 256 & & & & & \\
 	LSTM 512 & & & & & \\ \hline
@@ -498,6 +582,8 @@ The change in performance with the value of $n$ is interesting. Intuitively, one
 \begin{center}
 	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section 4.1.1 where 0-valued probabilities are replaced with a small constant to avoid division by 0.}}
 \end{center}
+\caption{A benchmark of various language models on the PTB dataset.}
+\end{figure}
 
 Points to discuss:
 \begin{itemize}
@@ -516,6 +602,35 @@ Points to discuss:
 \end{itemize}
 
 \subsection{On a Mobile Device}
+
+Incorporating an RNN-based language model implementation into a mobile keyboard, as described in section \todo{XXX}, presented a different series of challenges. The strict memory and CPU limitations of App Extensions in iOS forced me to explore the tradeoffs between resource consumption and prediction performance. \\
+
+As shown in figure \todo{XXX}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I use in the following experiments. I investigated the effect of both vocabulary size and the number of hidden neurons on the memory usage and the average-keys-saved:
+
+\begin{tikzpicture}
+  \begin{axis}[
+    scale only axis,
+    xmin=0,xmax=5,
+    ymin=0,ymax=1,
+    axis y line=left,
+    ymajorgrids=true,
+    grid style=dashed,
+    xlabel=Minimum frequency,
+    ylabel=Average-keys-saved]
+  \end{axis}
+  \begin{axis}[
+    scale only axis,
+    xmin=0,xmax=50,
+    ymin=0,ymax=1,
+    axis x line=top,
+    axis y line=none,
+    xmajorgrids=true,
+    grid style=dashed,
+    xlabel=Memory (MB)]
+  \end{axis}
+\end{tikzpicture}
+
+
 Here, I want to focus on the tradeoff between accuracy and resource consumption. Specifically, I could look at the following: \\
 \begin{itemize}
 \item
@@ -529,9 +644,34 @@ Here, I want to focus on the tradeoff between accuracy and resource consumption.
 \item
 	ALSO: Perhaps compare using float 32 vs float 16 in terms of memory vs accuracy.
 \end{itemize}
+\subsubsection*{The trade-off between the vocabulary size and resource usage}
+\subsubsection*{The trade-off between the number of hidden neurons and resource usage}
+\subsubsection*{The trade-off between the number of hidden neurons and resource usage}
+
+Other optimisations (not graphed):
+\begin{itemize}
+\item
+	Remove softmax layer.
+\item
+	Store weights as float 16 rather than float 32.
+\end{itemize}
 
 \subsection{On Error-Prone Text}
+
+I split the CLC dataset up into six files:
+\begin{center}
+\begin{tabular}{c c}
+	\ttt{train.correct.txt} & \ttt{train.incorrect.txt} \\
+	\ttt{valid.correct.txt} & \ttt{valid.incorrect.txt} \\
+	\ttt{test.correct.txt} & \ttt{test.incorrect.txt}
+\end{tabular}
+\end{center}
+The training, validation and test sets all consisted of one file containing uncorrected text and another file containing the corresponding corrected text. I trained an 2-layer LSTM-based language model with 256 hidden neurons on \ttt{train.correct.txt}, and used \ttt{valid.correct.txt} to guide the learning rate decay. I filtered the test set files such that they only contained pairs of lines that were not identical and that did not contain any insertion or deletion corrections. \\
+
+Before exploring ways to improve the performance on error-prone text, I first established an approximate upper and lower bound. To obtain the upper bound (i.e. the best possible perplexity), I evaluated the LSTM using \ttt{test.correct.txt} for the input words and \ttt{test.correct.txt} for the target words. and 'In order to establish a rough upper and lower bound on the performance of the LSTM on error-prone text, I first evaluated 
+
 Things I aim to evaluate here are: \\
+
 \begin{itemize}
 \item
 	The hypothetical upper and lower bounds on accuracy (i.e. the LM results on correct input and on incorrect input respectively).
@@ -543,44 +683,48 @@ Things I aim to evaluate here are: \\
 	An intuitive explanation behind the gap remaining between the current performance and the upper bound. Perhaps some suggestions for future work.
 \end{itemize}
 
+\begin{figure}[h]
 \begin{center}
 \begin{tikzpicture}[scale=1.2]
 \pgfplotsset{every axis legend/.append style={
-        at={(0.5, -0.2)},
-        anchor=north}}
+	at={(0.5, -0.5)},
+	anchor=north}}
 \begin{axis}[
-    title={Perplexity on Cambridge Learner Corpus},
-    xlabel={Edit Distance},
-    ylabel={Perplexity},
-    xmin=1, xmax=3,
-    ymin=70, ymax=100,
-    xtick={1, 2, 3},
-    ytick={70, 75, 80, 85, 90, 95, 100},
-    ymajorgrids=true,
-    grid style=dashed,
+	axis lines = middle,
+	width=10cm,
+	height=5cm,
+	xlabel={Perplexity},
+	axis x line=bottom,
+	hide y axis,
+	xmin=70, xmax=100,
+	ymin=0, ymax=5,
+	xtick={70, 75, 80, 85, 90, 95, 100},
 ]
- 
-\addplot[color=black]
-coordinates {(1, 89.70)(2, 89.70)(3, 89.70)};
 
-\addplot[color=red, mark=square]
-coordinates {(1, 88.47)(2, 88.47)(3, 88.47)};
+\addplot[color=black, mark=|, mark size=5.0]
+coordinates {(89.70, 0)} node[pin=85:{\small Upper bound}]{};
 
-\addplot[color=black]
-coordinates {(1, 77.83)(2, 77.83)(3, 77.83)};
+\addplot[color=red, mark=x, mark size=3.0]
+coordinates {(88.47, 0)};
 
-\legend{LSTM (error-free input), Error-Correcting LSTM (error-prone input), LSTM (error-prone input)}
+\addplot[color=black, mark=|, mark size=5.0]
+coordinates {(77.83, 0)} node[pin=85:{\small Lower bound}]{};
+
+\legend{, Error-Correcting LSTM (error-prone input),}
  
 \end{axis}
 \end{tikzpicture}
+\caption{Perplexity on Cambridge Learner Corpus}
 \end{center}
+\end{figure}
 
 \chapter{Conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the bibliography
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{refs}
+\bibliographystyle{ieeetr}
+\bibliography{bibliography}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the appendices
