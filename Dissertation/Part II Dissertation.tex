@@ -40,6 +40,9 @@
 % For plotting graphs.
 \usepackage{pgfplots}
 
+% For centering captions.
+\usepackage{caption}
+
 % For temporarily splitting the document into multiple columns
 \usepackage{multicol}
 
@@ -272,15 +275,161 @@ Unfortunately, humans are not perfect, and they will make typographical mistakes
 \end{itemize}
 
 \chapter{Preparation}
+
+My preparation consisted of thoroughly understanding $n$-gram and RNN-based language models, as well as planning how to tie them all together in an efficient implementation.
+
 \section{$n$-gram Models}
+
+This section describes $n$-gram language models and the various smoothing techniques implemented in this project.
+
 \subsection{An Overview of $n$-gram Models}
-Describe how they work, and the motivation for smoothing and backoff.
+
+Language models are concerned with the task of computing $\mathbb{P}(w_1^N)$, the probability of a sequence of words $w_1w_2...w_N = w_1^N$, where $w_i \in V$ and $V$ is some predefined vocabulary\footnote{The vocabulary is typically taken as all of the words that occur at least $k$ times in the training set. $k$ is typically around 2 or 3.}. By repeated application of the product rule, it follows that:
+\begin{gather*}
+	\mathbb{P}(w_1^N) = \prod_{i = 1}^N \mathbb{P}(w_i | w_1^{i - 1})
+\end{gather*}
+$n$-gram language models make the Markov assumption that $w_i$ only depends on the previous $(n - 1)$ words. That is, $\mathbb{P}(w_i | w_1^{i - 1}) \approx \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})$:
+\begin{gather*}
+	\mathbb{P}(w_1^N) \approx \prod_{i = 1}^N \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})
+\end{gather*}
+Using the maximum likelihood estimation, $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})$ can be estimated as follows:
+\begin{gather*}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{MLE} = \frac{c(w_{i - n + 1}^{i})}{\sum_w c(w_{i - n + 1}^{i - 1}w)}
+\end{gather*}
+where $c(W)$ denotes the number of times that the word sequence $W$ was seen in the training set. \\
+
+To a first approximation, the aforementioned $n$-gram language model provides reasonable results and is simple to compute. However, it does have one major issue: if, as an example, a 3-gram (trigram) model does not encounter the trigram \tit{`the cat sat'} in the data it is trained upon, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which is exponential in the value of $n$. This means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
+
+One way to get around this problem is to exponentially increase the size of the training set. This does, however, require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this. The ones which I have implemented are described in the next section. \\
+
+\begin{figure}[h]
+\centering
+\captionsetup{justification=centering}
+$\vcenter{\hbox{
+\begin{tikzpicture}[scale=0.6]
+\begin{axis}[
+	symbolic x coords={\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}},
+	xtick=data,
+	xlabel={$w$},
+	ylabel={$\mathbb{P}(w | \tit{the cat})$},
+	ymin=0, ymax=1,
+	axis x line*=bottom,
+	axis y line*=left,
+]
+
+\addplot[ybar, fill=black]
+coordinates {(\tit{a}, 0)(\tit{cat}, 0)(\tit{dog}, 0)(\tit{is}, 0.6)(\tit{mat}, 0)(\tit{on}, 0.1)(\tit{sat}, 0)(\tit{the}, 0)(\tit{was}, 0.3)};
+
+\end{axis}
+\end{tikzpicture}}}
+~~\vcenter{\hbox{\scalebox{1}{$\rightarrow$}}}~~
+\vcenter{\hbox{\begin{tikzpicture}[scale=0.6]
+\begin{axis}[
+	symbolic x coords={\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}},
+	xtick=data,
+	xlabel={$w$},
+	ylabel={$\mathbb{P}(w | \tit{the cat})$},
+	ymin=0, ymax=1,
+	axis x line*=bottom,
+	axis y line*=left,
+]
+
+\addplot[ybar, fill=black]
+coordinates {(\tit{a}, 0.01)(\tit{cat}, 0.01)(\tit{dog}, 0.02)(\tit{is}, 0.45)(\tit{mat}, 0.02)(\tit{on}, 0.12)(\tit{sat}, 0.1)(\tit{the}, 0.02)(\tit{was}, 0.25)};
+
+\end{axis}
+\end{tikzpicture}}}$
+\caption{A toy example of smoothing. The probabilities of words that frequently follow \tit{`the cat'} are distributed to other less frequently occurring words in the vocabulary. The vocabulary is $V = \{$\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}$\}$.}
+\end{figure}
+
 \subsection{Smoothing Techniques}
+
 \subsubsection{Add-One Smoothing}
-\subsubsection{Katz Smoothing}
+
+Add-one smoothing \cite{add1_smoothing:johnson1932} simply involves adding 1 to each of the $n$-gram counts, and dividing by $|V|$ to ensure the probabilities sum to 1:
+\begin{gather*}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape add-one}} = \frac{c(w_{i - n + 1}^{i}) + 1}{\sum_w c(w_{i - n + 1}^{i - 1}w) + |V|}
+\end{gather*}
+One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. As an example, if both \tit{`the cat'} and \tit{`pizza cat'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{cat}\ |\ \tit{the})_{\text{\scshape add-one}} = \mathbb{P}(\tit{cat}\ |\ \tit{pizza})_{\text{\scshape add-one}}$, despite the fact that \tit{`the'} is much more likely to precede \tit{`cat'} than \tit{`pizza'}. This problem can be reduced by employing \tit{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{the})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`the cat'} is more likely than \tit{`pizza cat'}.
+
 \subsubsection{Absolute Discounting}
-\subsubsection{Kneser-Ney}
-\subsubsection{Modified Kneser-Ney}
+
+Absolute discounting employs backoff by interpolating higher and lower order $n$-gram models. It does this by subtracting a fixed discount $0 \leq D \leq 1$ from each non-zero count:
+\begin{equation*}
+\begin{aligned}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape ABS}} &= \frac{max\{c(w_{i - n + 1}^{i}) - D, 0\}}{\sum_w c(w_{i - n + 1}^{i - 1}w)} \\
+	&+ \frac{D}{\sum_w c(w_{i - n + 1}^{i - 1}w)}N_{1+}(w_{i - n + 1}^{i - 1}\bullet)\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}
+\end{aligned}
+\end{equation*}
+where
+\begin{gather*}
+	N_{1+}(w_{i - n + 1}^{i - 1}\bullet) = |\{ w\ |\ c(w_{i - n + 1}^{i - 1}w) \geq 1 \}|
+\end{gather*}
+and the base case of recursion $\mathbb{P}(w)_{\text{\scshape ABS}}$ is given by the maximum likelihood unigram model. $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$ is the number of unique words that follow the sequence $w_{i - n + 1}^{i - 1}$, which is the number of $n$-grams that $D$ is subtracted from. It is not difficult to show that the coefficient attached to the $\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}$ term ensures that the probabilities sum to 1. \\
+
+Ney, Essen and Kneser \cite{absolute_discounting:ney1994} suggested setting $D$ to the value:
+\begin{gather}
+	D = \frac{n_1}{n_1 + 2n_2}
+\end{gather}
+where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts respectively.
+
+\subsubsection{Kneser-Ney Smoothing}
+
+Kneser and Ney proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram \cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
+
+From this example, it seems intuitive to assign more probability to those $n$-grams that follow a larger number of unique words. Kneser and Ney encapsulate this intuition by replacing some of the absolute counts $c(w_i^j)$ with the number of unique words that precede the word sequence $w_i^j$, $N_{1+}(\bullet w_i^j)$:
+\begin{gather*}
+	N_{1+}(\bullet w_i^j) = |\{w\ |\ c(w_i^jw) \geq 1\}|
+\end{gather*}
+Kneser-Ney smoothing\footnote{This is actually the interpolated version of Kneser-Ney smoothing, which differs slightly in form to the equation presented in the original paper.} is defined as follows:
+\begin{align*}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KN}} &= \frac{max\{\gamma(w_{i - n + 1}^{i}) - D, 0\}}{\sum_w \gamma(w_{i - n + 1}^{i - 1}w)} \\
+	&+ \frac{D}{\sum_w \gamma(w_{i - n + 1}^{i - 1}w)}N_{1+}(w_{i - n + 1}^{i - 1}\bullet)\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KN}}
+\end{align*}
+where
+\begin{gather*}
+	\gamma(w_{i - k + 1}^i) = \begin{cases}
+		c(w_{i - k + 1}^i) &\text{for the outermost level of recursion (i.e. when $k = n$)} \\
+		N_{1+}(\bullet w_{i - k + 1}^i) &\text{otherwise}
+	\end{cases}
+\end{gather*}
+and the unigram probability is given as:
+\begin{gather*}
+	\mathbb{P}(w_i)_{\text{\scshape KN}} = \frac{N_{1+}(\bullet w_i)}{\sum_w N_{1+}(\bullet w)}
+\end{gather*}
+
+\subsubsection{Modified Kneser-Ney Smoothing}
+
+Chen and Goodman experimented with different discount values $D$ in Kneser-Ney smoothing and noticed that the ideal average discount value for $n$-grams with one or two counts is substantially different from the ideal average discount for $n$-grams with higher counts. Upon this discovery, they introduced a modified version of Kneser-Ney smoothing \cite{modified_kneser_ney:chen1999}:
+\begin{equation*}
+\begin{aligned}
+	\mathbb{P}(w_i | w_{i - k + 1}^{i - 1})_{\text{\scshape MKN}} &= \frac{max\{\gamma(w_{i - k + 1}^{i}) - D(c(w_{i - k + 1}^{i}), 0\}}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)} \\
+	&+ \lambda(w_{i - k + 1}^{i - 1})\mathbb{P}(w_i | w_{i - k + 2}^{i - 1})_{\text{\scshape MKN}}
+\end{aligned}
+\end{equation*}
+where
+\begin{gather*}
+	\lambda(w_{i - k + 1}^{i - 1}) = \frac{D_1N_1(w_{i - k + 1}^{i - 1}\bullet) + D_2N_2(w_{i - k + 1}^{i - 1}\bullet) + D_{3+}N_{3+}(w_{i - k + 1}^{i - 1}\bullet)}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)}
+\end{gather*}
+and
+\begin{gather*}
+	D(c) = \begin{cases}
+		0 &\text{if }c = 0 \\
+		D_1 &\text{if }c = 1 \\
+		D_2 &\text{if }c = 2 \\
+		D_{3+} &\text{if }c \geq 3 \\
+	\end{cases}
+\end{gather*}
+Chen and Goodman suggest setting the discounts to be:
+\begin{align*}
+	D_1 = 1 - 2D\frac{n_2}{n_1} && D_2 = 2 - 3D\frac{n_3}{n_2} && D_{3+} = 3 - 4D\frac{n_4}{n_3}
+\end{align*}
+where $D$ is as defined in equation (2.1). \todo{Keep this number up to date}.
+
+\subsubsection{Katz Smoothing}
+
+Katz smoothing \cite{katz_smoothing:katz1987} is another popular smoothing technique
+
 \section{Recurrent Neural Network Models}
 \subsection{An Overview of Neural Networks}
 Give a brief introduction to neural networks. Explain backpropagation. Motivate why we need RNNs for language modelling.
@@ -291,6 +440,19 @@ Explain RNNs.
 \subsubsection{Long Short-Term Memory}
 \subsection{Word Embeddings}
 \subsection{Backpropagation Through Time}
+
+Other general points to make about language models:
+\begin{itemize}
+\item
+	LMs have a vocabulary $V$.
+\item
+	How to compute vocabulary (minimum frequency, etc)
+\item
+	How to handle OOV words
+\item
+	How to handle sentence boundaries
+\end{itemize}
+
 \section{Software Engineering}
 \subsection{Starting Point}
 \subsection{Requirements}
@@ -432,15 +594,15 @@ The first set of language models that I built were $n$-gram models, along with a
 \begin{figure}[h]
 \begin{tikzpicture}[scale=1.0]
 \begin{axis}[
-    xlabel={$n$},
-    ylabel={Cross-entropy ($\log_2$ perplexity)},
-    xmin=2, xmax=5,
-    ymin=6, ymax=14,
-    xtick={2, 3, 4, 5},
-    ytick={6, 8, 10, 12, 14},
-    legend pos=outer north east,
-    ymajorgrids=true,
-    grid style=dashed,
+	xlabel={$n$},
+	ylabel={Cross-entropy ($\log_2$ perplexity)},
+	xmin=2, xmax=5,
+	ymin=6, ymax=14,
+	xtick={2, 3, 4, 5},
+	ytick={6, 8, 10, 12, 14},
+	legend pos=outer north east,
+	ymajorgrids=true,
+	grid style=dashed,
 ]
 
 \addplot[color=lightgray, mark=x]
@@ -485,13 +647,13 @@ As described in the implementation chapter, I also implemented three RNN-based l
 \begin{figure}[h]
 \begin{tikzpicture}[scale=1.0]
 \begin{semilogxaxis}[
-    xlabel={Number of words used in training set},
-    ylabel={Cross-entropy ($\log_2$ perplexity)},
-    xmin=1e3, xmax=1e7,
-    ymin=6, ymax=18,
-    legend pos=outer north east,
-    ymajorgrids=true,
-    grid style=dashed,
+	xlabel={Number of words used in training set},
+	ylabel={Cross-entropy ($\log_2$ perplexity)},
+	xmin=1e3, xmax=1e7,
+	ymin=6, ymax=18,
+	legend pos=outer north east,
+	ymajorgrids=true,
+	grid style=dashed,
 ]
 
 % 3gram
@@ -574,7 +736,7 @@ coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
 	Vanilla RNN 512 & & & & & \\
 	GRU 256 & 114.52 & 3.79196 & 0.73993 & 271.39 & 37 \\
 	GRU 512 & & & & & \\
-	LSTM 256 & & & & & \\
+	LSTM 256 & 112.47 & 3.84489 & 0.73617 & 287.13 & 38 \\
 	LSTM 512 & & & & & \\ \hline
 	LSTM 512 interpolated with 5-gram + mod. KN & & & & & \\ \hline
 \end{tabular}
@@ -599,6 +761,8 @@ Points to discuss:
 	Reduction in performance of $n$-gram, add-one and Katz with N, due to sparsity of $n$-grams at higher lengths.
 \item
 	Combination via average.
+\item
+	Average inference times should be taken with a pinch of salt, because you have to consider CPU scheduling etc.
 \end{itemize}
 
 \subsection{On a Mobile Device}
@@ -608,26 +772,26 @@ Incorporating an RNN-based language model implementation into a mobile keyboard,
 As shown in figure \todo{XXX}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I use in the following experiments. I investigated the effect of both vocabulary size and the number of hidden neurons on the memory usage and the average-keys-saved:
 
 \begin{tikzpicture}
-  \begin{axis}[
-    scale only axis,
-    xmin=0,xmax=5,
-    ymin=0,ymax=1,
-    axis y line=left,
-    ymajorgrids=true,
-    grid style=dashed,
-    xlabel=Minimum frequency,
-    ylabel=Average-keys-saved]
-  \end{axis}
-  \begin{axis}[
-    scale only axis,
-    xmin=0,xmax=50,
-    ymin=0,ymax=1,
-    axis x line=top,
-    axis y line=none,
-    xmajorgrids=true,
-    grid style=dashed,
-    xlabel=Memory (MB)]
-  \end{axis}
+\begin{axis}[
+	scale only axis,
+	xmin=0,xmax=5,
+	ymin=0,ymax=1,
+	axis y line=left,
+	ymajorgrids=true,
+	grid style=dashed,
+	xlabel=Minimum frequency,
+	ylabel=Average-keys-saved]
+\end{axis}
+\begin{axis}[
+	scale only axis,
+	xmin=0,xmax=50,
+	ymin=0,ymax=1,
+	axis x line=top,
+	axis y line=none,
+	xmajorgrids=true,
+	grid style=dashed,
+	xlabel=Memory (MB)]
+\end{axis}
 \end{tikzpicture}
 
 
