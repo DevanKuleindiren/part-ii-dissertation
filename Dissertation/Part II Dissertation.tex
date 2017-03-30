@@ -43,11 +43,17 @@
 % For centering captions.
 \usepackage{caption}
 
+% For subfigures.
+\usepackage{subcaption}
+
 % For temporarily splitting the document into multiple columns
 \usepackage{multicol}
 
 % For circuit/logic diagrams
 \usepackage{circuitikz}
+
+% For tikz diagrams.
+\usetikzlibrary{positioning, fit, arrows.meta}
 
 % Enables spacing in file paths when inserting images
 \usepackage[space]{grffile}
@@ -222,11 +228,11 @@ I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the C
 
 \chapter{Introduction}
 
-My project investigates the performance of various language models in the context of text prediction. I started by implementing a series of well-established models and comparing their performance, before assessing the tradeoffs that occur when you attempt to apply them in a practical context, such as in a mobile keyboard. Finally, I propose a novel extension to an existing model which aims to improve its performance on error-prone text.
+My project investigates the performance of various language models in the context of text prediction. I started by implementing a series of well-established models and comparing their performance, before assessing the tradeoffs that occur when you attempt to apply them in a practical context, such as in a mobile keyboard. Finally, I proposed a novel extension to an existing model which aims to improve its performance on error-prone text.
 
 \section{Language Models}
 
-Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. This predictive power is useful in a variety of applications. For example, in speech recognition, if the speech recogniser has estimated two candidate word sequences from an acoustic signal \tit{`it's not easy to wreck a nice beach'} and \tit{`it's not easy to recognise speech'}, then a language model can be used to determine that the second candidate is more probable than the first. Language models are also used in machine translation, handwriting recognition, part-of-speech tagging and information retrieval.
+Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. This predictive power is useful in a variety of applications. For example, in speech recognition, if the speech recogniser has estimated two candidate word sequences from an acoustic signal; \tit{`it's not easy to wreck a nice beach'} and \tit{`it's not easy to recognise speech'}, then a language model can be used to determine that the second candidate is more probable than the first. Language models are also used in machine translation, handwriting recognition, part-of-speech tagging and information retrieval.
 
 \begin{alignat*}{2}
 	\overbrace{\tit{Do you want to grab a }}^{w_1^k}&\overbrace{\underline{\tit{drink}}}^{w_{k+1}} &&\hspace{0.5mm}\overbrace{(0.327)}^{\mathbb{P}(w_{k + 1} | w_1^k)} \\
@@ -243,36 +249,18 @@ My project focuses on language modelling in the context of text prediction. That
 
 \subsection*{Benchmarking}
 
-\begin{itemize}
-\item
-	Variety of language models, that vary in accuracy, memory consumption and speed.
-\item
-	Combinations can be considered.
-\item
-	Important tradeoffs when applying them to mobile.
-\end{itemize}
-
-There are two prominent approaches to language modelling, the first of which is the $n$-gram approach and the second of which is based on (recurrent) neural networks.
-
- language models and their various smoothing techniques, before proceeding onto neural network-based language models. Combinations of such models, which can be achieved by interpolating their probability distributions, will also be included in the benchmark. \\
-
-New techniques for facilitating better predictions are constantly being developed for language models. However, it is important to realise that such models are being used increasingly in a mobile environment, where the computational and memory resources aren't as abundant.
+Language models are central to a wide range of applications, but there are so many different ways of implementing them. Before using a language model in a particular context, it is important to understand how it performs in comparison to other methods available. In this project I focused in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network-based models. $n$-gram models are typically coupled with smoothing techniques, which are explained in section 2.1. I investigated 5 different smoothing techniques and 3 different recurrent neural network architectures on a variety of datasets.
 
 \subsection*{Error-prone Text}
 
-One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. This isn't surprising, because they are only ever trained on sentences that do not contain any errors.
-
-Unfortunately, humans are not perfect, and they will make typographical mistakes, spelling mistakes and occasionally grammatical errors too. In this project I investigate ways to bridge the gap in performance between language model predictions on error-prone text and error-free text. 
+One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. This is not surprising, because they are only ever trained on sentences that do not contain any errors. Unfortunately, the assumption that humans will not make any mistakes when typing text is almost never valid.  For this reason, I also investigated ways to narrow the gap in performance between language model predictions on error-prone text and language model predictions on error-free text. 
 
 \section{Related Work}
-\begin{itemize}
-\item
-	Google 1-Billion Word benchmark
-\item
-	Chen and Goodman smoothing paper
-\item
-	Work that's been done on language models with error-prone text 
-\end{itemize}
+
+Chelba et al.~\cite{1bw:chelba2013} from Google explore the performance of a variety of language models on a huge, one billion word dataset. Their work presents the limits of language modelling, when vast quantities of data and computational resources are available. Chen and Goodman~\cite{smoothing:chen1996} compare the performance of a series of smoothing techniques for $n$-gram models, and later use their results to propose an extension to Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999} which is implemented in this project. \\
+
+In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. Language modelling on error-prone text, however, has an important distinction: A test time, a language model cannot use words ahead of its current position to make predictions. In other words, if a language model is predicting the probability of the next word in the middle of an error-prone sentence, then it can only use the first half of the sentence for making corrections and predictions.
+
 
 \chapter{Preparation}
 
@@ -346,7 +334,7 @@ coordinates {(\tit{a}, 0.01)(\tit{cat}, 0.01)(\tit{dog}, 0.02)(\tit{is}, 0.45)(\
 
 \subsubsection{Add-One Smoothing}
 
-Add-one smoothing \cite{add1_smoothing:johnson1932} simply involves adding 1 to each of the $n$-gram counts, and dividing by $|V|$ to ensure the probabilities sum to 1:
+Add-one smoothing~\cite{add1_smoothing:johnson1932} simply involves adding 1 to each of the $n$-gram counts, and dividing by $|V|$ to ensure the probabilities sum to 1:
 \begin{gather*}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape add-one}} = \frac{c(w_{i - n + 1}^{i}) + 1}{\sum_w c(w_{i - n + 1}^{i - 1}w) + |V|}
 \end{gather*}
@@ -367,7 +355,7 @@ where
 \end{gather*}
 and the base case of recursion $\mathbb{P}(w)_{\text{\scshape ABS}}$ is given by the maximum likelihood unigram model. $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$ is the number of unique words that follow the sequence $w_{i - n + 1}^{i - 1}$, which is the number of $n$-grams that $D$ is subtracted from. It is not difficult to show that the coefficient attached to the $\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}$ term ensures that the probabilities sum to 1. \\
 
-Ney, Essen and Kneser \cite{absolute_discounting:ney1994} suggested setting $D$ to the value:
+Ney, Essen and Kneser~\cite{absolute_discounting:ney1994} suggested setting $D$ to the value:
 \begin{gather}
 	D = \frac{n_1}{n_1 + 2n_2}
 \end{gather}
@@ -375,7 +363,7 @@ where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts resp
 
 \subsubsection{Kneser-Ney Smoothing}
 
-Kneser and Ney proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram \cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
+Kneser and Ney proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
 
 From this example, it seems intuitive to assign more probability to those $n$-grams that follow a larger number of unique words. Kneser and Ney encapsulate this intuition by replacing some of the absolute counts $c(w_i^j)$ with the number of unique words that precede the word sequence $w_i^j$, $N_{1+}(\bullet w_i^j)$:
 \begin{gather*}
@@ -387,12 +375,12 @@ Kneser-Ney smoothing\footnote{This is actually the interpolated version of Knese
 	&+ \frac{D}{\sum_w \gamma(w_{i - n + 1}^{i - 1}w)}N_{1+}(w_{i - n + 1}^{i - 1}\bullet)\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KN}}
 \end{align*}
 where
-\begin{gather*}
+\begin{gather}
 	\gamma(w_{i - k + 1}^i) = \begin{cases}
-		c(w_{i - k + 1}^i) &\text{for the outermost level of recursion (i.e. when $k = n$)} \\
+		c(w_{i - k + 1}^i) &\text{for the outermost level of recursion (i.e. $k = n$)} \\
 		N_{1+}(\bullet w_{i - k + 1}^i) &\text{otherwise}
 	\end{cases}
-\end{gather*}
+\end{gather}
 and the unigram probability is given as:
 \begin{gather*}
 	\mathbb{P}(w_i)_{\text{\scshape KN}} = \frac{N_{1+}(\bullet w_i)}{\sum_w N_{1+}(\bullet w)}
@@ -400,14 +388,14 @@ and the unigram probability is given as:
 
 \subsubsection{Modified Kneser-Ney Smoothing}
 
-Chen and Goodman experimented with different discount values $D$ in Kneser-Ney smoothing and noticed that the ideal average discount value for $n$-grams with one or two counts is substantially different from the ideal average discount for $n$-grams with higher counts. Upon this discovery, they introduced a modified version of Kneser-Ney smoothing \cite{modified_kneser_ney:chen1999}:
+Chen and Goodman experimented with different discount values $D$ in Kneser-Ney smoothing and noticed that the ideal average discount value for $n$-grams with one or two counts is substantially different from the ideal average discount for $n$-grams with higher counts. Upon this discovery, they introduced a modified version of Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999}:
 \begin{equation*}
 \begin{aligned}
 	\mathbb{P}(w_i | w_{i - k + 1}^{i - 1})_{\text{\scshape MKN}} &= \frac{max\{\gamma(w_{i - k + 1}^{i}) - D(c(w_{i - k + 1}^{i}), 0\}}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)} \\
 	&+ \lambda(w_{i - k + 1}^{i - 1})\mathbb{P}(w_i | w_{i - k + 2}^{i - 1})_{\text{\scshape MKN}}
 \end{aligned}
 \end{equation*}
-where
+where $\gamma$ is defined in equation (2.2) \todo{Keep this number up to date.}, and $\lambda$ is defined as:
 \begin{gather*}
 	\lambda(w_{i - k + 1}^{i - 1}) = \frac{D_1N_1(w_{i - k + 1}^{i - 1}\bullet) + D_2N_2(w_{i - k + 1}^{i - 1}\bullet) + D_{3+}N_{3+}(w_{i - k + 1}^{i - 1}\bullet)}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)}
 \end{gather*}
@@ -428,18 +416,387 @@ where $D$ is as defined in equation (2.1). \todo{Keep this number up to date}.
 
 \subsubsection{Katz Smoothing}
 
-Katz smoothing \cite{katz_smoothing:katz1987} is another popular smoothing technique
+Katz smoothing is a popular smoothing technique based on the Good-Turing estimate~\cite{good_turing:good1953}. The Good-Turing estimate states an $n$-gram that occurs $r$ times should be treated as occurring $r^*$ times, where:
+\begin{gather*}
+	r^* = (r + 1)\frac{n_{r + 1}}{n_r}
+\end{gather*}
+where $n_r$ is the number of $n$-grams that occur $r$ times. Converting this count into a probability simply involves normalising as follows:
+\begin{gather}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape GT}} = \frac{c^*(w_{i - n + 1}^{i})}{\sum_{r = 0}^\infty n_r r^*}
+\end{gather}
+Katz smoothing~\cite{katz_smoothing:katz1987} is then defined as:
+\begin{gather}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KATZ}} = \begin{cases}
+		\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape GT}} &\text{if }c(w_{i - n + 1}^i) > 0 \\
+		\alpha(w_{i - n + 1}^{i - 1})\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KATZ}} &\text{otherwise}
+	\end{cases}
+\end{gather}
+where
+\begin{gather*}
+	\alpha(w_{i - n + 1}^{i - 1}) = \frac{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KATZ}}}{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KATZ}}}
+\end{gather*}
+In practice, the infinite sum in equation (2.3) cannot be computed. To get around this issue, Katz takes $n$-gram counts above some threshold $k$ as reliable and only applies the Good-Turing estimate to those with a count less than or equal to $k$. Katz suggests $k = 5$. This modification requires a slightly different equation to (2.4) and is presented in Katz's original paper.
 
 \section{Recurrent Neural Network Models}
+
+In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling. A thorough description of the more complex RNN architectures, gated recurrent units (GRUs) and long short-term memory (LSTM), is given in chapter 3.
+
 \subsection{An Overview of Neural Networks}
-Give a brief introduction to neural networks. Explain backpropagation. Motivate why we need RNNs for language modelling.
+
+The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks, or neural networks, were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}, which despite being substantially oversimplified, now provides an effective tool for classification and regression in modern-day machine learning. \\
+
+\tikzset{
+	every neuron/.style={
+		circle,
+		draw,
+		minimum size=5mm
+	},
+	neuron missing/.style={
+		draw=none,
+		scale=2,
+		text height=0.1cm,
+		execute at begin node=\color{black}$\hdots$
+	},
+}
+
+%\begin{figure}[h]
+%\begin{center}
+%\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+
+%\foreach \m/\l [count=\y] in {1, 2, 3, missing, 4}
+%	\node [every neuron/.try, neuron \m/.try] (input-\m) at (0, 2.5-\y) {};
+
+%\foreach \m [count=\y] in {1, missing, 2}
+%	\node [every neuron/.try, neuron \m/.try ] (hidden-\m) at (1.5, 2-\y*1.25) {};
+
+%\foreach \m [count=\y] in {1, missing, 2}
+%	\node [every neuron/.try, neuron \m/.try ] (hidden-2-\m) at (3, 2-\y*1.25) {};
+
+%\foreach \m [count=\y] in {1, missing, 2}
+%	\node [every neuron/.try, neuron \m/.try ] (output-\m) at (4.5, 1.5-\y) {};
+
+%\foreach \l [count=\i] in {1, 2, 3, n}
+%	\draw [<-] (input-\i) -- ++(-1,0) node [above, midway] {$x_\l$};
+
+%\foreach \l [count=\i] in {1, m}
+%	\draw [->] (output-\i) -- ++(1,0) node [above, midway] {$y_\l$};
+
+%\foreach \i in {1, ..., 4}
+%	\foreach \j in {1, ..., 2}
+%		\draw [->] (input-\i) -- (hidden-\j);
+
+%\foreach \i in {1, ..., 2}
+%	\foreach \j in {1, ..., 2}
+%		\draw [->] (hidden-\i) -- (hidden-2-\j);
+
+%\foreach \i in {1, ..., 2}
+%	\foreach \j in {1, ..., 2}
+%		\draw [->] (hidden-2-\i) -- (output-\j);
+
+%\foreach \l [count=\x from 0] in {Input, Hidden, Hidden, Output}
+%	\node [align=center, above] at (\x*1.5, 2) {\l \\ layer};
+
+%\end{tikzpicture}
+%\caption{An example multilayer perceptron, with two hidden layers.}
+%\end{center}
+%\end{figure}
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}[>=stealth]
+
+	\foreach \m/\l [count=\x] in {1, 2, 3, missing, 4}
+		\node [every neuron/.try, neuron \m/.try] (input-\m) at (\x - 2.5, 0) {};
+
+	\foreach \m [count=\x] in {1, missing, 2}
+		\node [every neuron/.try, neuron \m/.try ] (hidden-\m) at (\x*1.25 - 2, 2) {};
+
+	\foreach \m [count=\x] in {1, missing, 2}
+		\node [every neuron/.try, neuron \m/.try ] (output-\m) at (\x - 1.5, 4) {};
+
+	\foreach \l [count=\i] in {1, 2, 3, n}
+		\draw [<-] (input-\i) -- ++(0, -0.8) node [below] {$x_\l$};
+
+	\foreach \l [count=\i] in {1, n}
+		\node [above] at (hidden-\i.north) {};
+
+	\foreach \l [count=\i] in {1, n}
+		\draw [->] (output-\i) -- ++(0, 0.8) node [above] {$y_\l$};
+
+	\foreach \i in {1, ..., 4}
+		\foreach \j in {1, ..., 2}
+			\draw [->] (input-\i) -- (hidden-\j);
+
+	\foreach \i in {1, ..., 2}
+		\foreach \j in {1, ..., 2}
+			\draw [->] (hidden-\i) -- (output-\j);
+
+	\foreach \l [count=\y from 0] in {Input, Hidden, Output}
+		\node [right] at (3, \y*2) {\l\ layer};
+	\end{tikzpicture}
+	\caption{An example multilayer perceptron.}
+\end{subfigure}%
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}[>=stealth]
+		\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10, ] (input) at (0, 0) {};
+		\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (hidden) at (0, 2) {};
+		\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (output) at (0, 4) {};
+		\draw [<-] (input) -- ++(0, -0.8) node [below] {$\mathbf{x}$};
+		\draw [->, line width=0.3mm] (input) to node [right] {$W_{i,h}$} (hidden);
+		\draw [->, line width=0.3mm] (hidden) to node [right] {$W_{h,o}$} (output);
+		\draw [->] (output) -- ++(0, 0.8) node [above] {$\mathbf{y}$};
+	\end{tikzpicture}
+	\caption{A simplified notation of (a).}
+\end{subfigure}
+\caption{Two alternative notations for the same network: a multilayer perceptron with one hidden layer. In the simplified notation, the grey rectangle represents a vector of neurons, the thin arrow represents a vector and the thick arrow represents a matrix of weights.}
+\end{figure}
+
+Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. In the context of the brain, the nodes represent neurons, the weighted connections represent synapses and the flow of information represents electrochemical signals. \\
+
+An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section 2.2.2. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}, which I will outline below. \\
+
+\subsubsection{The Multilayer Perceptron}
+
+The multilayer perceptron consists of layers of neurons. The first layer is the input layer, the last is the output layer and any layers in between are called \tit{hidden layers}. If there is more than one hidden layer then it is called a \tit{deep} neural network. The input neurons simply pass on the input values that they are given. The neurons in the subsequent layers of the network compute the weighted sum of their inputs, before passing that value through an \tit{activation function} and outputting it:
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\begin{center}
+\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+
+\node[every neuron/.try] (neuron) {};
+\node[left=10mm of neuron] (mid) {};
+\node[above left=8mm and 15mm of neuron] (inp1) {$a_1$};
+\node[above left=0mm and 15mm of neuron] (inp2) {$a_2$};
+\node[below left=-3mm and 15mm of neuron] (inp3) {$\vdots$};
+\node[below left=8mm and 15mm of neuron] (inpN) {$a_n$};
+
+\draw[<-] (neuron.west |- mid) coordinate (aux)--++(165:15.5mm) node [below right=-1mm and 2mm of inp2] {$w_2$};
+\draw[<-] ([yshift=1mm]aux)--++(146:18mm) node [below right=-2mm and 2mm of inp1] {$w_1$};
+\draw[<-] ([yshift=-1mm]aux)--++(-146:18mm) node [above right=-3mm and 2mm of inpN] {$w_n$};
+
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\sigma \big( \sum_i a_i w_i \big)$};
+
+\end{tikzpicture}
+\caption{The computation carried out by each neuron. The inputs are denoted $a_i$, the weights on the input connections are $w_i$ and the activation function is $\sigma$.}
+\end{center}
+\end{figure}
+
+It is worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
+
+Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. These are both non-linear functions squashed within the ranges $(0, 1)$ and $(-1, 1)$ respectively. Their steep slope at the origin is supposed to mimic an axon, which fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[
+		height=6cm,
+		legend pos=north west,
+		axis x line=middle,
+		axis y line=middle,
+		grid = major,
+		grid style={dashed, gray!30},
+		xmin=-10, xmax= 10,
+		ymin= -0.2, ymax= 1.2,
+		xlabel=x,
+		ylabel={$\frac{1}{1 + e^{-x}}$},
+		tick align=outside,
+		enlargelimits=false]
+	\addplot[domain=-10:10, black, ultra thick,samples=500] {1/(1+exp(-x))};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{The sigmoid function.}
+\end{subfigure}%
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[
+		height=6cm,
+		legend pos=north west,
+		axis x line=middle,
+		axis y line=middle,
+		grid = major,
+		grid style={dashed, gray!30},
+		xmin=-10, xmax= 10,
+		ymin= -1.4, ymax= 1.4,
+		xlabel=x,
+		ylabel={$\tanh (x)$},
+		tick align=outside,
+		enlargelimits=false]
+	\addplot[domain=-10:10, black, ultra thick,samples=500] {(exp(x) - exp(-x))/(exp(x) + exp(-x))};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{The hyperbolic tangent function.}
+\end{subfigure}
+\caption{Two popular activation functions.}
+\end{figure}
+
+\subsubsection{Backpropagation and Gradient Descent}
+
+FNNs compute a function, $f$, parameterised by the weights $\mathbf{w}$ of the network, mapping an input vector $\mathbf{x} = (x_1, ..., x_n)^T$ to an output vector $\mathbf{y} = (y_1, ..., y_m)^T$. 
+\begin{gather*}
+	\mathbf{y} = f_\mathbf{w}(\mathbf{x})
+\end{gather*}
+The entire point of training a neural network is to get it to learn a particular mapping from input vectors to output vectors. What the inputs and outputs represent depends on the problem at hand. For example, in the context of classifying pictures of animals, the input vector might represent the pixel values of an image and the output vector might represent a probability distribution over the set of animals in the classification task. \\
+
+In order to train a neural network, you supply it with a training set, which is just a list of input-target pairs:
+\begin{gather*}
+	\mathbf{s} = ((\mathbf{x}_1, \mathbf{t}_1), ..., (\mathbf{x}_N, \mathbf{t}_N))
+\end{gather*}
+Where $\mathbf{t}_i$ is the vector that the network should output given the example input $\mathbf{x}_i$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
+\begin{gather*}
+	\mathcal{L}_{\text{\scshape total}} = \sum_{i = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_i), \mathbf{t}_i)
+\end{gather*}
+The end product of the \tit{backpropagation} algorithm is the partial derivative:
+\begin{gather*}
+	\frac{\partial}{\partial w_{i,j}} \big( \mathcal{L}_{\text{\scshape total}} \big)
+\end{gather*}
+for every weight $w_{i,j}$ in the neural network. \tit{Gradient descent} is an optimisation technique that uses these derivatives to adjust the weights such that the loss is minimised over the training set.
+
 \subsection{Recurrent Neural Networks}
-Explain RNNs.
+
+In the context of language modelling, the input is a sequence of words and the output is also a sequence of words. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network. \\
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{subfigure}{0.3\linewidth}
+	\centering
+	\begin{tikzpicture}[>=stealth]
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input) at (0, 0) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden) at (0, 1.5) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output) at (0, 3) {};
+		\draw [<-] (input) -- ++(0, -0.8) node [below] {$\mathbf{x}$};
+		\draw [->, line width=0.3mm] (input) to node [right] {$W_{i,h}$} (hidden);
+		\draw [->, line width=0.3mm, out=135, in=225, looseness=10] (hidden.north) to node [above left=3mm and -3mm of hidden] {$W_{h,h}$} (hidden.south);
+		\draw [->, line width=0.3mm] (hidden) to node [right] {$W_{h,o}$} (output);
+		\draw [->] (output) -- ++(0, 0.8) node [above] {$\mathbf{y}$};
+	\end{tikzpicture}
+	\caption{An RNN.}
+\end{subfigure}%
+\begin{subfigure}{0.7\linewidth}
+	\centering
+	\begin{tikzpicture}[>=stealth]
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input1) at (0, 0) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden1) at (0, 1.5) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output1) at (0, 3) {};
+		\draw [<-] (input1) -- ++(0, -0.8) node [below] {$\mathbf{x}^1$};
+		\draw [->, line width=0.3mm] (input1) to node [right] {$W_{i,h}$} (hidden1);
+		\draw [->, line width=0.3mm] (hidden1) to node [right] {$W_{h,o}$} (output1);
+		\draw [->] (output1) -- ++(0, 0.8) node [above] {$\mathbf{y}^1$};
+
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input2) at (3, 0) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden2) at (3, 1.5) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output2) at (3, 3) {};
+		\draw [<-] (input2) -- ++(0, -0.8) node [below] {$\mathbf{x}^2$};
+		\draw [->, line width=0.3mm] (input2) to node [right] {$W_{i,h}$} (hidden2);
+		\draw [->, line width=0.3mm] (hidden2) to node [right] {$W_{h,o}$} (output2);
+		\draw [->] (output2) -- ++(0, 0.8) node [above] {$\mathbf{y}^2$};
+
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input3) at (6, 0) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden3) at (6, 1.5) {};
+		\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output3) at (6, 3) {};
+		\draw [<-] (input3) -- ++(0, -0.8) node [below] {$\mathbf{x}^3$};
+		\draw [->, line width=0.3mm] (input3) to node [right] {$W_{i,h}$} (hidden3);
+		\draw [->, line width=0.3mm] (hidden3) to node [right] {$W_{h,o}$} (output3);
+		\draw [->] (output3) -- ++(0, 0.8) node [above] {$\mathbf{y}^3$};
+
+		\node (cont) at (8, 1.5) {$\hdots$};
+
+		\draw [->, line width=0.3mm] (hidden1.east) to node [above=1mm of hidden1] {$W_{h,h}$} (hidden2.west);
+		\draw [->, line width=0.3mm] (hidden2.east) to node [above=1mm of hidden2] {$W_{h,h}$} (hidden3.west);
+		\draw [->, line width=0.3mm] (hidden3.east) to node [above=1mm of hidden3] {$W_{h,h}$} (cont.west);
+	\end{tikzpicture}
+	\caption{An unrolled RNN.}
+\end{subfigure}
+\caption{Two different representations of the same RNN.}
+\end{figure}
+
+A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. This gives something like the network shown in figure 2.5(a). An easier way to visualise an RNN is by \tit{unrolling} it as shown in figure 2.5(b). By unravelling the RNN as shown, it is easy to see that can effectively represent a neural network with an infinite sequence of vectors as inputs and an infinite sequence of vectors as outputs. The notation $\mathbf{x}^t$ and $\mathbf{y}^t$ is used to denote the input vector and output vector at time step $t$. \\
+
+\begin{itemize}
+\item
+	How RNNs can (in principle) handle infinite sequences.
+\item
+	BPTT
+\item
+	Various architectures.
+\end{itemize}
+
+
+
+A diagram and brief description of each will suffice here:
 \subsubsection{Vanilla Recurrent Neural Networks}
 \subsubsection{Gated Recurrent Unit}
 \subsubsection{Long Short-Term Memory}
+
+\begin{figure}[h]
+\begin{center}
+\begin{tikzpicture}[
+    scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},% line width=0.4mm},
+    tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},% line width=0.4mm},
+    siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},% line width=0.4mm},
+    textb/.style={minimum width=6mm, minimum height=4mm},
+    ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+    ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+    filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+    \draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+    mylabel/.style={font=\scriptsize\sffamily},
+    >=LaTeX
+    ]
+
+\node[scalar] (plus) {$+$};
+\node[scalar, left=16mm of plus] (ftimes) {$\times$};
+\node[scalar, below=6mm of plus] (itimes) {$\times$};
+\node[scalar, right=16mm of itimes] (otimes) {$\times$};
+\node[tanlayer, above=2mm of otimes] (otanh) {\scriptsize $\tanh$};
+\node[tanlayer, below=6mm of itimes] (stanh) {\scriptsize $\tanh$};
+\node[siglayer, left=2mm of stanh] (isig) {$\sigma$};
+\node[siglayer, left=4mm of isig] (fsig) {$\sigma$};
+\node[siglayer, right=2mm of stanh] (osig) {$\sigma$};
+\node[textb, anchor=east, left=10mm of ftimes] (Cin) {$C_{t - 1}$};
+\node[textb, anchor=east, below=21mm of Cin] (hin) {$h_{t - 1}$};
+\node[textb, anchor=west, right=33mm of plus] (Cout) {$C_t$};
+\node[textb, anchor=west, below=21mm of Cout] (hout) {$h_t$};
+\node[textb, anchor=north, below left=10mm and 1mm of fsig] (x) {$x_t$};
+\node[textb, anchor=south, above right=6mm and 22mm of plus] (hout2) {$h_t$};
+\node[below=2.5mm of stanh] (invisible) {};
+\node[fit=(ftimes) (otanh) (osig) (fsig) (invisible), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+
+\foreach \i/\j in {otimes/hout2, hin/fsig, hin/isig, hin/stanh, hin/osig}
+	\draw[->, rounded corners=5pt] (\i) -| (\j);
+
+\draw[-, rounded corners=5pt] (plus) -| (otanh);
+
+\foreach \i/\j in {isig/itimes, osig/otimes}
+	\draw[->, rounded corners=5pt] (\i) |- (\j);
+
+\draw[->, rounded corners=5pt] (otimes.east) -| ++(4mm,-17mm) -- (hout.west);
+
+\foreach \i/\j in {Cin/ftimes, ftimes/plus, plus/Cout, fsig/ftimes, itimes/plus, stanh/itimes, otanh/otimes}
+	\draw[->] (\i) -- (\j);
+
+\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.045mm);
+
+\end{tikzpicture}
+\caption{The structure of a basic LSTM cell.}
+\end{center}
+\end{figure}
+
 \subsection{Word Embeddings}
-\subsection{Backpropagation Through Time}
+\begin{itemize}
+\item
+	Vector space model
+\item
+	Learnt during backpropagation
+\end{itemize}
 
 Other general points to make about language models:
 \begin{itemize}
@@ -455,28 +812,44 @@ Other general points to make about language models:
 
 \section{Software Engineering}
 \subsection{Starting Point}
+\begin{itemize}
+\item
+	All language models written from scratch.
+\end{itemize}
+
 \subsection{Requirements}
-\subsection{TensorFlow}
-Perhaps this could go in the implementation section.
+\begin{itemize}
+\item
+	Project proposal goals.
+\end{itemize}
+
 \subsection{Tools and Technologies Used}
 \begin{itemize}
 \item
-	Google Test (C++ unit testing)
+	Version Control
+	\begin{itemize}
+	\item
+		Git
+	\item
+		GitHub
+	\end{itemize}
 \item
-	Google Protocol Buffers
+	Testing
+	\begin{itemize}
+	\item
+		Google Test for C++
+	\item
+		
+	\end{itemize}
 \item
-	Bazel
+	Build Tools - Bazel
 \item
-	TensorFlow
+	Serialisation - Google Protocol Buffers
 \item
-	SLURM (open source job scheduler used by the HPCS)
-\item
-	NLTK
-\item
-	GitHub
-\item
-	Git
+	Machine Learning - TensorFlow, NLTK, SLURM (open source job scheduler used by the HPCS)
 \end{itemize}
+\subsection{TensorFlow}
+Perhaps this could go in the implementation section.
 
 \chapter{Implementation}
 \section{Development Strategy}
@@ -504,6 +877,20 @@ Dropout, embedding, learning rate decay, momentum?, gradient clipping
 
 In this chapter, I will first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I will present the performance of the existing language models that I implemented, secondly I will focus on the tradeoffs faced when employing those models on a mobile device, and finally I will display my findings in language modelling on error-prone text.
 
+\todo{Include these too:}
+\begin{itemize}
+\item
+	Examples of generated sentences.
+\item
+	Embedding visualisations - or perhaps put this into the implementation?
+\item
+	Visualisations of the neuron activations for each word in a sentence.
+\item
+	The number of parameters included in the LM in the PTB table (like Google did).
+\item
+	The training time of each LM.
+\end{itemize}
+
 \section{Evaluation Methodology}
 
 \subsection{Metrics}
@@ -516,7 +903,7 @@ In the context of text prediction, there are essentially two questions one might
 	How much resource, such as CPU or memory, does the language model consume?
 \end{enumerate}
 
-In order to answer these questions, I implemented a generic benchmarking framework that can return a series of metrics that fall into one of the two aforementioned categories when given a language model. These metrics include perplexity, average-keys-saved, memory usage and average inference time. The first two are concerned with the accuracy of language models and the latter two relate to the resource usage.
+In order to answer these questions, I implemented a generic benchmarking framework that can return a series of metrics that fall into one of the two aforementioned categories when given a language model. These metrics include perplexity, average-keys-saved, memory usage and average inference time. The first two are concerned with the accuracy of language models and the latter two relate to the resource usage. I also recorded how long it took to train each model.
 
 \subsubsection{Perplexity}
 
@@ -560,6 +947,10 @@ As an example, if the user is typing \ttt{science} and the word \ttt{science} ap
 
 This is measured as the amount of physical memory in megabytes occupied by the process in which the language model under test is instantiated.
 
+\subsubsection{Training Time}
+
+The amount of time it took to train the language model.
+
 \subsubsection{Average Inference Time}
 
 This is measured as the amount of time in milliseconds that the language model takes to assign a probability to all of the words in its vocabulary given a sequence of words, averaged over a large number of sequences.
@@ -576,11 +967,11 @@ Given that the Penn Tree Bank is so widely adopted, I used it for all tests in w
 
 \subsubsection{One Billion Word (1BW) Benchmark}
 
-This is a much larger dataset produced by Google of approximately 1 billion words \cite{1bw:chelba2013}. I used this dataset for tests in which the size of the training data is a variable under investigation, and will refer to it as 1BW.
+This is a much larger dataset produced by Google of approximately 1 billion words~\cite{1bw:chelba2013}. I used this dataset for tests in which the size of the training data is a variable under investigation, and will refer to it as 1BW.
 
 \subsubsection{Cambridge Learner Corpus (CLC)}
 
-The Cambridge Learner Corpus is a dataset of 1,244 exam scripts written by candidates sitting the Cambridge ESOL First Certificate in English (FCE) examination in 2000 and 2001 \cite{clc:yannakoudakis2011}. The original dataset contains the scripts annotated with corrections to all of the mistakes by the candidates. In this project I make use of a preprocessed version of the dataset, in which there is one file containing the error-free version of the exam scripts and there is another file containing the original exam scripts with their errors. These two files are aligned line by line. I used this dataset when exploring the performance of language models on error-prone text, and will refer to it as CLC.
+The Cambridge Learner Corpus is a dataset of 1,244 exam scripts written by candidates sitting the Cambridge ESOL First Certificate in English (FCE) examination in 2000 and 2001~\cite{clc:yannakoudakis2011}. The original dataset contains the scripts annotated with corrections to all of the mistakes by the candidates. In this project I make use of a preprocessed version of the dataset, in which there is one file containing the error-free version of the exam scripts and there is another file containing the original exam scripts with their errors. These two files are aligned line by line. I used this dataset when exploring the performance of language models on error-prone text, and will refer to it as CLC.
 
 \section{Results}
 
@@ -717,32 +1108,30 @@ coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
 
 \begin{figure}[h]
 \begin{adjustbox}{center}
-\begin{tabular}{| L{5cm} | C{2.5cm} | C{2cm} | C{2cm} | C{2cm} | C{2cm} |}
+\begin{tabular}{| L{5.2cm} | C{2.2cm} | C{2cm} | C{2cm} |  C{2cm} | C{2cm} |}
 	\hline
-	\tbf{Language Model} & \tbf{Perplexity} & \tbf{Guessing Entropy} & \tbf{Average-Keys-Saved} & \tbf{Memory Usage (MB)} & \tbf{Average Inference Time (ms)} \\ \hline
-	3-gram & 4.54 $\times 10^5$$^*$ & 1.97123 & 0.35014 & \tbf{266.91} & 62 \\
-	3-gram + add-one & 3764.96 & 1.97123 & 0.53063 & 266.94 & \tbf{41} \\
-	3-gram + Katz & 256.95 & 4.45221 & 0.68482 & 266.71 & 88 \\
-	3-gram + absolute disc. & 166.03 & 4.10462 & 0.72178 & 266.78 & 63 \\
-	3-gram + KN & 150.73 & 4.06848 & 0.72466 & 266.88 & 54 \\
-	3-gram + modified KN & 149.54 & 4.08662 & 0.72355 & 266.97 & 54 \\
-	5-gram & 1.96 $\times 10^8$$^*$ & 0.23265 & 0.07167 & 737.36 & 130 \\
-	5-gram + add-one & 8610.45 & 0.23265 & 0.33886 & 737.30 & 63 \\
-	5-gram + Katz & 314.49 & 4.53360 & 0.67154 & 737.43 & 156 \\
-	5-gram + absolute disc. & 167.38 & 4.06856 & 0.72333 & 737.43 & 126 \\
-	5-gram + KN & 146.35 & 4.01120 & \tbf{0.72598} & 737.37 & 114 \\
-	5-gram + modified KN & \tbf{142.68} & 4.03443 & 0.72554 & 737.53 & 116 \\ \hline
-	Vanilla RNN 256 & 131.03 & 3.99270 & 0.72776 & 253.67 & 39 \\
-	Vanilla RNN 512 & & & & & \\
-	GRU 256 & 114.52 & 3.79196 & 0.73993 & 271.39 & 37 \\
-	GRU 512 & & & & & \\
-	LSTM 256 & 112.47 & 3.84489 & 0.73617 & 287.13 & 38 \\
-	LSTM 512 & & & & & \\ \hline
-	LSTM 512 interpolated with 5-gram + mod. KN & & & & & \\ \hline
+	\tbf{Language Model} & \tbf{Perplexity} & \tbf{Average-Keys-Saved} & \tbf{Memory Usage (MB)} & \tbf{Training Time (min,secs)}$^\dagger$ & \tbf{Average Inference Time (ms)} \\ \hline
+	3-gram & 4.54 $\times 10^5$$^*$ & 0.35014 & 266.91 & \tbf{11s} & 62 \\
+	3-gram + add-one & 3764.96 & 0.53063 & 266.94 & \tbf{11s} & 41 \\
+	3-gram + Katz & 256.95 & 0.68482 & 266.71 & 14s & 88 \\
+	3-gram + absolute disc. & 166.03 & 0.72178 & 266.78 & 13s & 63 \\
+	3-gram + KN & 150.73 & 0.72466 & 266.88 & 14s & 54 \\
+	3-gram + modified KN & 149.54 & 0.72355 & 266.97 & 14s & 54 \\
+	5-gram & 1.96 $\times 10^8$$^*$ & 0.07167 & 737.36 & 26s & 130 \\
+	5-gram + add-one & 8610.45 & 0.33886 & 737.30 & 26s & 63 \\
+	5-gram + Katz & 314.49 & 0.67154 & 737.43 & 41s & 156 \\
+	5-gram + absolute disc. & 167.38 & 0.72333 & 737.43 & 40s & 126 \\
+	5-gram + KN & 146.35 & 0.72598 & 737.37 & 44s & 114 \\
+	5-gram + modified KN & 142.68 & 0.72554 & 737.53 & 50s & 116 \\ \hline
+	Vanilla RNN & 131.03 & 0.72776 & \tbf{253.67} & 15m 10s & 39 \\
+	Gated Recurrent Units & 114.52 & 0.73993 & 271.39 & 28m 35s & \tbf{37} \\
+	Long Short-Term Memory & 112.47 & 0.73617 & 287.13 & 18m 59s & 38 \\ \hline
+	LSTM, 5-gram\ +\ MKN (av) & 96.07 & 0.75719 & 929.39 & 19m 49s & 189  \\
+	LSTM, 5-gram\ +\ MKN (int) & \tbf{94.70} & \tbf{0.75830} & 927.20 & 19m 49s & 190 \\ \hline
 \end{tabular}
 \end{adjustbox}
 \begin{center}
-	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section 4.1.1 where 0-valued probabilities are replaced with a small constant to avoid division by 0.}}
+	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section 4.1.1 where 0-valued probabilities are replaced with a small constant to avoid division by 0. $^\dagger$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing Service. Nevertheless, the $n$-gram models were still much faster to train.}}
 \end{center}
 \caption{A benchmark of various language models on the PTB dataset.}
 \end{figure}
@@ -763,6 +1152,8 @@ Points to discuss:
 	Combination via average.
 \item
 	Average inference times should be taken with a pinch of salt, because you have to consider CPU scheduling etc.
+\item
+	Training times vary for LSTM and GRU in unexpected way, because LSTM happened to converge faster.
 \end{itemize}
 
 \subsection{On a Mobile Device}
@@ -882,7 +1273,21 @@ coordinates {(77.83, 0)} node[pin=85:{\small Lower bound}]{};
 \end{center}
 \end{figure}
 
-\chapter{Conclusion}
+\chapter{Conclusions}
+
+Conclusions:
+\begin{itemize}
+\item
+	
+\end{itemize}
+
+Future work/possible extensions:
+\begin{itemize}
+\item
+	Using Neural Machine Translation to correct the context, making use of attention.
+\item
+	
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the bibliography
