@@ -218,11 +218,6 @@ I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the C
 
 \tableofcontents
 
-\listoffigures
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% now for the chapters
 
 \pagestyle{headings}
 
@@ -249,7 +244,7 @@ My project focuses on language modelling in the context of text prediction. That
 
 \subsection*{Benchmarking}
 
-Language models are central to a wide range of applications, but there are so many different ways of implementing them. Before using a language model in a particular context, it is important to understand how it performs in comparison to other methods available. In this project I focused in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network-based models. $n$-gram models are typically coupled with smoothing techniques, which are explained in section 2.1. I investigated 5 different smoothing techniques and 3 different recurrent neural network architectures on a variety of datasets.
+Language models are central to a wide range of applications, but there are so many different ways of implementing them. Before using a language model in a particular context, it is important to understand how it performs in comparison to other methods available. In this project I focused in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network-based models. $n$-gram models are typically coupled with smoothing techniques, which are explained in section \ref{ngram_models}. I investigated 5 different smoothing techniques and 3 different recurrent neural network architectures on a variety of datasets.
 
 \subsection*{Error-prone Text}
 
@@ -266,7 +261,7 @@ In recent years, there have been joint efforts from Ng et al.\ at CoNLL to impro
 
 My preparation consisted of thoroughly understanding $n$-gram and RNN-based language models, as well as planning how to tie them all together in an efficient implementation.
 
-\section{$n$-gram Models}
+\section{$n$-gram Models} \label{ngram_models}
 
 This section describes $n$-gram language models and the various smoothing techniques implemented in this project.
 
@@ -395,7 +390,7 @@ Chen and Goodman experimented with different discount values $D$ in Kneser-Ney s
 	&+ \lambda(w_{i - k + 1}^{i - 1})\mathbb{P}(w_i | w_{i - k + 2}^{i - 1})_{\text{\scshape MKN}}
 \end{aligned}
 \end{equation*}
-where $\gamma$ is defined in equation (2.2) \todo{Keep this number up to date.}, and $\lambda$ is defined as:
+where $\gamma$ is defined in equation (2.2), and $\lambda$ is defined as:
 \begin{gather*}
 	\lambda(w_{i - k + 1}^{i - 1}) = \frac{D_1N_1(w_{i - k + 1}^{i - 1}\bullet) + D_2N_2(w_{i - k + 1}^{i - 1}\bullet) + D_{3+}N_{3+}(w_{i - k + 1}^{i - 1}\bullet)}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)}
 \end{gather*}
@@ -412,7 +407,7 @@ Chen and Goodman suggest setting the discounts to be:
 \begin{align*}
 	D_1 = 1 - 2D\frac{n_2}{n_1} && D_2 = 2 - 3D\frac{n_3}{n_2} && D_{3+} = 3 - 4D\frac{n_4}{n_3}
 \end{align*}
-where $D$ is as defined in equation (2.1). \todo{Keep this number up to date}.
+where $D$ is as defined in equation (2.1).
 
 \subsubsection{Katz Smoothing}
 
@@ -439,7 +434,7 @@ In practice, the infinite sum in equation (2.3) cannot be computed. To get aroun
 
 \section{Recurrent Neural Network Models}
 
-In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling. A thorough description of the more complex RNN architectures, gated recurrent units (GRUs) and long short-term memory (LSTM), is given in chapter 3.
+In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling. A thorough description of the more complex RNN architectures, gated recurrent units (GRUs) and long short-term memory (LSTM), is given in chapter \ref{implementation}.
 
 \subsection{An Overview of Neural Networks}
 
@@ -550,14 +545,14 @@ The human brain is a furiously complicated organ, packed with a network of appro
 		\draw [->, line width=0.3mm] (hidden) to node [right] {$W_{h,o}$} (output);
 		\draw [->] (output) -- ++(0, 0.8) node [above] {$\mathbf{y}$};
 	\end{tikzpicture}
-	\caption{A simplified notation of (a).}
+	\caption{A simplified notation for (a).}
 \end{subfigure}
 \caption{Two alternative notations for the same network: a multilayer perceptron with one hidden layer. In the simplified notation, the grey rectangle represents a vector of neurons, the thin arrow represents a vector and the thick arrow represents a matrix of weights.}
 \end{figure}
 
 Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. In the context of the brain, the nodes represent neurons, the weighted connections represent synapses and the flow of information represents electrochemical signals. \\
 
-An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section 2.2.2. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}, which I will outline below. \\
+An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section \ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}, which I will outline below. \\
 
 \subsubsection{The Multilayer Perceptron}
 
@@ -570,23 +565,25 @@ The multilayer perceptron consists of layers of neurons. The first layer is the 
 
 \node[every neuron/.try] (neuron) {};
 \node[left=10mm of neuron] (mid) {};
-\node[above left=8mm and 15mm of neuron] (inp1) {$a_1$};
-\node[above left=0mm and 15mm of neuron] (inp2) {$a_2$};
-\node[below left=-3mm and 15mm of neuron] (inp3) {$\vdots$};
-\node[below left=8mm and 15mm of neuron] (inpN) {$a_n$};
+\node[above left=10mm and 15mm of neuron] (bias) {$b$};
+\node[above left=2mm and 15mm of neuron] (inp1) {$a_1$};
+\node[left=15mm of neuron] (var) {$\vdots$};
+\node[below left=2mm and 15mm of neuron] (inpN) {$a_n$};
 
-\draw[<-] (neuron.west |- mid) coordinate (aux)--++(165:15.5mm) node [below right=-1mm and 2mm of inp2] {$w_2$};
-\draw[<-] ([yshift=1mm]aux)--++(146:18mm) node [below right=-2mm and 2mm of inp1] {$w_1$};
-\draw[<-] ([yshift=-1mm]aux)--++(-146:18mm) node [above right=-3mm and 2mm of inpN] {$w_n$};
+\draw[<-] (neuron.west |- mid) coordinate (aux)--++(159:16mm) node [below right=0mm and 2mm of inp1] {$w_1$};
+\draw[<-] ([yshift=1mm]aux)--++(140:19mm) node [below right=-2mm and 2mm of bias] {$w_0$};
+\draw[<-] ([yshift=-1mm]aux)--++(-162:16mm) node [right=2mm of inpN] {$w_n$};
 
-\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\sigma \big( \sum_i a_i w_i \big)$};
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\sigma \big( bw_0 + \sum_i a_i w_i \big)$};
 
 \end{tikzpicture}
-\caption{The computation carried out by each neuron. The inputs are denoted $a_i$, the weights on the input connections are $w_i$ and the activation function is $\sigma$.}
+\caption{The computation carried out by each neuron. The inputs are denoted $a_i$, the weights on the input connections are $w_i$, the activation function is $\sigma$ and $b$ is the bias input.}
 \end{center}
 \end{figure}
 
-It is worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
+The unusual looking input $b$ is a \tit{bias} input. This is a fixed-value input, typically set to 1, which allows the neuron to shift the output of the activation function left and right by adjusting the weight $w_0$. Bias inputs are usually attached to every non-input neuron in the network. \\
+
+It is also worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
 Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. These are both non-linear functions squashed within the ranges $(0, 1)$ and $(-1, 1)$ respectively. Their steep slope at the origin is supposed to mimic an axon, which fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
 
@@ -660,7 +657,9 @@ The end product of the \tit{backpropagation} algorithm is the partial derivative
 \end{gather*}
 for every weight $w_{i,j}$ in the neural network. \tit{Gradient descent} is an optimisation technique that uses these derivatives to adjust the weights such that the loss is minimised over the training set.
 
-\subsection{Recurrent Neural Networks}
+\todo{Describe backpropagation and gradient descent in more detail.}
+
+\subsection{Recurrent Neural Networks} \label{rnns}
 
 In the context of language modelling, the input is a sequence of words and the output is also a sequence of words. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network. \\
 
@@ -680,6 +679,7 @@ In the context of language modelling, the input is a sequence of words and the o
 		\draw [->] (output) -- ++(0, 0.8) node [above] {$\mathbf{y}$};
 	\end{tikzpicture}
 	\caption{An RNN.}
+	\label{fig:rnn}
 \end{subfigure}%
 \begin{subfigure}{0.7\linewidth}
 	\centering
@@ -715,11 +715,18 @@ In the context of language modelling, the input is a sequence of words and the o
 		\draw [->, line width=0.3mm] (hidden3.east) to node [above=1mm of hidden3] {$W_{h,h}$} (cont.west);
 	\end{tikzpicture}
 	\caption{An unrolled RNN.}
+	\label{fig:rnn_unrolled}
 \end{subfigure}
 \caption{Two different representations of the same RNN.}
 \end{figure}
 
-A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. This gives something like the network shown in figure 2.5(a). An easier way to visualise an RNN is by \tit{unrolling} it as shown in figure 2.5(b). By unravelling the RNN as shown, it is easy to see that can effectively represent a neural network with an infinite sequence of vectors as inputs and an infinite sequence of vectors as outputs. The notation $\mathbf{x}^t$ and $\mathbf{y}^t$ is used to denote the input vector and output vector at time step $t$. \\
+A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. This gives something like the network shown in figure \ref{fig:rnn}. An easier way to visualise an RNN is by \tit{unrolling} it as shown in figure \ref{fig:rnn_unrolled}. A nice property about RNNs is that they can be unrolled an arbitrary number of steps without the need for any additional parameters, because the same weight matrices are reused at each step. For this reason, RNNs are well suited for operating over sequences of input data. In the case of language modelling, this is ideal, because the inputs are sequences of words. The problem of representing textual words as numerical input vectors for an RNN is addressed in section \ref{word_embeddings}. \\
+
+As shown in figure \ref{fig:rnn_unrolled}, RNNs can take a sequence of vectors as input. In most applications, the vectors in such sequences are typically ordered by time, so I will use the notation $\mathbf{x}^t$ and $\mathbf{y}^t$ to denote the input and output vectors at time step $t$. \\
+
+\subsubsection{Backpropagation Through Time (BPTT)}
+
+Training an RNN is not so much different to training an FNN: the only different is that gradients must also be calculated across time steps.
 
 \begin{itemize}
 \item
@@ -790,7 +797,7 @@ A diagram and brief description of each will suffice here:
 \end{center}
 \end{figure}
 
-\subsection{Word Embeddings}
+\subsection{Word Embeddings} \label{word_embeddings}
 \begin{itemize}
 \item
 	Vector space model
@@ -811,47 +818,92 @@ Other general points to make about language models:
 \end{itemize}
 
 \section{Software Engineering}
-\subsection{Starting Point}
-\begin{itemize}
-\item
-	All language models written from scratch.
-\end{itemize}
+
+In this section details the requirements of the project and the early design decisions that were made to target those goals.
 
 \subsection{Requirements}
-\begin{itemize}
-\item
-	Project proposal goals.
-\end{itemize}
 
-\subsection{Tools and Technologies Used}
-\begin{itemize}
-\item
-	Version Control
-	\begin{itemize}
-	\item
-		Git
-	\item
-		GitHub
-	\end{itemize}
-\item
-	Testing
-	\begin{itemize}
-	\item
-		Google Test for C++
-	\item
-		
-	\end{itemize}
-\item
-	Build Tools - Bazel
-\item
-	Serialisation - Google Protocol Buffers
-\item
-	Machine Learning - TensorFlow, NLTK, SLURM (open source job scheduler used by the HPCS)
-\end{itemize}
-\subsection{TensorFlow}
-Perhaps this could go in the implementation section.
+The success requirements set out in the project proposal were:
 
-\chapter{Implementation}
+\begin{center}
+\begin{tabular}{L{1cm} L{14cm}}
+	\hline
+	\tbf{R1} & Language models (LMs) using the following techniques are implemented:
+	\begin{itemize}[nosep]
+	\item
+		$n$-gram LMs with various smoothing techniques.
+	\item
+		A vanilla RNN-based LM.
+	\item
+		An LSTM-based LM.
+	\end{itemize}\\[-\normalbaselineskip] \hline
+	\tbf{R2} & Comprehensible and reliable comparisons between the various LM implementations and their combinations are made regarding their accuracy, speed and resource consumption during both training and inference. \\ \hline
+	\tbf{R3} & A simple console application is developed to demonstrate the capability of the aforementioned language models in the context of next-word prediction. \\ \hline
+\end{tabular}
+\end{center}
+
+The project proposal also suggested two possible extensions:
+\begin{center}
+\begin{tabular}{L{1cm} L{14cm}}
+	\hline
+	\tbf{E1} & Explore possible extensions to existing language models to improve their performance on error-prone text. \\ \hline
+	\tbf{E2} & Build a mobile keyboard that exhibits the functionality of the language models. \\ \hline
+\end{tabular}
+\end{center}
+
+All requirements and extensions depend on \tbf{R1}, so I implemented that first. Afterwards, I built \tbf{R2} and \tbf{R3} in parallel before moving onto \tbf{E1} and \tbf{E2}.
+
+\subsection{Tools and Technologies Used} \label{tools}
+
+Below I describe and justify where necessary the tools and technologies that I selected to build my project.
+
+\subsubsection{Version Control and Build Tools}
+
+I hosted my project in a repository on GitHub, used Git for version control, and used Bazel for running builds and tests on my project.
+
+\subsubsection{Machine Learning}
+
+I chose to use TensorFlow, an open source machine learning library, to assist in the implementation of my recurrent neural networks. There are two key reasons for this:
+\begin{enumerate}
+\item
+	TensorFlow supports \tit{automatic differentiation}. That is, each tensor operation has a partial derivative associated with it, so when you want to apply the second stage of backpropagation, TensorFlow can automatically apply the chain rule through any sequence of tensor operations. Without this, I would have to hard-code new gradient calculations every time I change the structure of the network, which is tedious and error-prone.
+\item
+	TensorFlow supports GPU-accelerated matrix operations. Without this, training my recurrent neural networks would take significantly longer.
+\end{enumerate}
+Of course, there are many other machine learning libraries that offer comparable features. The reason I picked TensorFlow in particular was because I was already familiar with its codebase from using and contributing to it during an internship at Google in 2016. \\
+
+In order to train large scale models on NVIDIA GPUs, I used the University's High Performance Computing service.
+
+\subsubsection{Languages}
+
+At the time of writing my code, TensorFlow had both a C++ and a Python API. However, the C++ API only had support for loading and running inference on models, not for training them. \\
+
+One of the possible extensions I set out in my project proposal was to implement a mobile keyboard that makes use of my language model implementations. Android and iOS both provide little or no support for applications written in Python, but they do support code written in C++ via the JNI and Objective-C++ respectively. \\
+
+I used C++ to write the benchmarking framework and all $n$-gram language models, so that they could easily be used within a mobile application. As for the RNN-based language models, I wrote code to train and export them in Python, and then wrote some C++ classes for loading and running inference on them. This way, I could leverage the power of TensorFlow's Python API whilst also supporting the use of such models in a mobile keyboard. In order to export and import trained language models across different languages, I used Google's protocol buffers, a language neutral mechanism for serialising structured data.
+
+\subsubsection{Testing}
+
+I used Google Test for C++ unit tests and the \ttt{unittest} package for testing in Python.
+
+\subsection{Starting Point}
+
+My project codebase was written from scratch, with the assistance of the tools and libraries mentioned in section \ref{tools}. Before the project, I had no understanding of language modelling. Apart from a basic knowledge of recurrent neural networks, I had to learn about language modelling, $n$-gram smoothing techniques, long short-term memory and gated recurrent units through personal reading. \\
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tabular}{| l | l |}
+	\hline
+	\tbf{Experience} & \tbf{Tools and Technologies} \\ \hline
+	\tit{Significant} & C++, Python, Git, GitHub, TensorFlow \\
+	\tit{Some} & Bazel, iOS, Protocol Buffers \\
+	\tit{None} & Google Test, Objective-C++, SLURM \\ \hline
+\end{tabular}
+\caption{A summary of my prior experience with the tools and technologies used in this project.}
+\end{figure}
+
+\chapter{Implementation} \label{implementation}
 \section{Development Strategy}
 \subsection{Version Control and Build Tools}
 \subsection{Testing Strategy}
@@ -861,6 +913,7 @@ Perhaps this could go in the implementation section.
 \subsection{Counting $n$-grams Efficiently}
 \subsection{Precomputing Smoothing Coefficients}
 \section{Recurrent Neural Network Models}
+\subsection{TensorFlow}
 \subsection{Long Short-Term Memory}
 \subsection{Gated Recurrent Units}
 \subsection{Word Embeddings}
@@ -893,7 +946,7 @@ In this chapter, I will first describe the benchmarking framework that I built t
 
 \section{Evaluation Methodology}
 
-\subsection{Metrics}
+\subsection{Metrics} \label{metrics}
 
 In the context of text prediction, there are essentially two questions one might want to answer when evaluating a language model:
 \begin{enumerate}
@@ -1131,7 +1184,7 @@ coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
 \end{tabular}
 \end{adjustbox}
 \begin{center}
-	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section 4.1.1 where 0-valued probabilities are replaced with a small constant to avoid division by 0. $^\dagger$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing Service. Nevertheless, the $n$-gram models were still much faster to train.}}
+	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section \ref{metrics} where 0-valued probabilities are replaced with a small constant to avoid division by 0. $^\dagger$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing Service. Nevertheless, the $n$-gram models were still much faster to train.}}
 \end{center}
 \caption{A benchmark of various language models on the PTB dataset.}
 \end{figure}
