@@ -351,7 +351,7 @@ where
 and the base case of recursion $\mathbb{P}(w)_{\text{\scshape ABS}}$ is given by the maximum likelihood unigram model. $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$ is the number of unique words that follow the sequence $w_{i - n + 1}^{i - 1}$, which is the number of $n$-grams that $D$ is subtracted from. It is not difficult to show that the coefficient attached to the $\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}$ term ensures that the probabilities sum to 1. \\
 
 Ney, Essen and Kneser~\cite{absolute_discounting:ney1994} suggested setting $D$ to the value:
-\begin{gather}
+\begin{gather} \label{eq:discount}
 	D = \frac{n_1}{n_1 + 2n_2}
 \end{gather}
 where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts respectively.
@@ -370,7 +370,7 @@ Kneser-Ney smoothing\footnote{This is actually the interpolated version of Knese
 	&+ \frac{D}{\sum_w \gamma(w_{i - n + 1}^{i - 1}w)}N_{1+}(w_{i - n + 1}^{i - 1}\bullet)\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KN}}
 \end{align*}
 where
-\begin{gather}
+\begin{gather} \label{eq:gamma}
 	\gamma(w_{i - k + 1}^i) = \begin{cases}
 		c(w_{i - k + 1}^i) &\text{for the outermost level of recursion (i.e. $k = n$)} \\
 		N_{1+}(\bullet w_{i - k + 1}^i) &\text{otherwise}
@@ -390,7 +390,7 @@ Chen and Goodman experimented with different discount values $D$ in Kneser-Ney s
 	&+ \lambda(w_{i - k + 1}^{i - 1})\mathbb{P}(w_i | w_{i - k + 2}^{i - 1})_{\text{\scshape MKN}}
 \end{aligned}
 \end{equation*}
-where $\gamma$ is defined in equation (2.2), and $\lambda$ is defined as:
+where $\gamma$ is defined in equation \ref{eq:gamma}, and $\lambda$ is defined as:
 \begin{gather*}
 	\lambda(w_{i - k + 1}^{i - 1}) = \frac{D_1N_1(w_{i - k + 1}^{i - 1}\bullet) + D_2N_2(w_{i - k + 1}^{i - 1}\bullet) + D_{3+}N_{3+}(w_{i - k + 1}^{i - 1}\bullet)}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)}
 \end{gather*}
@@ -407,7 +407,7 @@ Chen and Goodman suggest setting the discounts to be:
 \begin{align*}
 	D_1 = 1 - 2D\frac{n_2}{n_1} && D_2 = 2 - 3D\frac{n_3}{n_2} && D_{3+} = 3 - 4D\frac{n_4}{n_3}
 \end{align*}
-where $D$ is as defined in equation (2.1).
+where $D$ is as defined in equation \ref{eq:discount}.
 
 \subsubsection{Katz Smoothing}
 
@@ -416,11 +416,11 @@ Katz smoothing is a popular smoothing technique based on the Good-Turing estimat
 	r^* = (r + 1)\frac{n_{r + 1}}{n_r}
 \end{gather*}
 where $n_r$ is the number of $n$-grams that occur $r$ times. Converting this count into a probability simply involves normalising as follows:
-\begin{gather}
+\begin{gather} \label{eq:gt}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape GT}} = \frac{c^*(w_{i - n + 1}^{i})}{\sum_{r = 0}^\infty n_r r^*}
 \end{gather}
 Katz smoothing~\cite{katz_smoothing:katz1987} is then defined as:
-\begin{gather}
+\begin{gather} \label{eq:katz}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KATZ}} = \begin{cases}
 		\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape GT}} &\text{if }c(w_{i - n + 1}^i) > 0 \\
 		\alpha(w_{i - n + 1}^{i - 1})\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KATZ}} &\text{otherwise}
@@ -430,7 +430,7 @@ where
 \begin{gather*}
 	\alpha(w_{i - n + 1}^{i - 1}) = \frac{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KATZ}}}{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KATZ}}}
 \end{gather*}
-In practice, the infinite sum in equation (2.3) cannot be computed. To get around this issue, Katz takes $n$-gram counts above some threshold $k$ as reliable and only applies the Good-Turing estimate to those with a count less than or equal to $k$. Katz suggests $k = 5$. This modification requires a slightly different equation to (2.4) and is presented in Katz's original paper.
+In practice, the infinite sum in equation \ref{eq:gt} cannot be computed. To get around this issue, Katz takes $n$-gram counts above some threshold $k$ as reliable and only applies the Good-Turing estimate to those with a count less than or equal to $k$. Katz suggests $k = 5$. This modification requires a slightly different equation to \ref{eq:katz} and is presented in Katz's original paper.
 
 \section{Recurrent Neural Network Models}
 
@@ -556,28 +556,29 @@ An important distinction to be made is whether the neural network is cyclic or n
 
 \subsubsection{The Multilayer Perceptron}
 
-The multilayer perceptron consists of layers of neurons. The first layer is the input layer, the last is the output layer and any layers in between are called \tit{hidden layers}. If there is more than one hidden layer then it is called a \tit{deep} neural network. The input neurons simply pass on the input values that they are given. The neurons in the subsequent layers of the network compute the weighted sum of their inputs, before passing that value through an \tit{activation function} and outputting it:
+The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first layer is the input layer, the last is the output layer and any layers in between are called \tit{hidden layers}. If there is more than one hidden layer then it is called a \tit{deep} neural network. The input neurons simply pass on the input values that they are given. The neurons in the subsequent layers of the network compute the weighted sum of their inputs, before passing that value through an \tit{activation function} and outputting it:
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
 \begin{center}
 \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
 
-\node[every neuron/.try] (neuron) {};
+\node[every neuron/.try] (neuron) {$j$};
 \node[left=10mm of neuron] (mid) {};
-\node[above left=10mm and 15mm of neuron] (bias) {$b$};
-\node[above left=2mm and 15mm of neuron] (inp1) {$a_1$};
-\node[left=15mm of neuron] (var) {$\vdots$};
-\node[below left=2mm and 15mm of neuron] (inpN) {$a_n$};
+\node[above left=12mm and 20mm of neuron] (bias) {$b$};
+\node[above left=2mm and 20mm of neuron] (inp1) {$a_1^{l-1}$};
+\node[left=20mm of neuron] (var) {$\vdots$};
+\node[below left=2mm and 20mm of neuron] (inpN) {$a_n^{l-1}$};
 
-\draw[<-] (neuron.west |- mid) coordinate (aux)--++(159:16mm) node [below right=0mm and 2mm of inp1] {$w_1$};
-\draw[<-] ([yshift=1mm]aux)--++(140:19mm) node [below right=-2mm and 2mm of bias] {$w_0$};
-\draw[<-] ([yshift=-1mm]aux)--++(-162:16mm) node [right=2mm of inpN] {$w_n$};
+\draw[<-] (neuron.west |- mid) coordinate (aux)--++(159:20mm) node [below right=0mm and 2mm of inp1] {$w_{1,j}^{l-1}$};
+\draw[<-] ([yshift=1mm]aux)--++(140:24mm) node [below right=-5mm and 2mm of bias] {$w_{0,j}^{l-1}$};
+\draw[<-] ([yshift=-1mm]aux)--++(-162:20mm) node [right=2mm of inpN] {$w_{n,j}^{l-1}$};
 
-\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\sigma \big( bw_0 + \sum_i a_i w_i \big)$};
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{bw_{0,j} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
 
 \end{tikzpicture}
-\caption{The computation carried out by each neuron. The inputs are denoted $a_i$, the weights on the input connections are $w_i$, the activation function is $\sigma$ and $b$ is the bias input.}
+\caption{The computation carried out by each neuron. The outputs or \tit{activations} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the activation function is $\phi$ and $b$ is the bias input.}
+\label{fig:neuron}
 \end{center}
 \end{figure}
 
@@ -603,13 +604,13 @@ Frequently used activation functions include the sigmoid and the hyperbolic tang
 		xmin=-10, xmax= 10,
 		ymin= -0.2, ymax= 1.2,
 		xlabel=x,
-		ylabel={$\frac{1}{1 + e^{-x}}$},
+		ylabel={\footnotesize $\sigma(x) = (1 + e^{-x})^{-1}$},
 		tick align=outside,
 		enlargelimits=false]
 	\addplot[domain=-10:10, black, ultra thick,samples=500] {1/(1+exp(-x))};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{The sigmoid function.}
+	\caption{The sigmoid function, $\sigma$.}
 \end{subfigure}%
 \begin{subfigure}{0.5\linewidth}
 	\centering
@@ -624,13 +625,13 @@ Frequently used activation functions include the sigmoid and the hyperbolic tang
 		xmin=-10, xmax= 10,
 		ymin= -1.4, ymax= 1.4,
 		xlabel=x,
-		ylabel={$\tanh (x)$},
+		ylabel={\footnotesize $\tanh (x)$},
 		tick align=outside,
 		enlargelimits=false]
 	\addplot[domain=-10:10, black, ultra thick,samples=500] {(exp(x) - exp(-x))/(exp(x) + exp(-x))};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{The hyperbolic tangent function.}
+	\caption{The hyperbolic tangent function, $\tanh$.}
 \end{subfigure}
 \caption{Two popular activation functions.}
 \end{figure}
@@ -647,21 +648,44 @@ In order to train a neural network, you supply it with a training set, which is 
 \begin{gather*}
 	\mathbf{s} = ((\mathbf{x}_1, \mathbf{t}_1), ..., (\mathbf{x}_N, \mathbf{t}_N))
 \end{gather*}
-Where $\mathbf{t}_i$ is the vector that the network should output given the example input $\mathbf{x}_i$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
+Where $\mathbf{t}_i$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
 \begin{gather*}
-	\mathcal{L}_{\text{\scshape total}} = \sum_{i = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_i), \mathbf{t}_i)
+	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
 \end{gather*}
 The end product of the \tit{backpropagation} algorithm is the partial derivative:
 \begin{gather*}
-	\frac{\partial}{\partial w_{i,j}} \big( \mathcal{L}_{\text{\scshape total}} \big)
+	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather*}
-for every weight $w_{i,j}$ in the neural network. \tit{Gradient descent} is an optimisation technique that uses these derivatives to adjust the weights such that the loss is minimised over the training set.
+for every weight $w_{i,j}^l$ in the neural network. It is a two stage algorithm that works as follows:
+\begin{enumerate}
+\item
+	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$. The process of calculating the output of the neural network given the input is known as \tit{forward propagation}, because the input is propagated through each layer in the network.
+\item
+	Given $\mathcal{L}_{\text{\scshape total}}$, calculate $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ for each weight in each layer of the network by applying the chain rule backwards from the output layer to the input layer. This step is described in more detail below.
+\end{enumerate}
 
-\todo{Describe backpropagation and gradient descent in more detail.}
+$\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ is calculated as follows:
+\begin{gather} \label{eq:bp_weight_grad}
+	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big) = \sum_{k = 1}^N \underbrace{\frac{\partial \mathcal{L}}{\partial f_{\mathbf{w}}(\mathbf{x}_k)}  \frac{\partial f_{\mathbf{w}}(\mathbf{x}_k)}{\partial z_j^{l + 1}}}_{\delta_j^{l+1}}  \frac{\partial z_j^{l + 1}}{\partial w_{i,j}^l} = \delta_j^{l+1} a_i^l
+\end{gather}
+The term $\delta_j^{l+1}$ varies in form for each layer. For the output layer, it has the following form:
+\begin{gather} \label{eq:delta_output}
+	\delta_j^L = \frac{\partial \mathcal{L}}{\partial f_{\mathbf{w}}(\mathbf{x}_k)} \phi'(z_j^L)
+\end{gather}
+For the preceding layers, $\delta_j^l$ can be defined recursively in terms of the delta values for the neurons in subsequent layers in the network. This is defined below, and a detailed justification of it is given in appendix \ref{appendix:bp_recurrence}:
+\begin{gather} \label{eq:delta_hidden}
+	\delta_i^l = \phi'(z_i^l) \sum_j \delta_j^{l+1} w_{i,j}^l
+\end{gather}
+
+\tit{Gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. The simplest form of gradient descent does this by changing each weight value in the direction of the negative gradient of the loss. This is is equivalent to moving the network output downwards on the error surface defined by plotting the loss against each of the weights in the network:
+\begin{gather*}
+	w_{i,j}^l \leftarrow w_{i,j}^l - \eta \frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
+\end{gather*}
+$\eta$ is known as the \tit{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
 
 \subsection{Recurrent Neural Networks} \label{rnns}
 
-In the context of language modelling, the input is a sequence of words and the output is also a sequence of words. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network. \\
+In the context of language modelling, the input is a sequence of words and the output should be the same sequence of words shifted ahead in time by one word. For example, given (\tit{`the', `cat', `sat', ...}) as input, the network should produce something similar to (\tit{`cat', `sat', `on', ...}) as output. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network.
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -722,100 +746,218 @@ In the context of language modelling, the input is a sequence of words and the o
 
 A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. This gives something like the network shown in figure \ref{fig:rnn}. An easier way to visualise an RNN is by \tit{unrolling} it as shown in figure \ref{fig:rnn_unrolled}. A nice property about RNNs is that they can be unrolled an arbitrary number of steps without the need for any additional parameters, because the same weight matrices are reused at each step. For this reason, RNNs are well suited for operating over sequences of input data. In the case of language modelling, this is ideal, because the inputs are sequences of words. The problem of representing textual words as numerical input vectors for an RNN is addressed in section \ref{word_embeddings}. \\
 
-As shown in figure \ref{fig:rnn_unrolled}, RNNs can take a sequence of vectors as input. In most applications, the vectors in such sequences are typically ordered by time, so I will use the notation $\mathbf{x}^t$ and $\mathbf{y}^t$ to denote the input and output vectors at time step $t$. \\
+As shown in figure \ref{fig:rnn_unrolled}, RNNs can take a sequence of vectors as input. In most applications, the vectors in such sequences are typically ordered by time, so I use the notation $\mathbf{x}^t$ and $\mathbf{y}^t$ to denote the input and output vectors at time step $t$.
 
 \subsubsection{Backpropagation Through Time (BPTT)}
 
-Training an RNN is not so much different to training an FNN: the only different is that gradients must also be calculated across time steps.
+Training an RNN is not so much different to training an FNN: the only difference is that gradients must also be calculated across time steps. As shown figure \ref{fig:rnn_unrolled}, each weight is reused at each time step. For this reason, the weight update given in equation \ref{eq:bp_weight_grad} is summed across the time steps:
+\begin{gather*}
+	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big) = \sum_t \delta_j^{l+1,t} a_i^{l,t}
+\end{gather*}
+The delta term for the output layer is defined analogously to equation \ref{eq:delta_output}:
+\begin{gather} \label{eq:delta_output}
+	\delta_j^{L,t} = \frac{\partial \mathcal{L}}{\partial f_{\mathbf{w}}(\mathbf{x}_k^t)} \phi'(z_j^{L,t})
+\end{gather}
+The delta term for the preceding layers can be shown to have the form below. This is justified in more detail in appendix \ref{appendix:bp_recurrence}.
+\begin{gather} \label{eq:delta_hidden}
+	\delta_i^{l,t} = \phi'(z_i^{l,t}) \big( \sum_j \delta_j^{l+1,t} w_{i,j}^l + \sum_j \delta_j^{l,t+1} v_{i,j}^l \big)
+\end{gather}
+where $v_{i,j}^l$ denotes the weight on the recurrent connection from neuron $i$ in layer $l$ back to neuron $j$ in the same layer.
 
-\begin{itemize}
-\item
-	How RNNs can (in principle) handle infinite sequences.
-\item
-	BPTT
-\item
-	Various architectures.
-\end{itemize}
-
-
-
-A diagram and brief description of each will suffice here:
 \subsubsection{Vanilla Recurrent Neural Networks}
-\subsubsection{Gated Recurrent Unit}
+So far, the equations presented have assumed a \tit{vanilla RNN}. That is, each neuron, or \tit{cell}, simply computes the weighted sum of its inputs and then applys an activation function. A significant problem associated with this architecture is known as the \tit{vanishing gradient problem}. Namely, the influence of a particular input on the hidden layers and subsequently the output layer either decays or blows up exponentially as it cycles through the recurrent connections, which makes it difficult for this architecture to retain long-term information across several steps. Various improvements have been made to improve upon this problem, two of which are outlined below.
+
 \subsubsection{Long Short-Term Memory}
+The most effective solution so far for tackling the vanishing gradient problem is the Long Short-Term Memory architecture proposed by Hochreiter and Schmidhuber~\cite{lstm:hochreiter1997}. In their architecture, each cell maintains a state, $\mathbf{c}$, which is manipulated according to the inputs it receives to produce a new state and the cell output. At each cell, the state passes through three gates: the \tit{forget gate}, \tit{input gate} and the \tit{output gate}. The effect of such gates and a more detailed discussion of this architecture is given in chapter~\ref{implementation}.
 
 \begin{figure}[h]
-\begin{center}
+\centering
 \begin{tikzpicture}[
-    scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},% line width=0.4mm},
-    tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},% line width=0.4mm},
-    siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},% line width=0.4mm},
-    textb/.style={minimum width=6mm, minimum height=4mm},
-    ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
-    ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
-    filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
-    \draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
-    mylabel/.style={font=\scriptsize\sffamily},
-    >=LaTeX
-    ]
+	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
+	tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
+	siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
+	textb/.style={minimum width=6mm, minimum height=4mm},
+	ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+	ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+	filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+	\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+	mylabel/.style={font=\scriptsize\sffamily},
+	>=LaTeX
+]
 
-\node[scalar] (plus) {$+$};
-\node[scalar, left=16mm of plus] (ftimes) {$\times$};
-\node[scalar, below=6mm of plus] (itimes) {$\times$};
-\node[scalar, right=16mm of itimes] (otimes) {$\times$};
-\node[tanlayer, above=2mm of otimes] (otanh) {\scriptsize $\tanh$};
-\node[tanlayer, below=6mm of itimes] (stanh) {\scriptsize $\tanh$};
-\node[siglayer, left=2mm of stanh] (isig) {$\sigma$};
-\node[siglayer, left=4mm of isig] (fsig) {$\sigma$};
-\node[siglayer, right=2mm of stanh] (osig) {$\sigma$};
-\node[textb, anchor=east, left=10mm of ftimes] (Cin) {$C_{t - 1}$};
-\node[textb, anchor=east, below=21mm of Cin] (hin) {$h_{t - 1}$};
-\node[textb, anchor=west, right=33mm of plus] (Cout) {$C_t$};
-\node[textb, anchor=west, below=21mm of Cout] (hout) {$h_t$};
-\node[textb, anchor=north, below left=10mm and 1mm of fsig] (x) {$x_t$};
-\node[textb, anchor=south, above right=6mm and 22mm of plus] (hout2) {$h_t$};
-\node[below=2.5mm of stanh] (invisible) {};
-\node[fit=(ftimes) (otanh) (osig) (fsig) (invisible), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+\node[tanlayer] (nnlayer) {};
+\node[textb, below=5mm of nnlayer] (nnlayertext) {\footnotesize A neural network layer.};
+\node[scalar, left=30mm of nnlayer] (scalar) {};
+\node[textb, below=5mm of scalar] (scalartext) {\footnotesize A scalar operation.};
+\node[right=30mm of nnlayer] (concat) {};
+\node[textb, below=5mm of concat] (concattext) {\footnotesize Concatenation.};
+\node[right=60mm of nnlayer] (copy) {};
+\node[textb, below=5mm of copy] (copytext) {\footnotesize Copy.};
 
-\foreach \i/\j in {otimes/hout2, hin/fsig, hin/isig, hin/stanh, hin/osig}
-	\draw[->, rounded corners=5pt] (\i) -| (\j);
+\draw[<-, rounded corners=5pt] (concat) -| ++(-10mm,3mm);
+\draw[<-, rounded corners=5pt] (concat) -| ++(-10mm,-3mm);
 
-\draw[-, rounded corners=5pt] (plus) -| (otanh);
-
-\foreach \i/\j in {isig/itimes, osig/otimes}
-	\draw[->, rounded corners=5pt] (\i) |- (\j);
-
-\draw[->, rounded corners=5pt] (otimes.east) -| ++(4mm,-17mm) -- (hout.west);
-
-\foreach \i/\j in {Cin/ftimes, ftimes/plus, plus/Cout, fsig/ftimes, itimes/plus, stanh/itimes, otanh/otimes}
-	\draw[->] (\i) -- (\j);
-
-\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.045mm);
+\draw[rounded corners=5pt] (copy.east) -- ++(-7mm,0mm);
+\draw[->, rounded corners=5pt] (copy) -| ++(3mm,3mm);
+\draw[->, rounded corners=5pt] (copy) -| ++(3mm,-3mm);
 
 \end{tikzpicture}
-\caption{The structure of a basic LSTM cell.}
-\end{center}
+\caption{A notation for drawing RNN architectures.}
+\label{fig:rnn_notation}
 \end{figure}
 
-\subsection{Word Embeddings} \label{word_embeddings}
-\begin{itemize}
-\item
-	Vector space model
-\item
-	Learnt during backpropagation
-\end{itemize}
 
-Other general points to make about language models:
-\begin{itemize}
-\item
-	LMs have a vocabulary $V$.
-\item
-	How to compute vocabulary (minimum frequency, etc)
-\item
-	How to handle OOV words
-\item
-	How to handle sentence boundaries
-\end{itemize}
+\begin{figure}[h]
+\centering
+\begin{subfigure}{0.33\linewidth}
+	\centering
+	\resizebox{4cm}{3cm}{%
+	\begin{tikzpicture}[
+		scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
+		tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
+		siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
+		textb/.style={minimum width=6mm, minimum height=4mm},
+		ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+		ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+		filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+		\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+		mylabel/.style={font=\scriptsize\sffamily},
+		>=LaTeX
+	]
+	
+	\node[tanlayer] (tanh) {\scriptsize $\tanh$};
+	\node[textb, anchor=east, left=10mm of tanh] (hin) {$\mathbf{a}^{l, t - 1}$};
+	\node[textb, anchor=west, right=10mm of tanh] (hout) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=north, below left=10mm and -1mm of tanh] (x) {$\mathbf{a}^{l - 1, t}$};
+	\node[textb, anchor=south, above right=10mm and 1mm of tanh] (hout2) {$\mathbf{a}^{l, t}$};
+	\node[fit=(tanh), draw, inner xsep=7mm, inner ysep=7mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+
+	\foreach \i/\j in {hin/tanh.west, tanh.east/hout}
+		\draw[->, rounded corners=5pt] (\i) -- (\j);
+
+	\draw [->, rounded corners=5pt] (x.north) |- (tanh.west);
+
+	\draw [->, rounded corners=5pt] (tanh.east) -| (hout2);
+
+	\end{tikzpicture}}
+	\caption{A vanilla RNN cell.}
+\end{subfigure}%
+\begin{subfigure}{0.33\linewidth}
+	\centering
+	\resizebox{4.8cm}{3cm}{%
+	\begin{tikzpicture}[
+		scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
+		tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
+		siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
+		textb/.style={minimum width=6mm, minimum height=4mm},
+		ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+		ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+		filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+		\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+		mylabel/.style={font=\scriptsize\sffamily},
+		>=LaTeX
+	]
+	
+	\node[scalar] (plus) {$+$};
+	\node[scalar, left=16mm of plus] (ftimes) {$\times$};
+	\node[scalar, below=6mm of plus] (itimes) {$\times$};
+	\node[scalar, right=16mm of itimes] (otimes) {$\times$};
+	\node[tanlayer, above=2mm of otimes] (otanh) {\scriptsize $\tanh$};
+	\node[tanlayer, below=6mm of itimes] (stanh) {\scriptsize $\tanh$};
+	\node[siglayer, left=2mm of stanh] (isig) {$\sigma$};
+	\node[siglayer, left=4mm of isig] (fsig) {$\sigma$};
+	\node[siglayer, right=2mm of stanh] (osig) {$\sigma$};
+	\node[textb, anchor=east, left=10mm of ftimes] (Cin) {$\mathbf{c}^{l, t - 1}$};
+	\node[textb, anchor=east, below=21mm of Cin] (hin) {$\mathbf{a}^{l, t - 1}$};
+	\node[textb, anchor=west, right=33mm of plus] (Cout) {$\mathbf{c}^{l, t}$};
+	\node[textb, anchor=west, below=21mm of Cout] (hout) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=north, below left=10mm and -2mm of fsig] (x) {$\mathbf{a}^{l - 1, t}$};
+	\node[textb, anchor=south, above right=6mm and 22mm of plus] (hout2) {$\mathbf{a}^{l, t}$};
+	\node[below=2.5mm of stanh] (invisible) {};
+	\node[fit=(ftimes) (otanh) (osig) (fsig) (invisible), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+
+	\foreach \i/\j in {otimes/hout2, hin/fsig, hin/isig, hin/stanh, hin/osig}
+		\draw[->, rounded corners=5pt] (\i) -| (\j);
+
+	\draw[-, rounded corners=5pt] (plus) -| (otanh);
+
+	\foreach \i/\j in {isig/itimes, osig/otimes}
+		\draw[->, rounded corners=5pt] (\i) |- (\j);
+
+	\draw[->, rounded corners=5pt] (otimes.east) -| ++(4mm,-17mm) -- (hout.west);
+
+	\foreach \i/\j in {Cin/ftimes, ftimes/plus, plus/Cout, fsig/ftimes, itimes/plus, stanh/itimes, otanh/otimes}
+		\draw[->] (\i) -- (\j);
+
+	\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.39mm);
+
+	\end{tikzpicture}}
+	\caption{An LSTM cell.}
+\end{subfigure}%
+\begin{subfigure}{0.33\linewidth}
+	\centering
+	\resizebox{4.8cm}{3cm}{%
+	\begin{tikzpicture}[
+		scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
+		tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
+		siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
+		textb/.style={minimum width=6mm, minimum height=4mm},
+		ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+		ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+		filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+		\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+		mylabel/.style={font=\scriptsize\sffamily},
+		>=LaTeX
+	]
+	
+	\node[scalar] (times) {$\times$};
+	\node[scalar, right=16mm of times] (plus) {$+$};
+	\node[scalar, below=6mm of plus] (times2) {$\times$};
+	\node[scalar, left=6mm of times2] (minus1) {\small 1-};
+	\node[scalar, left=36mm of times2] (times3) {$\times$};
+	\node[siglayer, below=16mm of times] (sig2) {$\sigma$};
+	\node[siglayer, left=4mm of sig2] (sig1) {$\sigma$};
+	\node[tanlayer, right=2mm of sig2] (tanh) {\scriptsize $\tanh$};
+	\node[textb, anchor=east, left=32mm of times] (hin) {$\mathbf{a}^{l, t - 1}$};
+	\node[textb, anchor=west, right=33mm of times] (hout) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=north, below left=10mm and 8mm of sig1] (x) {$\mathbf{a}^{l - 1, t}$};
+	\node[textb, anchor=south, above right=6mm and 22mm of times] (hout2) {$\mathbf{a}^{l, t}$};
+	\node[below right=2.5mm and 17.5mm of sig2] (invisible) {};
+	\node[left=7mm of sig1] (invisible2) {};
+	\node[fit=(plus) (tanh) (invisible) (invisible2), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+
+	\foreach \i/\j in {hin/times3, plus/hout2, tanh/times2}
+		\draw[->, rounded corners=5pt] (\i) -| (\j);
+
+	\foreach \i/\j in {sig1/times3, sig2/minus1}
+		\draw[->, rounded corners=5pt] (\i) |- (\j);
+
+	\foreach \i/\j in {hin/times, times/plus, plus/hout, times2/plus, minus1/times2, sig2/times}
+		\draw[->] (\i) -- (\j);
+
+	\foreach \i/\j in {hin.east/sig1.south, hin.east/sig2.south}
+		\draw[->, rounded corners=5pt] (\i) -| ++(7mm,-25mm) -| (\j);
+		
+	\draw[->, rounded corners=5pt] (hin.east) -| ++(7mm,-27.32mm) -| (tanh.south);
+
+	\draw[-, rounded corners=5pt] (times3.south) |- ++(3mm, -14.69mm);
+
+	\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.045mm);
+
+	\end{tikzpicture}}
+	\caption{A GRU cell.}
+\end{subfigure}
+\caption{Various architectures of RNN neurons, using the notation from figure~\ref{fig:rnn_notation}}
+\end{figure}
+
+\subsubsection{Gated Recurrent Unit}
+Whilst the LSTM architecture provides a significant improvement for retaining long-term information, it is computationally more expensive to run. Cho et al.\ propose the Gated Recurrent Unit~\cite{gru:cho2014}, which is a simplified version of LSTM that is cheaper to compute. The most significant changes are that it combines the forget and input gates into a single `update gate', and it merges the cell state and cell output. This architecture is also described in more detail in chapter~\ref{implementation}.
+
+\subsection{Word Embeddings} \label{word_embeddings}
+
+RNNs take a sequence of vectors as input, and produce a sequence of vectors as output. In the context of language modelling, these inputs and outputs should represent sequences of words. In order to do this, each word is represented by a single vector, which is known as a word \tit{embedding}. \\
+
+The aim behind word embeddings is that similar words should be represented by vectors that are closer together in the vector space than those for dissimilar words. One effective way to obtain such embeddings is to learn them through backpropagation, which is the method that was used in this dissertation. The idea is that each word is mapped to a large, randomly initialised vector. Then, when the RNN is trained on sequences of words, the embedding values are updated in a way that is analogous to how the weights are updated in the network.
 
 \section{Software Engineering}
 
@@ -928,7 +1070,7 @@ Dropout, embedding, learning rate decay, momentum?, gradient clipping
 
 \chapter{Evaluation}
 
-In this chapter, I will first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I will present the performance of the existing language models that I implemented, secondly I will focus on the tradeoffs faced when employing those models on a mobile device, and finally I will display my findings in language modelling on error-prone text.
+In this chapter, I will first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I present the performance of the existing language models that I implemented, secondly I focus on the tradeoffs faced when employing those models on a mobile device, and finally I display my findings in language modelling on error-prone text.
 
 \todo{Include these too:}
 \begin{itemize}
@@ -985,11 +1127,6 @@ With a little algebra, this can be rearranged to give equation (4.1). \\
 
 One issue with perplexity is that it is undefined if $\mathbb{P}_L(w_i | w_1^{i-1})$ is 0 at any point. To get around this in my implementation, I replaced probability values of 0 with the small constant \ttt{1e-9}. Results that use this approximation are marked.
 
-%\subsubsection{Guessing Entropy}~\\
-%If a language model $L_1$ has assigned a higher probability to the correct next word $w_c$ than another language model $L_2$, then it does not necessarily follow that $w_c$ is ranked higher in the predictions of $L_1$ than in the predictions of $L_2$.\footnote{To see this, consider the following example: $L_1$ and $L_2$ both have a vocabulary of 5 words; $L_1$ assigns a probability of 0.3 to $w_c$, and assigns 0.35, 0.35, 0 and 0 to the remaining words; $L_2$ assigns a probability of 0.25 to $w_c$, and assigns 0.2, 0.2, 0.2 and 0.15 to the remaining words. In this example, $w_c$ is given a higher probability by $L_1$ but ranked higher by $L_2$.} \\
-%
-%Guessing entropy is a metric which focuses more on the final ordering of the word predictions made by a language model. It is defined as the binary logarithm of how far down a list of predictions (when sorted by probability) the actual next word is, averaged across the test data.
-
 \subsubsection{Average-Keys-Saved}
 
 It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section \todo{XXX}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user would be saved from typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
@@ -1033,7 +1170,6 @@ The Cambridge Learner Corpus is a dataset of 1,244 exam scripts written by candi
 \subsubsection*{Smoothing techniques and the value of $n$ in $n$-gram models}
 
 The first set of language models that I built were $n$-gram models, along with a series of smoothing techniques for improving their predictions on less frequent $n$-grams.
-
 
 \begin{figure}[h]
 \begin{tikzpicture}[scale=1.0]
@@ -1081,12 +1217,6 @@ The change in performance with the value of $n$ is interesting. Intuitively, one
 \subsubsection*{A comparison of RNN-based models with $n$-gram models}
 
 As described in the implementation chapter, I also implemented three RNN-based language models which differ in the RNN cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory.
-
-\begin{itemize}
-\item
-	Plot perplexity (or cross-entropy) and average-keys-saved as a function of the amount of training data used.
-\end{itemize}
-
 
 \begin{figure}[h]
 \begin{tikzpicture}[scale=1.0]
@@ -1148,16 +1278,36 @@ coordinates {(1e3, 16.48)(1e4, 12.65)(1e5, 9.93)(1e6, 8.46)(1e7, 7.50)};
 \addplot[color=violet, mark=diamond]
 coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
 
+% Vanilla RNN 256
+\addplot[color=orange, mark=asterisk]
+coordinates {(1e3, 13.59)(1e4, 11.72)(1e5, 9.62)(1e6, 8.34)(1e7, 0)};
+
+% GRU 256
+\addplot[color=teal, mark=pentagon]
+coordinates {(1e3, 13.58)(1e4, 11.67)(1e5, 10.03)(1e6, 8.23)(1e7, 0)};
+
+% LSTM 256
+\addplot[color=magenta, mark=star]
+coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 0)};
+
 \legend{
 %	3gram, 3gram + add-one, 3gram + Katz, 3gram + absolute discounting, 3gram + Kneser-Ney, 3gram + Modified Kneser-Ney,
 	5gram, 5gram + add-one, 5gram + Katz, 5gram + absolute discounting, 5gram + Kneser-Ney, 5gram + Modified Kneser-Ney,
+	Vanilla RNN, GRU, LSTM,
 }
  
 \end{semilogxaxis}
 \end{tikzpicture}
-\caption{Cross-entropy of various language models with respect to the training set size.}
+\caption{Cross-entropy of various language models with respect to the training set size, using the 1BW dataset.}
 \end{figure}
 
+As can be seen:
+\begin{itemize}
+\item
+	RNNs better than $n$-gram models.
+\item
+	etc, etc.
+\end{itemize}
 
 \begin{figure}[h]
 \begin{adjustbox}{center}
@@ -1187,38 +1337,36 @@ coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
 	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section \ref{metrics} where 0-valued probabilities are replaced with a small constant to avoid division by 0. $^\dagger$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing Service. Nevertheless, the $n$-gram models were still much faster to train.}}
 \end{center}
 \caption{A benchmark of various language models on the PTB dataset.}
+\label{fig:ptb}
 \end{figure}
 
-Points to discuss:
+Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. Indeed, my results for 3-gram modified Kneser-Ney smoothing, 5-gram modified Kneser-Ney smoothing and vanilla RNN are comparable to those from Mikolov~\cite{rnn_ptb:mikolov2012}. \\
+
+There is a lot of information that can be drawn from figure~\ref{fig:ptb}, so I will highlight only the most important and interesting points:
 \begin{itemize}
 \item
-	Average-keys-saved and guessing entropy taken over first 1000 words, whereas perplexity over whole test set.
+	In general, the RNN-based language models outperform the $n$-gram based models in terms of prediction accuracy. In my implementation, they run slightly faster at inference time and also consume less memory, although this is partly due to the fact that they are entirely unpruned. The RNN-based language models take significantly longer to train and obtain the correct hyperparameters for.
 \item
-	Note $n$-gram models are unpruned (hence large size).
+	Ignoring insignificant differences in memory and time, the discounting-based smoothing techniques (absolute discounting, Kneser-Ney smoothing and modified Kneser-Ney smoothing) equal or outperform add-one and Katz smoothing in every metric.
 \item
-	Katz beaten by absolute-discounting-derived methods on all fronts.
+	LSTM yields marginally better prediction accuracy than the GRU architecture, but requires more memory. Apart from the memory overhead, GRUs significantly outperform the vanilla RNN architecture. The differences in training time for the RNN-based models should be taken lightly, because each model was trained for a different number of iterations, depending on how long it took to converge to a steady perplexity score on the validation set.
 \item
-	Modified Kneser-Ney only offers marginal gain in perplexity.
+	Interestingly, a substantial improvement in perplexity and average-keys-saved can be obtained by simply averaging the probabilities produced by an $n$-gram and an RNN-based language model. This seems to imply that the two classes of language model complement one another, in the sense that RNN-based models make strong predictions when some of the $n$-gram predictions are weak, and vice versa.
 \item
-	Reduction in performance of $n$-gram, add-one and Katz with N, due to sparsity of $n$-grams at higher lengths.
-\item
-	Combination via average.
-\item
-	Average inference times should be taken with a pinch of salt, because you have to consider CPU scheduling etc.
-\item
-	Training times vary for LSTM and GRU in unexpected way, because LSTM happened to converge faster.
+	The combined language models can be improved even more by interpolating their probabilities rather than just averaging them. The result shown for the interpolation of 5-gram modified Kneser-Ney with LSTM used $\lambda = 0.38$, where the probability was calculated as $\lambda$($n$-gram probability) + (1 - $\lambda$)(LSTM probability).
 \end{itemize}
 
 \subsection{On a Mobile Device}
 
 Incorporating an RNN-based language model implementation into a mobile keyboard, as described in section \todo{XXX}, presented a different series of challenges. The strict memory and CPU limitations of App Extensions in iOS forced me to explore the tradeoffs between resource consumption and prediction performance. \\
 
-As shown in figure \todo{XXX}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I use in the following experiments. I investigated the effect of both vocabulary size and the number of hidden neurons on the memory usage and the average-keys-saved:
+As shown in figure~\ref{fig:ptb}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I use in the following experiments. I investigated the effect of both vocabulary size and the number of hidden neurons on the memory usage and the average-keys-saved:
 
 \begin{tikzpicture}
 \begin{axis}[
 	scale only axis,
-	xmin=0,xmax=5,
+	xmin=1,xmax=5,
+	xtick={1, 2, 4, 8, 16, 32},
 	ymin=0,ymax=1,
 	axis y line=left,
 	ymajorgrids=true,
@@ -1228,7 +1376,7 @@ As shown in figure \todo{XXX}, the vanilla RNN architecture presents the smalles
 \end{axis}
 \begin{axis}[
 	scale only axis,
-	xmin=0,xmax=50,
+	xmin=0,xmax=40,
 	ymin=0,ymax=1,
 	axis x line=top,
 	axis y line=none,
@@ -1351,6 +1499,15 @@ Future work/possible extensions:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the appendices
 \appendix
+
+\chapter{Backpropagation Recurrence Relation} \label{appendix:bp_recurrence}
+
+\begin{align*}
+	\delta_i^l &= \sum_j \delta_j^{l+1} \frac{\partial z_j^{l+1}}{\partial z_i^l} \\
+	&= \sum_j \delta_j^{l+1} \frac{\partial z_j^{l+1}}{\partial y_i^l} \frac{\partial y_i^l}{\partial z_i^l} \\
+	&= \sum_j \delta_j^{l+1} w_{i,j}^l \phi'(z_i^l) \\
+	&= \phi'(z_i^l) \sum_j \delta_j^{l+1} w_{i,j}^l \\
+\end{align*}
 
 \chapter{Project Proposal}
 
