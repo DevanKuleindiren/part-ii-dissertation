@@ -806,6 +806,8 @@ The most effective solution so far for tackling the vanishing gradient problem i
 \label{fig:rnn_notation}
 \end{figure}
 
+\subsubsection{Gated Recurrent Unit}
+Whilst the LSTM architecture provides a significant improvement for retaining long-term information, it is computationally more expensive to run. Cho et al.\ propose the Gated Recurrent Unit~\cite{gru:cho2014}, which is a simplified version of LSTM that is cheaper to compute. The most significant changes are that it combines the forget and input gates into a single `update gate', and it merges the cell state and cell output. This architecture is also described in more detail in chapter~\ref{implementation}.
 
 \begin{figure}[h]
 \centering
@@ -950,9 +952,6 @@ The most effective solution so far for tackling the vanishing gradient problem i
 \caption{Various architectures of RNN neurons, using the notation from figure~\ref{fig:rnn_notation}}
 \end{figure}
 
-\subsubsection{Gated Recurrent Unit}
-Whilst the LSTM architecture provides a significant improvement for retaining long-term information, it is computationally more expensive to run. Cho et al.\ propose the Gated Recurrent Unit~\cite{gru:cho2014}, which is a simplified version of LSTM that is cheaper to compute. The most significant changes are that it combines the forget and input gates into a single `update gate', and it merges the cell state and cell output. This architecture is also described in more detail in chapter~\ref{implementation}.
-
 \subsection{Word Embeddings} \label{word_embeddings}
 
 RNNs take a sequence of vectors as input, and produce a sequence of vectors as output. In the context of language modelling, these inputs and outputs should represent sequences of words. In order to do this, each word is represented by a single vector, which is known as a word \tit{embedding}. \\
@@ -1046,27 +1045,117 @@ My project codebase was written from scratch, with the assistance of the tools a
 \end{figure}
 
 \chapter{Implementation} \label{implementation}
-\section{Development Strategy}
-\subsection{Version Control and Build Tools}
-\subsection{Testing Strategy}
+
+This section details how I implemented a variety $n$-gram and RNN-based language models, how I built the mobile keyboard on iOS and how I extended an existing language model to improve its performance on error-prone text.
+
 \section{System Overview}
+
+
+
+\begin{itemize}
+\item
+	Diagram showing how languages are used and interconnected.
+\item
+	Explanation of how and why project is embedded in TensorFlow repository.
+\end{itemize}
+
 \subsection{Interface to Language Models}
+\begin{itemize}
+\item
+	Vocabulary and minimum frequency
+\item
+	Methods
+\item
+	The use of protocol buffers - vocab proto + either $n$-gram proto or some rnn protos.
+\end{itemize}
 \section{$n$-gram Models}
+\begin{itemize}
+\item
+	Tradeoff between how much is done at training time vs how much is done at inference time.
+\item
+	Pipeline: compute vocabulary $\rightarrow$ count $n$-grams $\rightarrow$ populate probability trie.
+\item
+	Justify approach over hash-based models or computing probability from counts on the fly.
+\item
+	Vocab words replaced with integers to save space.
+\end{itemize}
 \subsection{Counting $n$-grams Efficiently}
+\begin{itemize}
+\item
+	Count trie
+	\begin{itemize}
+	\item
+		Interface
+	\item
+		Efficient count following/preceding
+	\item
+		Efficient sum following
+	\end{itemize}
+\end{itemize}
 \subsection{Precomputing Smoothing Coefficients}
+\begin{itemize}
+\item
+	How all smoothing methods can be massaged to same form, which suits storage in probability trie.
+\item
+	Probability trie - explain how it stores each parameter the minimum number of times.
+\end{itemize}
 \section{Recurrent Neural Network Models}
 \subsection{TensorFlow}
+\begin{itemize}
+\item
+	How it works
+\item
+	Training vs inference flow
+\end{itemize}
 \subsection{Long Short-Term Memory}
+\begin{itemize}
+\item
+	Forward pass equations
+\item
+	Explain gates
+\item
+	Dropout, embedding, learning rate decay, momentum?, gradient clipping
+\end{itemize}
 \subsection{Gated Recurrent Units}
+\begin{itemize}
+\item
+	Explain
+\end{itemize}
 \subsection{Word Embeddings}
-Show some cool embedding plots with PCA.
+\begin{itemize}
+\item
+	PCA plots
+\end{itemize}
 \subsection{Parameter Tuning}
-Dropout, embedding, learning rate decay, momentum?, gradient clipping
-\section{Extending Models to Tackle Error-Prone Text}
+\begin{itemize}
+\item
+	Learning rate schedule using validation set, initial learning rate, dropout, etc
+\end{itemize}
+\section{Extending Models to Tackle Error-Prone Text} \label{error_correcting_lm}
 \subsection{Preprocessing the CLC Dataset}
+\begin{itemize}
+\item
+	Tokenisation
+\item
+	Alignment and removal of identical sentences
+\end{itemize}
 \subsection{Error Correction on Word Context}
-\section{Mobile Keyboard}
+\begin{itemize}
+\item
+	Motivation and algorithm for error-correction on the context
+\end{itemize}
+\section{Mobile Keyboard} \label{mobile_keyboard}
+\begin{itemize}
+\item
+	Compiling my project, along with TensorFlow into a static library for use on iOS.
+\end{itemize}
 \subsection{Updating Language Model Predictions On the Fly}
+\begin{itemize}
+\item
+	Building a character trie when a new word is requested, sifting through it as new characters are typed
+\item
+	Screenshots
+\end{itemize}
 
 \chapter{Evaluation}
 
@@ -1077,13 +1166,7 @@ In this chapter, I will first describe the benchmarking framework that I built t
 \item
 	Examples of generated sentences.
 \item
-	Embedding visualisations - or perhaps put this into the implementation?
-\item
 	Visualisations of the neuron activations for each word in a sentence.
-\item
-	The number of parameters included in the LM in the PTB table (like Google did).
-\item
-	The training time of each LM.
 \end{itemize}
 
 \section{Evaluation Methodology}
@@ -1103,7 +1186,7 @@ In order to answer these questions, I implemented a generic benchmarking framewo
 \subsubsection{Perplexity}
 
 Perplexity is the most widely-used metric for language models, and is therefore an essential one to include so that my results can be compared with those of other authors. Given a sequence of words $w_1^{N} = w_1w_2...w_N$ as test data, the perplexity PP of a language model $L$ is defined as:
-\begin{gather}
+\begin{gather} \label{eq:perplexity}
 	\text{PP}_L(w_1^N) = \sqrt[N]{\frac{1}{\mathbb{P}_L(w_1^N)}} = \sqrt[N]{\prod_{i=1}^{N}\frac{1}{\mathbb{P}_L(w_i | w_1^{i-1})}}
 \end{gather}
 where $\mathbb{P}_L(w_i | w_1^{i-1})$ is the probability computed by the language model $L$ of the word $w_i$ following the words $w_1^{i-1}$. The key point is that \tbf{lower values of perplexity indicate better prediction accuracy} for language models trained on a particular training set. \\
@@ -1115,7 +1198,7 @@ This somewhat arbitrary-looking formulation can be better understood from a touc
 It can be shown that $H(p, q) = H(p) + D_{KL}(p || q)$ where $D_{KL}(p || q) \geq 0$ is the Kullback-Leibler distance between $p$ and $q$. Generally speaking, the better an estimate $q$ is of $p$, the lower $H(p, q)$ will be, with a lower bound of $H(p)$, the entropy of $p$. \\
 
 The perplexity PP of a model $q$, with respect to the true distribution $p$ it is attempting to estimate, is defined as:
-\begin{gather}
+\begin{gather} \label{eq:perplexity_to_cross_entropy}
 	\text{PP} = 2^{H(p, q)}
 \end{gather}
 
@@ -1123,13 +1206,13 @@ Language models assign probability distributions over sequences of words, and so
 \begin{gather*}
 	\text{PP}_L(w_1^N) = 2^{-\frac{1}{N}\sum_i \log_2 \mathbb{P}_L(w_i | w_1^{i-1})}
 \end{gather*}
-With a little algebra, this can be rearranged to give equation (4.1). \\
+With a little algebra, this can be rearranged to give equation~\ref{eq:perplexity}. \\
 
 One issue with perplexity is that it is undefined if $\mathbb{P}_L(w_i | w_1^{i-1})$ is 0 at any point. To get around this in my implementation, I replaced probability values of 0 with the small constant \ttt{1e-9}. Results that use this approximation are marked.
 
 \subsubsection{Average-Keys-Saved}
 
-It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section \todo{XXX}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user would be saved from typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
+It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section~\ref{mobile_keyboard}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user would be saved from typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
 
 As an example, if the user is typing \ttt{science} and the word \ttt{science} appears in the top three predictions after they have typed \ttt{sc}, then that would count as 5 characters being saved, averaging at $\frac{5}{7}$ keys saved per character. Averaging over the number of characters in the test data ensures that the results are not biased by the data containing particularly long words, which are easier to save characters on.
 
@@ -1210,7 +1293,7 @@ coordinates {(2, 7.54)(3, 7.22)(4, 7.17)(5, 7.16)};
 \caption{Cross-entropy of $n$-gram models trained on the PTB dataset.}
 \end{figure}
 
-Recall from equation (4.2) that cross-entropy is just the binary logarithm of perplexity, and that lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that modified Kneser-Ney smoothing offers the best prediction performance amongst the $n$-gram models. \\
+Recall from equation~\ref{eq:perplexity_to_cross_entropy} that cross-entropy is just the binary logarithm of perplexity, and that lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that modified Kneser-Ney smoothing offers the best prediction performance amongst the $n$-gram models. \\
 
 The change in performance with the value of $n$ is interesting. Intuitively, one might expect that increasing $n$ will always yield better results, because this corresponds to increasing the number of words you use to make a prediction. However, for $n$-gram models with no smoothing, add-one smoothing or Katz smoothing, this is not the case. For $n$-gram models with add-one or no smoothing, this is because they do not employ backoff. At higher values of $n$, $n$-grams are much more sparse, so without any backoff higher $n$-gram models can only rely on sparse counts, resulting is lower probabilities being assigned to plausible sequences of words. Katz smoothing does employ backoff, and achieves much better performance, but it still distributes too much probability to rare $n$-grams.
 
@@ -1224,7 +1307,7 @@ As described in the implementation chapter, I also implemented three RNN-based l
 	xlabel={Number of words used in training set},
 	ylabel={Cross-entropy ($\log_2$ perplexity)},
 	xmin=1e3, xmax=1e7,
-	ymin=6, ymax=18,
+	ymin=6, ymax=14,
 	legend pos=outer north east,
 	ymajorgrids=true,
 	grid style=dashed,
@@ -1299,15 +1382,12 @@ coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 0)};
 \end{semilogxaxis}
 \end{tikzpicture}
 \caption{Cross-entropy of various language models with respect to the training set size, using the 1BW dataset.}
+\label{fig:cross_entropy_training_set_size}
 \end{figure}
 
-As can be seen:
-\begin{itemize}
-\item
-	RNNs better than $n$-gram models.
-\item
-	etc, etc.
-\end{itemize}
+As can be seen in figure~\ref{fig:cross_entropy_training_set_size}, the RNN-based language models consistently outperform the $n$-gram based models in terms of prediction accuracy. This difference is even more pronounced when there is less training data. The performance improvement from adding more training data seems to start flattening out towards $10^7$ words. \\
+
+Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. Indeed, my results for 3-gram modified Kneser-Ney smoothing, 5-gram modified Kneser-Ney smoothing and the vanilla RNN are comparable to those from Mikolov~\cite{rnn_ptb:mikolov2012}. \\
 
 \begin{figure}[h]
 \begin{adjustbox}{center}
@@ -1340,8 +1420,6 @@ As can be seen:
 \label{fig:ptb}
 \end{figure}
 
-Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. Indeed, my results for 3-gram modified Kneser-Ney smoothing, 5-gram modified Kneser-Ney smoothing and vanilla RNN are comparable to those from Mikolov~\cite{rnn_ptb:mikolov2012}. \\
-
 There is a lot of information that can be drawn from figure~\ref{fig:ptb}, so I will highlight only the most important and interesting points:
 \begin{itemize}
 \item
@@ -1358,63 +1436,170 @@ There is a lot of information that can be drawn from figure~\ref{fig:ptb}, so I 
 
 \subsection{On a Mobile Device}
 
-Incorporating an RNN-based language model implementation into a mobile keyboard, as described in section \todo{XXX}, presented a different series of challenges. The strict memory and CPU limitations of App Extensions in iOS forced me to explore the tradeoffs between resource consumption and prediction performance. \\
+Incorporating an RNN-based language model implementation into a mobile keyboard, as described in section~\ref{mobile_keyboard}, presented a different series of challenges. The strict memory and CPU limitations of App Extensions in iOS forced me to explore the tradeoffs between resource consumption and prediction performance. \\
 
-As shown in figure~\ref{fig:ptb}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I use in the following experiments. I investigated the effect of both vocabulary size and the number of hidden neurons on the memory usage and the average-keys-saved:
+As shown in figure~\ref{fig:ptb}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I used in the following experiments, along with the 3-gram modified Kneser-Ney smoothing model. \\
 
-\begin{tikzpicture}
-\begin{axis}[
+Two obvious ways of decreasing the memory footprint of a language model are decreasing the vocabulary size and, for RNN-based models, decreasing the number of hidden neurons. What is less obvious, is how quickly the average-keys-saved drops with these two parameters.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}[scale=0.7]
+	\begin{semilogxaxis}[
+		scale only axis,
+		xmin=1,xmax=64,
+		log basis x=2,
+		xtick={1, 2, 4, 8, 16, 32, 64},
+		ymin=0.5,ymax=0.8,
+		ymajorgrids=true,
+		grid style=dashed,
+		xlabel=Minimum frequency,
+		ylabel=Average-keys-saved]
+
+		\addplot[color=green, mark=x]
+		coordinates {(1, 0.72355)(2, 0.72377)(4, 0.72355)(8, 0.71138)(16, 0.68327)(32, 0.63479)(64, 0.58079)};
+
+		\node [below right] at (axis cs:  1, 0.72355) {\scriptsize 266.56 MB};
+		\node [above] at (axis cs:  2, 0.72377) {\scriptsize 266.62 MB};
+		\node [below] at (axis cs:  4, 0.72355) {\scriptsize 266.12 MB};
+		\node [above] at (axis cs:  8, 0.71138) {\scriptsize 253.03 MB};
+		\node [above] at (axis cs:  16, 0.68327) {\scriptsize 224.94 MB};
+		\node [above] at (axis cs:  32, 0.63479) {\scriptsize 189.83 MB};
+		\node [left] at (axis cs:  64, 0.58079) {\scriptsize 148.57 MB};
+
+	\end{semilogxaxis}	
+	\end{tikzpicture}
+	\caption{3gram + modified Kneser-Ney smoothing}
+\end{subfigure}%
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}[scale=0.7]
+	\begin{semilogxaxis}[
+		scale only axis,
+		xmin=1,xmax=64,
+		log basis x=2,
+		xtick={1, 2, 4, 8, 16, 32, 64},
+		ymin=0.5,ymax=0.8,
+		ymajorgrids=true,
+		grid style=dashed,
+		xlabel=Minimum frequency,
+		ylabel=Average-keys-saved]
+		
+		\addplot[color=blue, mark=x]
+		coordinates {(1, 0.72311)(2, 0.72731)(4, 0.72908)(8, 0.70651)(16, 0.69124)(32, 0.63590)(64, 0.58079)};
+		
+		\node [above right] at (axis cs:  1, 0.72311) {\scriptsize 185.48 MB};
+		\node [below] at (axis cs:  2, 0.72731) {\scriptsize 186.00 MB};
+		\node [above] at (axis cs:  4, 0.72908) {\scriptsize 184.34 MB};
+		\node [above] at (axis cs:  8, 0.70651) {\scriptsize 153.03 MB};
+		\node [above] at (axis cs:  16, 0.69124) {\scriptsize 108.24 MB};
+		\node [above] at (axis cs:  32, 0.63590) {\scriptsize 78.45 MB};
+		\node [left] at (axis cs:  64, 0.58079) {\scriptsize 60.20 MB};
+		
+	\end{semilogxaxis}
+	\end{tikzpicture}
+	\caption{Vanilla RNN with 256 hidden neurons}
+\end{subfigure}
+\caption{The effect of \tit{minimum frequency} and therefore vocabulary size on average-keys-saved and memory usage. Both models were trained using the PTB dataset.}
+\end{figure}
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[scale=0.7]
+\begin{semilogxaxis}[
 	scale only axis,
-	xmin=1,xmax=5,
-	xtick={1, 2, 4, 8, 16, 32},
-	ymin=0,ymax=1,
-	axis y line=left,
+	xmin=16,xmax=256,
+	log basis x=2,
+	xtick={16, 32, 64, 128, 256},
+	ymin=0.5,ymax=0.8,
 	ymajorgrids=true,
 	grid style=dashed,
-	xlabel=Minimum frequency,
+	xlabel=Number of hidden neurons,
 	ylabel=Average-keys-saved]
-\end{axis}
-\begin{axis}[
-	scale only axis,
-	xmin=0,xmax=40,
-	ymin=0,ymax=1,
-	axis x line=top,
-	axis y line=none,
-	xmajorgrids=true,
-	grid style=dashed,
-	xlabel=Memory (MB)]
-\end{axis}
+
+	\addplot[color=blue, mark=x]
+	coordinates {(16, 0.65007)(32, 0.67552)(64, 0.69212)(128, 0.71204)(256, 0.72310)};
+	\node [right] at (axis cs:  16, 0.65007) {\scriptsize 44.00 MB};
+	\node [above] at (axis cs:  32, 0.67552) {\scriptsize 53.17 MB};
+	\node [above] at (axis cs:  64, 0.69212) {\scriptsize 72.40 MB};
+	\node [below] at (axis cs:  128, 0.71204) {\scriptsize 109.05 MB};
+	\node [above left] at (axis cs:  256, 0.72310) {\scriptsize 185.48 MB};
+
+\end{semilogxaxis}
 \end{tikzpicture}
+\caption{The effect of the number of hidden neurons on average-keys-saved and memory usage in a 2-layer vanilla RNN.}
+\label{fig:average_keys_saved_vs_number_of_hidden_neurons}
+\end{figure}
 
+The vocabulary size was altered by changing a parameter called the \tit{minimum frequency} in my model implementations. This parameter defines the minimum number of times a word must appear in the training set to be considered part of the language model vocabulary. Any words that were not included in the vocabulary were mapped to the unknown-word marker, \ttt{<unk>}. \\
 
-Here, I want to focus on the tradeoff between accuracy and resource consumption. Specifically, I could look at the following: \\
-\begin{itemize}
-\item
-	The effect of increasing the minimum frequency for a word to be considered in the vocabulary. (I.e. the effect of changing the vocabulary size).
-\item
-	The effect of changing the number of hidden layer neurons.
-\item
-	The effect of using RNN vs GRU vs LSTM.
-\item
-	(Perhaps also the effect of pruning on $n$-gram models).
-\item
-	ALSO: Perhaps compare using float 32 vs float 16 in terms of memory vs accuracy.
-\end{itemize}
-\subsubsection*{The trade-off between the vocabulary size and resource usage}
-\subsubsection*{The trade-off between the number of hidden neurons and resource usage}
-\subsubsection*{The trade-off between the number of hidden neurons and resource usage}
+For both the $n$-gram and vanilla RNN models, the minimum frequency can be increased to approximately $2^4$ before the average-keys-saved starts dropping rapidly. In the case of the RNN model, a saving of 77.24 MB is made by increasing the minimum frequency to $2^4$, with a drop of only 0.03187 in average-keys-saved. The savings made on the $n$-gram model are less substantial. \\
 
-Other optimisations (not graphed):
-\begin{itemize}
-\item
-	Remove softmax layer.
-\item
-	Store weights as float 16 rather than float 32.
-\end{itemize}
+From figure~\ref{fig:average_keys_saved_vs_number_of_hidden_neurons}, it can be seen that much greater reductions in memory usage can be achieved for a given loss in average-keys-saved. Dropping from 256 to 32 hidden neurons in each layer gives a memory saving of 132.31 MB, with an average-keys-saved loss of 0.04758. It is intriguing that a 2-layer vanilla RNN with only 32 hidden neurons in each layer can achieve a better average-keys-saved score than the 5-gram model with Katz smoothing from figure~\ref{fig:ptb}. \\
+
+Of course, there are several other techniques that can be used to optimise the memory and CPU overhead of language models for mobile platforms. These include, but are not limited to: using 16-bit floats, rather than 32-bit or 64-bit, to store the model parameters; removing the softmax layer from the RNN, since the outputs do not need to sum to 1 in text prediction; and memory-mapping the model to reduce memory pressure when it is initially being loaded.
 
 \subsection{On Error-Prone Text}
 
-I split the CLC dataset up into six files:
+In this section I present my findings for the performance of language models on error-prone text. In the ideal case, when presented with error-prone text, a RNN-based language model should be able to predict the next words that would follow the error-free version of the text, as shown in figure~\ref{fig:error_prone_to_error_free_rnn}.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[>=stealth]
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input1) at (0, 0) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden1) at (0, 1.5) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output1) at (0, 3) {};
+	\draw [<-] (input1) -- ++(0, -0.8) node [below] {\tit{the}};
+	\draw [->, line width=0.3mm] (input1) -- (hidden1);
+	\draw [->, line width=0.3mm] (hidden1) -- (output1);
+	\draw [->] (output1) -- ++(0, 0.8) node [above] {\tit{weather}};
+	
+	\node[below left=6mm and 2mm of input1] (inputs) {\tbf{Inputs:}};
+	\node[above left=5mm and 2mm of output1] (targets) {\tbf{Targets:}};
+
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input2) at (3, 0) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden2) at (3, 1.5) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output2) at (3, 3) {};
+	\draw [<-] (input2) -- ++(0, -0.8) node [below] {\textcolor{red}{\tit{whether}}};
+	\draw [->, line width=0.3mm] (input2) -- (hidden2);
+	\draw [->, line width=0.3mm] (hidden2) -- (output2);
+	\draw [->] (output2) -- ++(0, 0.8) node [above] {\tit{is}};
+
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input3) at (6, 0) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden3) at (6, 1.5) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output3) at (6, 3) {};
+	\draw [<-] (input3) -- ++(0, -0.8) node [below] {\tit{is}};
+	\draw [->, line width=0.3mm] (input3) -- (hidden3);
+	\draw [->, line width=0.3mm] (hidden3) -- (output3);
+	\draw [->] (output3) -- ++(0, 0.8) node [above] {\tit{sunny}};
+	
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input4) at (9, 0) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden4) at (9, 1.5) {};
+	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output4) at (9, 3) {};
+	\draw [<-] (input4) -- ++(0, -0.8) node [below] {\tit{sunny}};
+	\draw [->, line width=0.3mm] (input4) -- (hidden4);
+	\draw [->, line width=0.3mm] (hidden4) -- (output4);
+	\draw [->] (output4) -- ++(0, 0.8) node [above] {\tit{today}};
+
+	\node (cont) at (11, 1.5) {$\hdots$};
+
+	\draw [->, line width=0.3mm] (hidden1.east) -- (hidden2.west);
+	\draw [->, line width=0.3mm] (hidden2.east) -- (hidden3.west);
+	\draw [->, line width=0.3mm] (hidden3.east) -- (hidden4.west);
+	\draw [->, line width=0.3mm] (hidden4.east) -- (cont.west);
+\end{tikzpicture}
+\caption{The ideal language model that can make predictions regardless of errors in the input text.}
+\label{fig:error_prone_to_error_free_rnn}
+\end{figure}
+
+Normally, language models are evaluated by feeding them a sequence of input words (\tit{the inputs}) and seeing how well they predict that same sequence of input words shifted forward in time by one word (\tit{the targets}). When evaluating my error-correcting language models, I did exactly the same thing, except that the inputs were allowed to contain error in them and the targets were not. \\
+
+In order to obtain sequences of words with and without errors in them I used the CLC dataset. I split this dataset up into six files:
 \begin{center}
 \begin{tabular}{c c}
 	\ttt{train.correct.txt} & \ttt{train.incorrect.txt} \\
@@ -1422,72 +1607,60 @@ I split the CLC dataset up into six files:
 	\ttt{test.correct.txt} & \ttt{test.incorrect.txt}
 \end{tabular}
 \end{center}
-The training, validation and test sets all consisted of one file containing uncorrected text and another file containing the corresponding corrected text. I trained an 2-layer LSTM-based language model with 256 hidden neurons on \ttt{train.correct.txt}, and used \ttt{valid.correct.txt} to guide the learning rate decay. I filtered the test set files such that they only contained pairs of lines that were not identical and that did not contain any insertion or deletion corrections. \\
+The training, validation and test sets all consisted of one file containing uncorrected text and another file containing the corresponding corrected text. I trained an 2-layer LSTM-based language model with 256 hidden neurons on \ttt{train.correct.txt}, and used \ttt{valid.correct.txt} to guide the learning rate decay. In order to focus the evaluation on the error-correcting ability of my language models, I removed any pairs of lines from the test set files that were identical. I also removed any pairs of lines that contained corrections that involve the insertion or deletion of words, because my model was not designed to handle these types of errors, as explained in section~\ref{error_correcting_lm}. \\
 
-Before exploring ways to improve the performance on error-prone text, I first established an approximate upper and lower bound. To obtain the upper bound (i.e. the best possible perplexity), I evaluated the LSTM using \ttt{test.correct.txt} for the input words and \ttt{test.correct.txt} for the target words. and 'In order to establish a rough upper and lower bound on the performance of the LSTM on error-prone text, I first evaluated 
+Before exploring ways to improve predictions on error-prone text, I first established an approximate lower and upper bound on the performance. The ideal error-correcting language model would predict words as if the input were not error-prone, therefore, to obtain the upper bound in performance, I evaluated the LSTM-based language model using \ttt{test.correct.txt} for the input words and \ttt{test.correct.txt} for the target words. In order to establish a lower bound, I evaluated the performance of the same model using \ttt{test.incorrect.txt} for the input words and \ttt{test.correct.txt} for the target words. This model did not contain any error-correcting capabilities. \\
 
-Things I aim to evaluate here are: \\
+As explained in section~\ref{error_correcting_lm}, my error-correcting language model attempted to replace words in the context that were not contained in some dictionary $D$ of words, by going through the next-words in the vocabulary in order of decreasing probability and finding the candidate word within an edit distance $\delta$ of the original word. Therefore, with this approach, there were two parameters $D$ and $\delta$ that could be changed.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\begin{adjustbox}{center}
+\begin{tabular}{| L{3.5cm} | L{8cm} | C{2.2cm} | C{2cm} |}
+	\hline
+	\tbf{Language model} & \tbf{Description} & \tbf{Perplexity} & \tbf{Average-keys-saved} \\ \hline
+	\tit{Upper bound} & The best performance achievable assuming perfect error-correction. & 77.83 & 0.65483 \\ \hline
+	\tit{Error-correcting LSTM} & $D = V$; $\delta$ = 1 & 87.61 & 0.64453 \\ \hline
+	\tit{Error-correcting LSTM} & $D = E \cup V$; $\delta$ = 1 & 87.99 & 0.64453 \\ \hline
+	\tit{Error-correcting LSTM} & $D = E \cup V$; $\delta$ = 2 & 88.47 & 0.64376 \\ \hline
+	\tit{Error-correcting LSTM} & $D = E \cup V$; $\delta$ = 3 & 88.57 & 0.64273 \\ \hline
+	\tit{Lower bound} & The performance that would be achieved with no error-correction. & 89.70 & 0.63912 \\ \hline
+\end{tabular}
+\end{adjustbox}
+\caption{The performance of my error-correcting language model with respect to the upper and lower bound, using the CLC dataset. $E$ and $V$ denote the english dictionary and the language model vocabulary respectively.}
+\label{fig:error_correcting_results}
+\end{figure}
 
 \begin{itemize}
-\item
-	The hypothetical upper and lower bounds on accuracy (i.e. the LM results on correct input and on incorrect input respectively).
-\item
-	The effect of using the vocabulary vs different sized dictionaries for determining if a word should be replaced or not.
-\item
-	The effect of edit distance on performance.
 \item
 	An intuitive explanation behind the gap remaining between the current performance and the upper bound. Perhaps some suggestions for future work.
 \end{itemize}
 
-\begin{figure}[h]
-\begin{center}
-\begin{tikzpicture}[scale=1.2]
-\pgfplotsset{every axis legend/.append style={
-	at={(0.5, -0.5)},
-	anchor=north}}
-\begin{axis}[
-	axis lines = middle,
-	width=10cm,
-	height=5cm,
-	xlabel={Perplexity},
-	axis x line=bottom,
-	hide y axis,
-	xmin=70, xmax=100,
-	ymin=0, ymax=5,
-	xtick={70, 75, 80, 85, 90, 95, 100},
-]
-
-\addplot[color=black, mark=|, mark size=5.0]
-coordinates {(89.70, 0)} node[pin=85:{\small Upper bound}]{};
-
-\addplot[color=red, mark=x, mark size=3.0]
-coordinates {(88.47, 0)};
-
-\addplot[color=black, mark=|, mark size=5.0]
-coordinates {(77.83, 0)} node[pin=85:{\small Lower bound}]{};
-
-\legend{, Error-Correcting LSTM (error-prone input),}
- 
-\end{axis}
-\end{tikzpicture}
-\caption{Perplexity on Cambridge Learner Corpus}
-\end{center}
-\end{figure}
 
 \chapter{Conclusions}
+
+The project was a success: I implemented a variety of $n$-gram and RNN-based language models, and benchmarked them in terms of both their prediction performance and their applicability to running on a mobile platform, as set out in my project proposal. Additionally, I built a mobile keyboard for iOS that uses my language models as a library, and proposed a novel extension to an existing language model that improves its performance on error-prone text. \\
 
 Conclusions:
 \begin{itemize}
 \item
-	
+	Neural models offer best performance, but take longest to train.
+\item
+	Significant prediction improvements can be achieved by interpolating language models.
+\item
+	Memory reduction is most effectively achieved by reducing the number of hidden neurons.
+\item
+	Best option for mobile device is perhaps to combine one or more memory-reduced language models.
 \end{itemize}
+
+In my project, I explicitly demonstrated that language model performance is deterred by error-prone text. Whilst I made some modifications to an existing model that saw an increase in performance on such text, there is still room for improvement. If I were given more time to work on the project, I would investigate ways to cater for non-spelling corrections, and changes that involve the insertion or deletion of words.
 
 Future work/possible extensions:
 \begin{itemize}
 \item
-	Using Neural Machine Translation to correct the context, making use of attention.
+	More intelligent ways of pruning $n$-gram models.
 \item
-	
+	Using Neural Machine Translation to correct the context, making use of attention.	
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
