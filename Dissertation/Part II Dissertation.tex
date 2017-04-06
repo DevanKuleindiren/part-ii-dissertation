@@ -53,7 +53,7 @@
 \usepackage{circuitikz}
 
 % For tikz diagrams.
-\usetikzlibrary{positioning, fit, arrows.meta}
+\usetikzlibrary{positioning, fit, arrows, arrows.meta, decorations.markings}
 
 % Enables spacing in file paths when inserting images
 \usepackage[space]{grffile}
@@ -63,38 +63,39 @@
 
 % The colours used by lstlisting
 \definecolor{mygreen}{rgb}{0,0.6,0}
-\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{myblue}{rgb}{0,0.5,0.8}
+\definecolor{mygray}{rgb}{0.3,0.3,0.3}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
 
 % For blocks of code
 \lstset{ %
-  aboveskip=1em,
-  backgroundcolor=\color{white},	% choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
-  basicstyle=\ttfamily\scriptsize,		% the size of the fonts that are used for the code
-  belowskip=-2em,
-  breakatwhitespace=false,		% sets if automatic breaks should only happen at whitespace
-  breaklines=true,				% sets automatic line breaking
-  captionpos=b,					% sets the caption-position to bottom
-  commentstyle=\color{mygreen},	% comment style
-  deletekeywords={...},			% if you want to delete keywords from the given language
-  escapeinside={\%*}{*)},			% if you want to add LaTeX within your code
-  extendedchars=true,			% lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
-  frame=single,					% adds a frame around the code
-  keepspaces=true,				% keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
-  keywordstyle=\color{blue},		% keyword style
-  language=Java,				% the language of the code
-  otherkeywords={},				% if you want to add more keywords to the set, e.g. for ML you might have {fun, let, ...}
-  numbers=left,					% where to put the line-numbers; possible values are (none, left, right)
-  numbersep=5pt,				% how far the line-numbers are from the code
-  numberstyle=\tiny\color{mygray},	% the style that is used for the line-numbers
-  rulecolor=\color{black},			% if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
-  showspaces=false,				% show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
-  showstringspaces=false,			% underline spaces within strings only
-  showtabs=false,				% show tabs within strings adding particular underscores
-  stepnumber=1,				% the step between two line-numbers. If it's 1, each line will be numbered
-  stringstyle=\color{mymauve},		% string literal style
-  tabsize=2,					% sets default tabsize to 2 spaces
-  title=\lstname					% show the filename of files included with \lstinputlisting; also try caption instead of title
+	aboveskip=1em,
+	backgroundcolor=\color{white},				% choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+	basicstyle=\ttfamily\scriptsize\color{mygray},	% the size of the fonts that are used for the code
+	belowskip=-2em,
+	breakatwhitespace=false,					% sets if automatic breaks should only happen at whitespace
+	breaklines=true,						% sets automatic line breaking
+	captionpos=b,							% sets the caption-position to bottom
+	commentstyle=\color{mygreen},			% comment style
+	deletekeywords={...},						% if you want to delete keywords from the given language
+	escapeinside={\%*}{*)},					% if you want to add LaTeX within your code
+	extendedchars=true,						% lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	frame=single,							% adds a frame around the code
+	keepspaces=true,						% keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\color{myblue},				% keyword style
+	language=C++,							% the language of the code
+	otherkeywords={},						% if you want to add more keywords to the set, e.g. for ML you might have {fun, let, ...}
+	numbers=left,							% where to put the line-numbers; possible values are (none, left, right)
+	numbersep=5pt,						% how far the line-numbers are from the code
+	numberstyle=\tiny\color{mygray},			% the style that is used for the line-numbers
+	rulecolor=\color{black},					% if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,						% show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,					% underline spaces within strings only
+	showtabs=false,						% show tabs within strings adding particular underscores
+	stepnumber=1,							% the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{mymauve},				% string literal style
+	tabsize=2,								% sets default tabsize to 2 spaces
+	title=\lstname							% show the filename of files included with \lstinputlisting; also try caption instead of title
 }
 
 % Defines \ip{arg1}{arg2} to mean (arg1, arg2).
@@ -276,9 +277,9 @@ $n$-gram language models make the Markov assumption that $w_i$ only depends on t
 	\mathbb{P}(w_1^N) \approx \prod_{i = 1}^N \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})
 \end{gather*}
 Using the maximum likelihood estimation, $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})$ can be estimated as follows:
-\begin{gather*}
+\begin{gather} \label{eq:ngram}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{MLE} = \frac{c(w_{i - n + 1}^{i})}{\sum_w c(w_{i - n + 1}^{i - 1}w)}
-\end{gather*}
+\end{gather}
 where $c(W)$ denotes the number of times that the word sequence $W$ was seen in the training set. \\
 
 To a first approximation, the aforementioned $n$-gram language model provides reasonable results and is simple to compute. However, it does have one major issue: if, as an example, a 3-gram (trigram) model does not encounter the trigram \tit{`the cat sat'} in the data it is trained upon, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which is exponential in the value of $n$. This means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
@@ -345,9 +346,9 @@ Absolute discounting employs backoff by interpolating higher and lower order $n$
 \end{aligned}
 \end{equation*}
 where
-\begin{gather*}
+\begin{gather} \label{eq:n1plus}
 	N_{1+}(w_{i - n + 1}^{i - 1}\bullet) = |\{ w\ |\ c(w_{i - n + 1}^{i - 1}w) \geq 1 \}|
-\end{gather*}
+\end{gather}
 and the base case of recursion $\mathbb{P}(w)_{\text{\scshape ABS}}$ is given by the maximum likelihood unigram model. $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$ is the number of unique words that follow the sequence $w_{i - n + 1}^{i - 1}$, which is the number of $n$-grams that $D$ is subtracted from. It is not difficult to show that the coefficient attached to the $\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}$ term ensures that the probabilities sum to 1. \\
 
 Ney, Essen and Kneser~\cite{absolute_discounting:ney1994} suggested setting $D$ to the value:
@@ -403,7 +404,7 @@ and
 		D_{3+} &\text{if }c \geq 3 \\
 	\end{cases}
 \end{gather*}
-Chen and Goodman suggest setting the discounts to be:
+where $N_1$, $N_2$ and $N_{3+}$ are defined analogously to $N_{1+}$ in equation~\ref{eq:n1plus}. Chen and Goodman suggest setting the discounts to be:
 \begin{align*}
 	D_1 = 1 - 2D\frac{n_2}{n_1} && D_2 = 2 - 3D\frac{n_3}{n_2} && D_{3+} = 3 - 4D\frac{n_4}{n_3}
 \end{align*}
@@ -1050,36 +1051,153 @@ This section details how I implemented a variety $n$-gram and RNN-based language
 
 \section{System Overview}
 
+\tikzstyle{vecArrow} = [thick, decoration={markings,mark=at position
+	1 with {\arrow[semithick]{open triangle 60}}},
+	double distance=1.4pt, shorten >= 5.5pt,
+	preaction = {decorate},
+	postaction = {draw,line width=1.4pt, white,shorten >= 4.5pt}]
 
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\begin{adjustbox}{center}
+\centering
+\begin{tikzpicture}[
+		>=stealth,
+		language/.style={rectangle, rounded corners=5pt},
+		module/.style={draw, rectangle, thick, rounded corners=2pt, minimum width=25mm, minimum height=15mm, text width=25mm, align=center},
+	]
+	\node[language, minimum width=60mm, minimum height=30mm, fill=purple!10] (objectiveC) at (-5.5, 0) {};
+	\node[language, minimum width=60mm, minimum height=30mm, fill=brown!10] (python) at (-5.5, -4) {};
+	\node[language, minimum width=170mm, minimum height=30mm, fill=black!10] (protobuf) at (0, -8) {};
+	\node[language, minimum width=100mm, minimum height=70mm, fill=blue!10] (cplusplus) at (3.5, -2) {};
+	
+	\node[below right] (objectiveC_text) at (objectiveC.north west) {\tbf{Objective-C++}};
+	\node[below right] (python_text) at (python.north west) {\tbf{Python}};
+	\node[below right] (protobuf_text) at (protobuf.north west) {\tbf{Protocol Buffer}};
+	\node[below right] (cplusplus_text) at (cplusplus.north west) {\tbf{C++}};
 
-\begin{itemize}
-\item
-	Diagram showing how languages are used and interconnected.
-\item
-	Explanation of how and why project is embedded in TensorFlow repository.
-\end{itemize}
+	\node[module, below right=7.5mm and 15mm, dashed] (mobile_keyboard) at (objectiveC.north west) {\footnotesize iOS Mobile Keyboard};
 
-\subsection{Interface to Language Models}
-\begin{itemize}
-\item
-	Vocabulary and minimum frequency
-\item
-	Methods
-\item
-	The use of protocol buffers - vocab proto + either $n$-gram proto or some rnn protos.
-\end{itemize}
-\section{$n$-gram Models}
-\begin{itemize}
-\item
-	Tradeoff between how much is done at training time vs how much is done at inference time.
-\item
-	Pipeline: compute vocabulary $\rightarrow$ count $n$-grams $\rightarrow$ populate probability trie.
-\item
-	Justify approach over hash-based models or computing probability from counts on the fly.
-\item
-	Vocab words replaced with integers to save space.
-\end{itemize}
-\subsection{Counting $n$-grams Efficiently}
+	\node[module, below right=7.5mm and 15mm] (rnn_train) at (python.north west) {\footnotesize RNN LM Training};
+
+	\node[module, below right=7.5mm and 51mm] (rnn_proto) at (protobuf.north west) {\footnotesize Trained RNN LM};
+	\node[module, below right=7.5mm and 85mm] (ngram_proto) at (protobuf.north west) {\footnotesize Trained $n$-gram LM};
+
+	\node[module, below right=7.5mm and 15mm] (benchmark) at (cplusplus.north west) {\footnotesize Benchmarking Framework};
+	\node[module, below right=25mm and 11.5mm, minimum width=75mm, minimum height=40mm] (lm) at (cplusplus.north west) {};
+	\node[module, below right=27.5mm and 15mm] (rnn_infer) at (cplusplus.north west) {\footnotesize RNN LM Inference};
+	\node[module, below right=27.5mm and 55mm, dashed] (error_correcting) at (cplusplus.north west) {\footnotesize Error-Correcting RNN LM};
+	\node[module, below right=47.5mm and 15mm] (ngram) at (cplusplus.north west) {\footnotesize $n$-gram LM Training / Inference};
+	\node[module, below right=47.5mm and 55mm] (combination) at (cplusplus.north west) {\footnotesize Combined LM};
+
+	\foreach \i/\j in {error_correcting/rnn_infer, combination/ngram, combination/rnn_infer}
+		\draw[->] (\i) -- (\j);
+
+	\draw[->, rounded corners=5pt] (mobile_keyboard.east) -| ++(22.5mm,-10mm) |- ([yshift=2mm]rnn_infer.west);
+
+	\draw[->, rounded corners=5pt] (benchmark) -| (lm);
+
+	\draw[vecArrow, rounded corners=5pt] (rnn_train.east) -| ([xshift=-2mm]rnn_proto.north);
+	\draw[vecArrow, rounded corners=5pt] ([xshift=2mm]rnn_proto.north) |- ([yshift=-2mm]rnn_infer.west);
+
+	\draw[vecArrow, rounded corners=5pt] ([xshift=-2mm]ngram.south) -- ([xshift=-2mm]ngram_proto.north);
+	\draw[vecArrow, rounded corners=5pt] ([xshift=2mm]ngram_proto.north) -- ([xshift=2mm]ngram.south);
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{An overview of the project. Outlined rectangles denote groups of related files or code, of which the ones with a dashed outline represent project extensions. Thin arrows denote dependencies and thick arrows represent the movement of data.}
+\label{fig:system_overview}
+\end{figure}
+
+The core components of my project are highlighted in figure~\ref{fig:system_overview}. The choices of language for each of the system components are reasoned in section~\ref{tools}. I used Protocol Buffers as a language neutral method of encapsulating a trained and exported language model that can be loaded into memory and used to make predictions. \\
+
+As shown, all of the code for training and running inference on $n$-gram models was written in C++, and is described in section~\ref{ngram_lm}. The RNN-based language models were trained in Python using TensorFlow, before being exported into a small group of protocol buffers that can be loaded into C++ for running inference, all of which is detailed in section~\ref{rnn_lm}. The `Combined LM' component represents a language model which interpolates the probabilities across one or more $n$-gram and/or RNN-based language models. This part is not described in depth, because it is mostly trivial. I outline in section~\ref{mobile_keyboard} how I built a mobile keyboard in iOS that utilises one of the RNN-based language models. Finally, the `Error-Correcting RNN LM' component denotes an extension to an existing RNN-based language model which I made in order to improve its performance on error-prone text, which is described in section~\ref{error_correcting_lm}. \\
+
+The $n$-gram, RNN, error-correcting RNN and combined language models all inherit, either directly or indirectly, from a single language model superclass, which is all that the benchmarking framework depends on. This class is described briefly below. Details of the metrics used in the benchmarking framework are left for chapter~\ref{evaluation}. \\
+
+\subsection{The Language Model Hierarchy} \label{lm_interface}
+
+All of my language model implementations in C++ were joined by the same inheritance hierarchy, at the top of which was a single language model superclass, \ttt{LM}: \\
+
+\begin{lstlisting}[language=C++]
+class LM {
+protected:
+    Vocab *vocab;
+    ...
+public:
+    ...
+    // Given a sequence of words, `seq', return the most probable next word, with its
+    // associated probability.
+    virtual void Predict(std::list<std::string> seq,
+                         std::pair<std::string, double> &pred);
+    
+    // Given a sequence of words, `seq', return the top k most probable next words, in
+    // order of decreasing probability.
+    virtual void PredictTopK(std::list<std::string> seq,
+                             std::list<std::pair<std::string, double>> &preds, int k);
+    
+    // Return the probability of the word sequence, `seq'.
+    virtual double Prob (std::list<std::string> seq) = 0;
+    
+    // Given a sequence of words, `seq', initialise `probs' with the probability of each
+    // word in the vocabulary following that sequence.
+    virtual void ProbAllFollowing (std::list<std::string> seq,
+                                   std::list<std::pair<std::string, double>> &probs) = 0;
+    
+    // The same as above, except the word-probabilities are stored in a character trie.
+    virtual void ProbAllFollowing (std::list<std::string> seq, CharTrie *probs) = 0;
+    ...
+};
+\end{lstlisting}
+~\\
+
+Every language model object stores a \ttt{Vocab} object, which contains the set of words in the language model vocabulary, and a mapping from those words to integer IDs. The integer IDs are used in place of the string representations of such words in various language model data structures that are discussed later in this chapter. This is simply a memory optimisation, because an integer requires less space than a string. \\
+
+\ttt{Predict()} is a special case of \ttt{PredictTopK()}, which simply uses a priority queue to extract the top $k$ predictions from result of calling \ttt{ProbAllFollowing()}. The implementations of \ttt{Prob()} and \ttt{ProbAllFollowing()} depend on the specific language model. One might think that \ttt{ProbAllFollowing()} can be implemented by calling \ttt{Prob()} for each word in the vocabulary, but this would be inefficient in the case of an RNN-based language model, which implicitly computes the probability distribution over every word in the vocabulary in each forward pass of the network, hence why the methods are kept separate. \\
+
+\todo{Possibly add diagram of inheritance hierarchy.}
+
+\section{$n$-gram Models} \label{ngram_lm}
+
+Below I detail the implementation of the $n$-gram models and their associated smoothing techniques. \\
+
+One of the first things I discovered when implementing $n$-gram language models is that there is a tradeoff between how much computation is done at training time, and how much computation is done at inference time. For example, at one extreme you could compute only the number of times each $n$-gram occurs at training time, and leave the computation of the coefficients in the smoothing equations to be calculated on the fly. At the other extreme, you could compute and store the final value of the probability for every possible $n$-gram that can be formed from the words in the language model vocabulary, and then return the relevant probability immediately at inference time. The problem with the first approach is that the language model would be too slow at inference time, and the problem with the second approach is that storing absolute probabilities for every possible $n$-gram would occupy far too much space to be practical. In my implementation, I try to strike a balance between these two extremes by precomputing and efficiently storing all of the relevant coefficients for the smoothing equations, and then combining them at inference time to compute the required $n$-gram probability. \\
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+		>=stealth,
+		stage/.style={draw, rectangle, thick, rounded corners=2pt, minimum width=25mm, minimum height=15mm, text width=25mm, align=center, font=\footnotesize},
+		file/.style={draw, rectangle, minimum width=20mm, minimum height=30mm, text width=20mm, align=center, font=\footnotesize\ttfamily},
+	]
+	\node[file] (training_set) at (0, 0) {\ttt{train.txt}};
+	\node[stage] (vocab) at (3.5, 0) {Compute LM Vocabulary};
+	\node[stage] (count) at (7, 0) {Count $n$-grams};
+	\node[stage] (precompute) at (10.5, 0) {Precompute Smoothing Coefficients};
+	\node[file] (ngram_proto) at (14, 0) {vocab.pbtxt \\ ngram.pb};
+
+	\draw[->] (training_set) -- (vocab);
+	\draw[->] (vocab) -- (count);
+	\draw[->] (count) -- (precompute);
+	\draw[->] (precompute) -- (ngram_proto);
+\end{tikzpicture}
+\caption{The $n$-gram training pipeline.}
+\label{fig:ngram_training}
+\end{figure}
+
+The process of training an $n$-gram model in my implementation is outlined in figure~\ref{fig:ngram_training}. The three stages of the pipeline are outlined in sections~\ref{ngram_compute_vocab}, \ref{ngram_count} and \ref{ngram_precompute} respectively.
+
+\subsection{Computing the Vocabulary} \label{ngram_compute_vocab}
+
+The first stage involves a single pass over \ttt{train.txt}, where words that occur at least $k$ times are added to the vocabulary and mapped to an integer ID. A special marker \ttt{<unk>} is included in the vocabulary to represent any out-of-vocabulary words. That is, when the model encounters a word it has not seen before, it treats it as \ttt{<unk>}. The marker \ttt{<s>} is also included and is used to denote the end of a sentence.
+
+\subsection{Counting $n$-grams Efficiently} \label{ngram_count}
+
+For $n$-gram models without any smoothing, the only information that needs to be computed at this stage is $c(w_{i - n + 1}^{i})$ and $\sum_w c(w_{i - n + 1}^{i - 1}w)$, which are the number of times each $n$-gram $w_{i - n + 1}^i$ occurred in \ttt{train.txt}, and the sum of all such counts that follow the $(n-1)$-gram $w_{i - n + 1}^{i - 1}$ respectively. Then, given these two precomputed numbers, when the $n$-gram model is queried for the probability of $w_{i - n + 1}^i$, it can simply return the first number divided by the second, as required in equation~\ref{eq:ngram}. \\
+
+This situation becomes more complex once smoothing techniques are included.
+
 \begin{itemize}
 \item
 	Count trie
@@ -1092,14 +1210,14 @@ This section details how I implemented a variety $n$-gram and RNN-based language
 		Efficient sum following
 	\end{itemize}
 \end{itemize}
-\subsection{Precomputing Smoothing Coefficients}
+\subsection{Precomputing Smoothing Coefficients} \label{ngram_precompute}
 \begin{itemize}
 \item
 	How all smoothing methods can be massaged to same form, which suits storage in probability trie.
 \item
 	Probability trie - explain how it stores each parameter the minimum number of times.
 \end{itemize}
-\section{Recurrent Neural Network Models}
+\section{Recurrent Neural Network Models} \label{rnn_lm}
 \subsection{TensorFlow}
 \begin{itemize}
 \item
@@ -1131,19 +1249,7 @@ This section details how I implemented a variety $n$-gram and RNN-based language
 \item
 	Learning rate schedule using validation set, initial learning rate, dropout, etc
 \end{itemize}
-\section{Extending Models to Tackle Error-Prone Text} \label{error_correcting_lm}
-\subsection{Preprocessing the CLC Dataset}
-\begin{itemize}
-\item
-	Tokenisation
-\item
-	Alignment and removal of identical sentences
-\end{itemize}
-\subsection{Error Correction on Word Context}
-\begin{itemize}
-\item
-	Motivation and algorithm for error-correction on the context
-\end{itemize}
+
 \section{Mobile Keyboard} \label{mobile_keyboard}
 \begin{itemize}
 \item
@@ -1157,7 +1263,21 @@ This section details how I implemented a variety $n$-gram and RNN-based language
 	Screenshots
 \end{itemize}
 
-\chapter{Evaluation}
+\section{Extending Models to Tackle Error-Prone Text} \label{error_correcting_lm}
+\subsection{Preprocessing the CLC Dataset}
+\begin{itemize}
+\item
+	Tokenisation
+\item
+	Alignment and removal of identical sentences
+\end{itemize}
+\subsection{Error Correction on Word Context}
+\begin{itemize}
+\item
+	Motivation and algorithm for error-correction on the context
+\end{itemize}
+
+\chapter{Evaluation} \label{evaluation}
 
 In this chapter, I will first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I present the performance of the existing language models that I implemented, secondly I focus on the tradeoffs faced when employing those models on a mobile device, and finally I display my findings in language modelling on error-prone text.
 
@@ -1299,15 +1419,16 @@ The change in performance with the value of $n$ is interesting. Intuitively, one
 
 \subsubsection*{A comparison of RNN-based models with $n$-gram models}
 
-As described in the implementation chapter, I also implemented three RNN-based language models which differ in the RNN cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory.
+As described in the implementation chapter, I also implemented three RNN-based language models which differ in the RNN cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory. \\
 
 \begin{figure}[h]
+\captionsetup{justification=centering}
 \begin{tikzpicture}[scale=1.0]
 \begin{semilogxaxis}[
 	xlabel={Number of words used in training set},
 	ylabel={Cross-entropy ($\log_2$ perplexity)},
 	xmin=1e3, xmax=1e7,
-	ymin=6, ymax=14,
+	ymin=6, ymax=18,
 	legend pos=outer north east,
 	ymajorgrids=true,
 	grid style=dashed,
@@ -1363,15 +1484,15 @@ coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.83)(1e6, 8.39)(1e7, 7.46)};
 
 % Vanilla RNN 256
 \addplot[color=orange, mark=asterisk]
-coordinates {(1e3, 13.59)(1e4, 11.72)(1e5, 9.62)(1e6, 8.34)(1e7, 0)};
+coordinates {(1e3, 13.59)(1e4, 11.72)(1e5, 9.62)(1e6, 8.34)(1e7, 7.36)};
 
 % GRU 256
 \addplot[color=teal, mark=pentagon]
-coordinates {(1e3, 13.58)(1e4, 11.67)(1e5, 10.03)(1e6, 8.23)(1e7, 0)};
+coordinates {(1e3, 13.58)(1e4, 11.67)(1e5, 10.03)(1e6, 8.23)(1e7, 7.05)};
 
 % LSTM 256
 \addplot[color=magenta, mark=star]
-coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 0)};
+coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 6.98)};
 
 \legend{
 %	3gram, 3gram + add-one, 3gram + Katz, 3gram + absolute discounting, 3gram + Kneser-Ney, 3gram + Modified Kneser-Ney,
@@ -1385,9 +1506,9 @@ coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 0)};
 \label{fig:cross_entropy_training_set_size}
 \end{figure}
 
-As can be seen in figure~\ref{fig:cross_entropy_training_set_size}, the RNN-based language models consistently outperform the $n$-gram based models in terms of prediction accuracy. This difference is even more pronounced when there is less training data. The performance improvement from adding more training data seems to start flattening out towards $10^7$ words. \\
+As can be seen in figure~\ref{fig:cross_entropy_training_set_size}, the RNN-based language models consistently outperform the $n$-gram based models in terms of prediction accuracy. This difference is most significant for small training sets of less than $10^5$ words, and starts to become more pronounced again once the training set grows large beyond $10^6$ words. The performance gain from adding more training data seems to start flattening out towards $10^7$ words for the smoothed $n$-gram models, whereas the RNN-based ones seem to continue improving. \\
 
-Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. Indeed, my results for 3-gram modified Kneser-Ney smoothing, 5-gram modified Kneser-Ney smoothing and the vanilla RNN are comparable to those from Mikolov~\cite{rnn_ptb:mikolov2012}. \\
+Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. Indeed, my results for 3-gram modified Kneser-Ney smoothing, 5-gram modified Kneser-Ney smoothing and the vanilla RNN are comparable to those from Mikolov~\cite{rnn_ptb:mikolov2012}, who also benchmarked these three models. \\
 
 \begin{figure}[h]
 \begin{adjustbox}{center}
@@ -1611,7 +1732,7 @@ The training, validation and test sets all consisted of one file containing unco
 
 Before exploring ways to improve predictions on error-prone text, I first established an approximate lower and upper bound on the performance. The ideal error-correcting language model would predict words as if the input were not error-prone, therefore, to obtain the upper bound in performance, I evaluated the LSTM-based language model using \ttt{test.correct.txt} for the input words and \ttt{test.correct.txt} for the target words. In order to establish a lower bound, I evaluated the performance of the same model using \ttt{test.incorrect.txt} for the input words and \ttt{test.correct.txt} for the target words. This model did not contain any error-correcting capabilities. \\
 
-As explained in section~\ref{error_correcting_lm}, my error-correcting language model attempted to replace words in the context that were not contained in some dictionary $D$ of words, by going through the next-words in the vocabulary in order of decreasing probability and finding the candidate word within an edit distance $\delta$ of the original word. Therefore, with this approach, there were two parameters $D$ and $\delta$ that could be changed.
+As explained in section~\ref{error_correcting_lm}, my error-correcting language model attempted to replace words in the context that were not contained in a dictionary of English words, by going through the language model vocabulary in order of decreasing probability and picking the first candidate word within an edit distance $\delta$ of the original word. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1620,22 +1741,19 @@ As explained in section~\ref{error_correcting_lm}, my error-correcting language 
 	\hline
 	\tbf{Language model} & \tbf{Description} & \tbf{Perplexity} & \tbf{Average-keys-saved} \\ \hline
 	\tit{Upper bound} & The best performance achievable assuming perfect error-correction. & 77.83 & 0.65483 \\ \hline
-	\tit{Error-correcting LSTM} & $D = V$; $\delta$ = 1 & 87.61 & 0.64453 \\ \hline
-	\tit{Error-correcting LSTM} & $D = E \cup V$; $\delta$ = 1 & 87.99 & 0.64453 \\ \hline
-	\tit{Error-correcting LSTM} & $D = E \cup V$; $\delta$ = 2 & 88.47 & 0.64376 \\ \hline
-	\tit{Error-correcting LSTM} & $D = E \cup V$; $\delta$ = 3 & 88.57 & 0.64273 \\ \hline
+	\tit{Error-correcting LSTM} & $\delta$ = 1 & 87.99 & 0.64453 \\ \hline
+	\tit{Error-correcting LSTM} & $\delta$ = 2 & 88.47 & 0.64376 \\ \hline
+	\tit{Error-correcting LSTM} & $\delta$ = 3 & 88.57 & 0.64273 \\ \hline
 	\tit{Lower bound} & The performance that would be achieved with no error-correction. & 89.70 & 0.63912 \\ \hline
 \end{tabular}
 \end{adjustbox}
-\caption{The performance of my error-correcting language model with respect to the upper and lower bound, using the CLC dataset. $E$ and $V$ denote the english dictionary and the language model vocabulary respectively.}
+\caption{The performance of my error-correcting language model with respect to the upper and lower bound, using the CLC dataset.}
 \label{fig:error_correcting_results}
 \end{figure}
 
-\begin{itemize}
-\item
-	An intuitive explanation behind the gap remaining between the current performance and the upper bound. Perhaps some suggestions for future work.
-\end{itemize}
+It can be seen from figure~\ref{fig:error_correcting_results} that this approach improves the performance of language model predictions on error-prone text, with the best result arising from an edit distance of 1. There is, however, still a gap between this performance and the theoretical upper bound. The reasoning why this gap exists can be understood by looking at the corrections that the language model did make, and the corrections that it failed to make. \\
 
+\todo{Show sample corrections, explain why $D=V$ isn't good and explain what errors aren't covered.}
 
 \chapter{Conclusions}
 
