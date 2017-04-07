@@ -269,13 +269,13 @@ This section describes $n$-gram language models and the various smoothing techni
 \subsection{An Overview of $n$-gram Models}
 
 Language models are concerned with the task of computing $\mathbb{P}(w_1^N)$, the probability of a sequence of words $w_1w_2...w_N = w_1^N$, where $w_i \in V$ and $V$ is some predefined vocabulary\footnote{The vocabulary is typically taken as all of the words that occur at least $k$ times in the training set. $k$ is typically around 2 or 3.}. By repeated application of the product rule, it follows that:
-\begin{gather*}
+\begin{gather}
 	\mathbb{P}(w_1^N) = \prod_{i = 1}^N \mathbb{P}(w_i | w_1^{i - 1})
-\end{gather*}
+\end{gather}
 $n$-gram language models make the Markov assumption that $w_i$ only depends on the previous $(n - 1)$ words. That is, $\mathbb{P}(w_i | w_1^{i - 1}) \approx \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})$:
-\begin{gather*}
+\begin{gather}
 	\mathbb{P}(w_1^N) \approx \prod_{i = 1}^N \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})
-\end{gather*}
+\end{gather}
 Using the maximum likelihood estimation, $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})$ can be estimated as follows:
 \begin{gather} \label{eq:ngram}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{MLE} = \frac{c(w_{i - n + 1}^{i})}{\sum_w c(w_{i - n + 1}^{i - 1}w)}
@@ -331,20 +331,20 @@ coordinates {(\tit{a}, 0.01)(\tit{cat}, 0.01)(\tit{dog}, 0.02)(\tit{is}, 0.45)(\
 \subsubsection{Add-One Smoothing}
 
 Add-one smoothing~\cite{add1_smoothing:johnson1932} simply involves adding 1 to each of the $n$-gram counts, and dividing by $|V|$ to ensure the probabilities sum to 1:
-\begin{gather*}
+\begin{gather}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape add-one}} = \frac{c(w_{i - n + 1}^{i}) + 1}{\sum_w c(w_{i - n + 1}^{i - 1}w) + |V|}
-\end{gather*}
+\end{gather}
 One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. As an example, if both \tit{`the cat'} and \tit{`pizza cat'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{cat}\ |\ \tit{the})_{\text{\scshape add-one}} = \mathbb{P}(\tit{cat}\ |\ \tit{pizza})_{\text{\scshape add-one}}$, despite the fact that \tit{`the'} is much more likely to precede \tit{`cat'} than \tit{`pizza'}. This problem can be reduced by employing \tit{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{the})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`the cat'} is more likely than \tit{`pizza cat'}.
 
 \subsubsection{Absolute Discounting}
 
 Absolute discounting employs backoff by interpolating higher and lower order $n$-gram models. It does this by subtracting a fixed discount $0 \leq D \leq 1$ from each non-zero count:
-\begin{equation*}
+\begin{equation}
 \begin{aligned}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape ABS}} &= \frac{max\{c(w_{i - n + 1}^{i}) - D, 0\}}{\sum_w c(w_{i - n + 1}^{i - 1}w)} \\
 	&+ \frac{D}{\sum_w c(w_{i - n + 1}^{i - 1}w)}N_{1+}(w_{i - n + 1}^{i - 1}\bullet)\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}
 \end{aligned}
-\end{equation*}
+\end{equation}
 where
 \begin{gather} \label{eq:n1plus}
 	N_{1+}(w_{i - n + 1}^{i - 1}\bullet) = |\{ w\ |\ c(w_{i - n + 1}^{i - 1}w) \geq 1 \}|
@@ -362,14 +362,14 @@ where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts resp
 Kneser and Ney proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
 
 From this example, it seems intuitive to assign more probability to those $n$-grams that follow a larger number of unique words. Kneser and Ney encapsulate this intuition by replacing some of the absolute counts $c(w_i^j)$ with the number of unique words that precede the word sequence $w_i^j$, $N_{1+}(\bullet w_i^j)$:
-\begin{gather*}
-	N_{1+}(\bullet w_i^j) = |\{w\ |\ c(w_i^jw) \geq 1\}|
-\end{gather*}
+\begin{gather}
+	N_{1+}(\bullet w_i^j) = |\{w\ |\ c(ww_i^j) \geq 1\}|
+\end{gather}
 Kneser-Ney smoothing\footnote{This is actually the interpolated version of Kneser-Ney smoothing, which differs slightly in form to the equation presented in the original paper.} is defined as follows:
-\begin{align*}
+\begin{align}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KN}} &= \frac{max\{\gamma(w_{i - n + 1}^{i}) - D, 0\}}{\sum_w \gamma(w_{i - n + 1}^{i - 1}w)} \\
 	&+ \frac{D}{\sum_w \gamma(w_{i - n + 1}^{i - 1}w)}N_{1+}(w_{i - n + 1}^{i - 1}\bullet)\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KN}}
-\end{align*}
+\end{align}
 where
 \begin{gather} \label{eq:gamma}
 	\gamma(w_{i - k + 1}^i) = \begin{cases}
@@ -378,44 +378,44 @@ where
 	\end{cases}
 \end{gather}
 and the unigram probability is given as:
-\begin{gather*}
+\begin{gather}
 	\mathbb{P}(w_i)_{\text{\scshape KN}} = \frac{N_{1+}(\bullet w_i)}{\sum_w N_{1+}(\bullet w)}
-\end{gather*}
+\end{gather}
 
 \subsubsection{Modified Kneser-Ney Smoothing}
 
 Chen and Goodman experimented with different discount values $D$ in Kneser-Ney smoothing and noticed that the ideal average discount value for $n$-grams with one or two counts is substantially different from the ideal average discount for $n$-grams with higher counts. Upon this discovery, they introduced a modified version of Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999}:
-\begin{equation*}
+\begin{equation}
 \begin{aligned}
 	\mathbb{P}(w_i | w_{i - k + 1}^{i - 1})_{\text{\scshape MKN}} &= \frac{max\{\gamma(w_{i - k + 1}^{i}) - D(c(w_{i - k + 1}^{i}), 0\}}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)} \\
 	&+ \lambda(w_{i - k + 1}^{i - 1})\mathbb{P}(w_i | w_{i - k + 2}^{i - 1})_{\text{\scshape MKN}}
 \end{aligned}
-\end{equation*}
+\end{equation}
 where $\gamma$ is defined in equation \ref{eq:gamma}, and $\lambda$ is defined as:
-\begin{gather*}
+\begin{gather}
 	\lambda(w_{i - k + 1}^{i - 1}) = \frac{D_1N_1(w_{i - k + 1}^{i - 1}\bullet) + D_2N_2(w_{i - k + 1}^{i - 1}\bullet) + D_{3+}N_{3+}(w_{i - k + 1}^{i - 1}\bullet)}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)}
-\end{gather*}
+\end{gather}
 and
-\begin{gather*}
+\begin{gather}
 	D(c) = \begin{cases}
 		0 &\text{if }c = 0 \\
 		D_1 &\text{if }c = 1 \\
 		D_2 &\text{if }c = 2 \\
 		D_{3+} &\text{if }c \geq 3 \\
 	\end{cases}
-\end{gather*}
+\end{gather}
 where $N_1$, $N_2$ and $N_{3+}$ are defined analogously to $N_{1+}$ in equation~\ref{eq:n1plus}. Chen and Goodman suggest setting the discounts to be:
-\begin{align*}
+\begin{align}
 	D_1 = 1 - 2D\frac{n_2}{n_1} && D_2 = 2 - 3D\frac{n_3}{n_2} && D_{3+} = 3 - 4D\frac{n_4}{n_3}
-\end{align*}
+\end{align}
 where $D$ is as defined in equation \ref{eq:discount}.
 
 \subsubsection{Katz Smoothing}
 
 Katz smoothing is a popular smoothing technique based on the Good-Turing estimate~\cite{good_turing:good1953}. The Good-Turing estimate states an $n$-gram that occurs $r$ times should be treated as occurring $r^*$ times, where:
-\begin{gather*}
+\begin{gather}
 	r^* = (r + 1)\frac{n_{r + 1}}{n_r}
-\end{gather*}
+\end{gather}
 where $n_r$ is the number of $n$-grams that occur $r$ times. Converting this count into a probability simply involves normalising as follows:
 \begin{gather} \label{eq:gt}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape GT}} = \frac{c^*(w_{i - n + 1}^{i})}{\sum_{r = 0}^\infty n_r r^*}
@@ -428,9 +428,9 @@ Katz smoothing~\cite{katz_smoothing:katz1987} is then defined as:
 	\end{cases}
 \end{gather}
 where
-\begin{gather*}
+\begin{gather}
 	\alpha(w_{i - n + 1}^{i - 1}) = \frac{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KATZ}}}{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KATZ}}}
-\end{gather*}
+\end{gather}
 In practice, the infinite sum in equation \ref{eq:gt} cannot be computed. To get around this issue, Katz takes $n$-gram counts above some threshold $k$ as reliable and only applies the Good-Turing estimate to those with a count less than or equal to $k$. Katz suggests $k = 5$. This modification requires a slightly different equation to \ref{eq:katz} and is presented in Katz's original paper.
 
 \section{Recurrent Neural Network Models}
@@ -650,9 +650,9 @@ In order to train a neural network, you supply it with a training set, which is 
 	\mathbf{s} = ((\mathbf{x}_1, \mathbf{t}_1), ..., (\mathbf{x}_N, \mathbf{t}_N))
 \end{gather*}
 Where $\mathbf{t}_i$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
-\begin{gather*}
+\begin{gather}
 	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
-\end{gather*}
+\end{gather}
 The end product of the \tit{backpropagation} algorithm is the partial derivative:
 \begin{gather*}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
@@ -679,9 +679,9 @@ For the preceding layers, $\delta_j^l$ can be defined recursively in terms of th
 \end{gather}
 
 \tit{Gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. The simplest form of gradient descent does this by changing each weight value in the direction of the negative gradient of the loss. This is is equivalent to moving the network output downwards on the error surface defined by plotting the loss against each of the weights in the network:
-\begin{gather*}
+\begin{gather}
 	w_{i,j}^l \leftarrow w_{i,j}^l - \eta \frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
-\end{gather*}
+\end{gather}
 $\eta$ is known as the \tit{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
 
 \subsection{Recurrent Neural Networks} \label{rnns}
@@ -1047,7 +1047,7 @@ My project codebase was written from scratch, with the assistance of the tools a
 
 \chapter{Implementation} \label{implementation}
 
-This section details how I implemented a variety $n$-gram and RNN-based language models, how I built the mobile keyboard on iOS and how I extended an existing language model to improve its performance on error-prone text.
+This chapter details how I implemented a variety $n$-gram and RNN-based language models, how I built the mobile keyboard on iOS and how I extended an existing language model to improve its performance on error-prone text.
 
 \section{System Overview}
 
@@ -1159,7 +1159,7 @@ Every language model object stores a \ttt{Vocab} object, which contains the set 
 
 \section{$n$-gram Models} \label{ngram_lm}
 
-Below I detail the implementation of the $n$-gram models and their associated smoothing techniques. \\
+Below I detail my implementation of the $n$-gram models and their associated smoothing techniques. \\
 
 One of the first things I discovered when implementing $n$-gram language models is that there is a tradeoff between how much computation is done at training time, and how much computation is done at inference time. For example, at one extreme you could compute only the number of times each $n$-gram occurs at training time, and leave the computation of the coefficients in the smoothing equations to be calculated on the fly. At the other extreme, you could compute and store the final value of the probability for every possible $n$-gram that can be formed from the words in the language model vocabulary, and then return the relevant probability immediately at inference time. The problem with the first approach is that the language model would be too slow at inference time, and the problem with the second approach is that storing absolute probabilities for every possible $n$-gram would occupy far too much space to be practical. In my implementation, I try to strike a balance between these two extremes by precomputing and efficiently storing all of the relevant coefficients for the smoothing equations, and then combining them at inference time to compute the required $n$-gram probability. \\
 
@@ -1175,7 +1175,7 @@ One of the first things I discovered when implementing $n$-gram language models 
 	\node[stage] (vocab) at (3.5, 0) {Compute LM Vocabulary};
 	\node[stage] (count) at (7, 0) {Count $n$-grams};
 	\node[stage] (precompute) at (10.5, 0) {Precompute Smoothing Coefficients};
-	\node[file] (ngram_proto) at (14, 0) {vocab.pbtxt \\ ngram.pb};
+	\node[file] (ngram_proto) at (14, 0) {vocab.pbtxt\\ \& \\ ngram.pb};
 
 	\draw[->] (training_set) -- (vocab);
 	\draw[->] (vocab) -- (count);
@@ -1194,22 +1194,71 @@ The first stage involves a single pass over \ttt{train.txt}, where words that oc
 
 \subsection{Counting $n$-grams Efficiently} \label{ngram_count}
 
-For $n$-gram models without any smoothing, the only information that needs to be computed at this stage is $c(w_{i - n + 1}^{i})$ and $\sum_w c(w_{i - n + 1}^{i - 1}w)$, which are the number of times each $n$-gram $w_{i - n + 1}^i$ occurred in \ttt{train.txt}, and the sum of all such counts that follow the $(n-1)$-gram $w_{i - n + 1}^{i - 1}$ respectively. Then, given these two precomputed numbers, when the $n$-gram model is queried for the probability of $w_{i - n + 1}^i$, it can simply return the first number divided by the second, as required in equation~\ref{eq:ngram}. \\
+For $n$-gram models without any smoothing, the only information that needs to be computed at this stage is $c(w_{i - n + 1}^{i})$ and $\sum_w c(w_{i - n + 1}^{i - 1}w)$, which are the number of times each $n$-gram $w_{i - n + 1}^i$ occurred in \ttt{train.txt}, and the sum of all such counts for all words that follow the $(n-1)$-gram $w_{i - n + 1}^{i - 1}$ respectively. Then, given these two precomputed numbers, when the $n$-gram model is queried for the probability of $w_{i - n + 1}^i$, it can simply return the first number divided by the second, as required in equation~\ref{eq:ngram}. \\
 
-This situation becomes more complex once smoothing techniques are included.
+This situation becomes more complex once smoothing techniques are included. For instance, absolute discounting requires the knowledge of $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$, the number of unique words that follow $w_{i - n + 1}^{i - 1}$, for every such $(n - 1)$-gram. Moreover, because it employs backoff, it actually requires this knowledge for every $k$-gram where $1 \leq k < n$. Kneser-Ney smoothing additionally requires $N_{1+}(\bullet w_{i - k + 1}^i)$, the number of unique words that precede $w_{i - k + 1}^i$, and $\sum_w N_{1+}(\bullet w_{i - k + 1}^iw)$, the number of unique pairs of words that follow and precede $w_{i - k + 1}^i$, for every $k$-gram where $1 \leq k < n$. \\
 
-\begin{itemize}
-\item
-	Count trie
-	\begin{itemize}
-	\item
-		Interface
-	\item
-		Efficient count following/preceding
-	\item
-		Efficient sum following
-	\end{itemize}
-\end{itemize}
+In my implementation, I precompute and store all of these parameters in a temporary word-level trie, as shown in figure \todo{X}. This way, each parameter is only ever computed once and is accessible in $O(n)$ time. Given that I only consider $n$-grams for $n=2$, 3, 4 or 5, the access time practically constant.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+		>=stealth,
+		tnode/.style={draw, circle, thick, minimum width=5mm},
+	]
+	
+	\node[tnode] (a1) at (0, 0) {};
+	
+	\node[tnode] (b1) at (-4, -2) {};
+	\node[scale=2] (bvar1) at (-1.5, -2) {$\hdots$};
+	\node[tnode] (b2) at (1, -2) {};
+	\node[scale=2] (bvar2) at (2.5, -2) {$\hdots$};
+	\node[tnode] (bk) at (4, -2) {};
+
+	\node[tnode] (c1) at (-3, -4) {};
+	\node[scale=2] (cvar1) at (-1.5, -4) {$\hdots$};
+	\node[tnode] (c2) at (0, -4) {};
+	\node[scale=2] (cvar2) at (2.5, -4) {$\hdots$};
+	\node[tnode] (ck) at (5, -4) {};
+
+	\draw[->] (a1) to node [left] {\tit{a}} (b1);
+	\draw[->] (a1) to node [left] {\tit{the}} (b2);
+	\draw[->] (a1) to node [left] {\tit{zebra}} (bk);
+
+	\draw[->] (b2) to node [left] {\tit{a}} (c1);
+	\draw[->] (b2) to node [left] {\tit{cat}} (c2);
+	\draw[->] (b2) to node [left] {\tit{zebra}} (ck);
+
+	\node[below=0.5mm of b1.south] {$\hdots$};
+	\draw[-] ([xshift=-2mm, yshift=1mm]b1.south)--++(210:10mm);
+	\draw[-] ([xshift=2mm, yshift=1mm]b1.south)--++(330:10mm);
+
+	\node[below=0.5mm of c1.south] {$\hdots$};
+	\draw[-] ([xshift=-2mm, yshift=1mm]c1.south)--++(210:10mm);
+	\draw[-] ([xshift=2mm, yshift=1mm]c1.south)--++(330:10mm);
+
+	\node[below=0.5mm of c2.south] {$\hdots$};
+	\draw[-] ([xshift=-2mm, yshift=1mm]c2.south)--++(210:10mm);
+	\draw[-] ([xshift=2mm, yshift=1mm]c2.south)--++(330:10mm);
+
+	\node[below=0.5mm of bk.south] {$\hdots$};
+	\draw[-] ([xshift=-2mm, yshift=1mm]bk.south)--++(210:10mm);
+	\draw[-] ([xshift=2mm, yshift=1mm]bk.south)--++(330:10mm);
+
+	\node[below=0.5mm of ck.south] {$\hdots$};
+	\draw[-] ([xshift=-2mm, yshift=1mm]ck.south)--++(210:10mm);
+	\draw[-] ([xshift=2mm, yshift=1mm]ck.south)--++(330:10mm);
+
+	\node[draw, rectangle, rounded corners=2pt, thick, font=\tiny, fill=white] (inside) at (4.3, -5.5) {\begin{tabular}{l l} \ttt{count} & $c(\tit{the cat})$ \\ \ttt{sum\_following} & $\sum_w c(\tit{the cat }w)$ \\ \ttt{count\_following} & $N_{1+}(\tit{the cat }\bullet)$ \\ \ttt{count\_preceding} & $N_{1+}(\bullet \tit{ the cat})$ \\ \ttt{count\_preceding\_and\_following} &  $\sum_w N_{1+}(\bullet \tit{ the cat }w)$ \end{tabular}};
+
+	\draw[-, thick] (c2) -- ([xshift=0.8mm, yshift=-0.15mm]inside.north west);
+	\draw[-, thick] (c2) -- ([xshift=0.35mm, yshift=0.4mm]inside.south west);
+\end{tikzpicture}
+\caption{An example instance of the \ttt{CountTrie} class.}
+\label{fig:count_trie}
+\end{figure}
+
 \subsection{Precomputing Smoothing Coefficients} \label{ngram_precompute}
 \begin{itemize}
 \item
@@ -1218,14 +1267,70 @@ This situation becomes more complex once smoothing techniques are included.
 	Probability trie - explain how it stores each parameter the minimum number of times.
 \end{itemize}
 \section{Recurrent Neural Network Models} \label{rnn_lm}
+
+Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow, then I explain the structure of the RNN I use and how it applies to language modelling, and finally I give the details behind the cell architectures I used, word embeddings and parameter tuning.
+
 \subsection{TensorFlow}
+
+In this section I aim to give a brief overview of TensorFlow~\cite{tensorflow:abadi2016}, the open-source machine learning library that I used to implement my RNN-based language models. \\
+
+Computation in TensorFlow is defined in terms of a directed graph, where each node represents an operation and each directed edge represents the flow of a tensor, hence the name. TensorFlow programs consist of two key sections: the first is constructing the graph, and the second is executing one or more paths through the graph in what is called a `session'. In order to execute a path through a graph, you specify one or more nodes to evaluate, and then TensorFlow automatically executes all operations that are required to evaluate the tensor at the specified node(s). \\
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+		>=stealth,
+		tfnode/.style={draw, circle, thick, minimum width=8mm, align=center, font=\tiny},
+		thickl/.style={->, line width=0.6mm},
+	]
+	\node[tfnode] (a) at (0, 3.5) {$2$};
+	\node[tfnode] (b) at (0, 2) {$\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}$};
+	\node[tfnode] (c) at (0, 0) {$\begin{bmatrix} 1 \\ 1 \end{bmatrix}$};
+	\node[tfnode] (d) at (3, 1) {\ttt{tf.matmul}};
+	\node[tfnode] (e) at (6, 3) {\ttt{tf.mul}};
+	\node[above=0mm of e] (e_label) {\tiny $x$};
+	\node[tfnode] (f) at (5, 0) {\ttt{tf.add}};
+	
+	\draw[thickl] (b) -- (d);
+	\draw[thickl] (c) -- (d);
+	\draw[thickl] (a) -- (e);
+	\draw[thickl] (d) -- (e);
+	\draw[->] (d) -- (f);
+	\draw[->] (c) -- (f);
+\end{tikzpicture}
+\caption{The toy TensorFlow computation graph. On evaluation of node $x$, only the operations on the highlighted paths are computed, and the scalar (rank-0 tensor) 20 is returned.}
+\label{fig:tensorflow}
+\end{figure}
+Each operation takes zero or more tensors as input, and produces a tensor as output. There are some notable operations that take zero inputs: a \tit{constant}, which outputs a tensor whose value cannot be changed; a \tit{variable}, which is the same except the tensor that it outputs can be changed; and a \tit{placeholder}, which is a promise to provide a tensor at execution time. \\
+
+The computation of a (recurrent) neural network can be described as a directed graph of tensor operations. For example: a layer of neurons can be represented as a vector and the weights in between each layer can be represented as a matrix. Then, computing the activations of the next layer is simply a case of matrix multiplying the weights with the activations from the previous layer, and applying an activation function element-wise to the result. In the context of TensorFlow, a placeholder would be used to provide the input training data, and variables would be used to store all of the trainable parameters of the network, namely the weights and the word embeddings. \\
+
+Talk about computing gradients and applying backprop. \\
+
+Talk about exporting graph to proto and running in C++. \\
+
 \begin{itemize}
 \item
 	How it works
 \item
 	Training vs inference flow
 \end{itemize}
-\subsection{Long Short-Term Memory}
+
+\subsection{Network Structure}
+Explain the structure of the network, such as:
+\begin{itemize}
+\item
+	The way input words are converted to word vectors.
+\item
+	The number of layers and their size.
+\item
+	The fact that there are 2 layers of RNN cells followed by a fully connected layer which is finally fed through softmax.
+\item
+	Explain the output neurons, what they represent and the need (in some cases) for softmax.
+\end{itemize}
+
+\subsection{Long Short-Term Memory and Gated Recurrent Units}
 \begin{itemize}
 \item
 	Forward pass equations
@@ -1234,11 +1339,7 @@ This situation becomes more complex once smoothing techniques are included.
 \item
 	Dropout, embedding, learning rate decay, momentum?, gradient clipping
 \end{itemize}
-\subsection{Gated Recurrent Units}
-\begin{itemize}
-\item
-	Explain
-\end{itemize}
+
 \subsection{Word Embeddings}
 \begin{itemize}
 \item
@@ -1251,11 +1352,19 @@ This situation becomes more complex once smoothing techniques are included.
 \end{itemize}
 
 \section{Mobile Keyboard} \label{mobile_keyboard}
-\begin{itemize}
-\item
-	Compiling my project, along with TensorFlow into a static library for use on iOS.
-\end{itemize}
+
+As a project extension, I decided to apply one of my language models in a practical context by building a mobile keyboard. Below I describe how I went about doing this, as well as the lessons I learnt in the process. \\
+
+iOS applications are written in either Objective-C or Swift. An advantage of using Objective-C is that you can make use of Objective-C++ to link C++ code into your application, which is exactly what I needed to do. My C++ code, however, depended on TensorFlow, so in order to make my language models accessible within the mobile keyboard, I compiled both my RNN-language model implementation and a subset of TensorFlow's C++ API into a single static library by modifying one of the makefiles already present in the TensorFlow codebase. \\
+
+To build a mobile keyboard in iOS, you have to implement what is called an `App Extension'. App Extensions differ from normal applications in iOS in that they their functionality is system-wide. Apple insist that such ubiquitous components should be extremely responsive and light-weight, which means that they have much stricter memory and CPU limitations than normal applications. Although they do not specify exactly what these limitations are, many people in the developer community estimate that the memory limit is approximately 30 MB. \\
+
+\todo{Talk about tricks to make smaller.} \\
+
 \subsection{Updating Language Model Predictions On the Fly}
+
+A mobile keyboard should present the user with next-word predictions that are updated as they type. Querying the language model is a relatively expensive operation, so in my implementation I avoid unnecessary queries by only asking for next-word probabilities whenever the user presses the spacebar, changes their cursor position to another word or  It is only necessary to query the language model when the user is about to start typing a new word, namely, when they press the space bar\footnote{There are other edge cases where it is also required, such as when they change the position of their cursor or delete a series of words. These are all handled in my implementation.}. 
+
 \begin{itemize}
 \item
 	Building a character trie when a new word is requested, sifting through it as new characters are typed
@@ -1780,6 +1889,8 @@ Future work/possible extensions:
 \item
 	Using Neural Machine Translation to correct the context, making use of attention.	
 \end{itemize}
+
+\todo{Final sentence could be generated by training LM on text of this dissertation.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the bibliography
