@@ -54,6 +54,8 @@
 \usepackage{circuitikz}
 
 % For tikz diagrams.
+\usepgfplotslibrary{external}
+\usetikzlibrary{pgfplots.external}
 \usetikzlibrary{positioning, fit, arrows, arrows.meta, decorations.markings, shapes}
 
 % Enables spacing in file paths when inserting images
@@ -1354,6 +1356,7 @@ There are $|V|$ neurons in the output layer, each of which represent a word in t
 The outputs of the softmax function sum to 1 and are used to represent a probability distribution over all of the possible next words. That is, $\mathbb{P}(\text{next word} = j) = \text{\scshape Softmax}(\mathbf{z})_j$, where $j$ is the ID of a particular word in the vocabulary. Each ID lies in the range $[0, |V|)$.
 
 \begin{figure}[h]
+\captionsetup{justification=centering}
 \centering
 \begin{tikzpicture}[>=stealth]
 	\node[draw, rectangle, minimum width=5mm, minimum height=45mm, fill=black!10, ] (input) at (0, 0) {};
@@ -1392,10 +1395,23 @@ The outputs of the softmax function sum to 1 and are used to represent a probabi
 \end{itemize}
 
 \subsection{Word Embeddings} \label{embeddings}
-\begin{itemize}
-\item
-	PCA plots
-\end{itemize}
+
+As mentioned in section~\ref{rnn_structure}, each input word is first mapped to a vector representation known as a \tit{word embedding} which is learned as the network is trained. The goal behind representing words as points in a high-dimensional space is that similar words will cluster close together. This way, the RNN-based language model can more easily generalise to combinations of words that it has not seen before, by understanding which words can be substituted for one another. \\
+
+I wanted to be able to visualise the word embeddings after each RNN-based language model had been trained. To do this, I used principle component analysis (PCA) to reduce the word embeddings to two-dimensional points that can be plotted on a scatter diagram. PCA is a dimensionality reduction technique that transforms the input data to a new coordinate system such that the first coordinate represents some projection that achieves the greatest variance, the second coordinate the second greatest variance, and so on.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[scale=1.0]
+\begin{axis}
+\addplot[only marks, fill=black] table [x=x, y=y, col sep=comma] {Data/embeddings_all.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{A subsample of the LSTM-based language model word embeddings projected on two dimensions using PCA.}
+\label{fig:pca_embeddings_all}
+\end{figure}
+
 \subsection{Parameter Tuning} \label{tuning}
 
 Parameters:
