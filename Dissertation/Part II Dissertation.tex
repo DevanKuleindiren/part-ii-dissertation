@@ -54,7 +54,7 @@
 \usepackage{circuitikz}
 
 % For tikz diagrams.
-\usetikzlibrary{positioning, fit, arrows, arrows.meta, decorations.markings}
+\usetikzlibrary{positioning, fit, arrows, arrows.meta, decorations.markings, shapes}
 
 % Enables spacing in file paths when inserting images
 \usepackage[space]{grffile}
@@ -455,48 +455,6 @@ The human brain is a furiously complicated organ, packed with a network of appro
 		execute at begin node=\color{black}$\hdots$
 	},
 }
-
-%\begin{figure}[h]
-%\begin{center}
-%\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
-
-%\foreach \m/\l [count=\y] in {1, 2, 3, missing, 4}
-%	\node [every neuron/.try, neuron \m/.try] (input-\m) at (0, 2.5-\y) {};
-
-%\foreach \m [count=\y] in {1, missing, 2}
-%	\node [every neuron/.try, neuron \m/.try ] (hidden-\m) at (1.5, 2-\y*1.25) {};
-
-%\foreach \m [count=\y] in {1, missing, 2}
-%	\node [every neuron/.try, neuron \m/.try ] (hidden-2-\m) at (3, 2-\y*1.25) {};
-
-%\foreach \m [count=\y] in {1, missing, 2}
-%	\node [every neuron/.try, neuron \m/.try ] (output-\m) at (4.5, 1.5-\y) {};
-
-%\foreach \l [count=\i] in {1, 2, 3, n}
-%	\draw [<-] (input-\i) -- ++(-1,0) node [above, midway] {$x_\l$};
-
-%\foreach \l [count=\i] in {1, m}
-%	\draw [->] (output-\i) -- ++(1,0) node [above, midway] {$y_\l$};
-
-%\foreach \i in {1, ..., 4}
-%	\foreach \j in {1, ..., 2}
-%		\draw [->] (input-\i) -- (hidden-\j);
-
-%\foreach \i in {1, ..., 2}
-%	\foreach \j in {1, ..., 2}
-%		\draw [->] (hidden-\i) -- (hidden-2-\j);
-
-%\foreach \i in {1, ..., 2}
-%	\foreach \j in {1, ..., 2}
-%		\draw [->] (hidden-2-\i) -- (output-\j);
-
-%\foreach \l [count=\x from 0] in {Input, Hidden, Hidden, Output}
-%	\node [align=center, above] at (\x*1.5, 2) {\l \\ layer};
-
-%\end{tikzpicture}
-%\caption{An example multilayer perceptron, with two hidden layers.}
-%\end{center}
-%\end{figure}
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1156,7 +1114,41 @@ Every language model object stores a \ttt{Vocab} object, which contains the set 
 
 \ttt{Predict()} is a special case of \ttt{PredictTopK()}, which simply uses a priority queue to extract the top $k$ predictions from result of calling \ttt{ProbAllFollowing()}. The implementations of \ttt{Prob()} and \ttt{ProbAllFollowing()} depend on the specific language model. One might think that \ttt{ProbAllFollowing()} can be implemented by calling \ttt{Prob()} for each word in the vocabulary, but this would be inefficient in the case of an RNN-based language model, which implicitly computes the probability distribution over every word in the vocabulary in each forward pass of the network, hence why the methods are kept separate. \\
 
-\todo{Possibly add diagram of inheritance hierarchy.}
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+		>=stealth,
+		class/.style={draw, rectangle, minimum width=20mm, minimum height=6mm, align=center, font=\footnotesize},
+	]
+	\node[class] (lm) at (0,0) {\ttt{LM}};
+	\node[class] (ngram) at (0, -2) {\ttt{NGram}};
+	\node[class] (rnn) at (-6.5, -2) {\ttt{RNN}};
+	\node[class] (combined) at (6.5, -2) {\ttt{Combined}};
+	
+	\node[class] (error_correcting) at (-6.5, -4) {\ttt{ErrorCorrectingRNN}};
+	\node[class] (katz) at (0, -4) {\ttt{Katz}};
+	\node[class] (add1) at (-3, -4) {\ttt{AddOne}};
+	\node[class] (mkn) at (3, -4) {\ttt{KneserNeyMod}};
+	\node[class] (abs) at (-1.5, -6) {\ttt{AbsoluteDiscounting}};
+	\node[class] (kn) at (1.5, -6) {\ttt{KneserNey}};
+
+	\foreach \i/\j in {ngram/lm, error_correcting/rnn, katz/ngram}
+		\draw[-{Triangle[open, angle=60:10pt]}] (\i) -- (\j);
+
+	\draw[-{Triangle[open, angle=60:10pt]}] (rnn.north) |- ++(10mm, 7.5mm) -| (lm.south);
+	\draw[-{Triangle[open, angle=60:10pt]}] (combined.north) |- ++(-10mm, 7.5mm) -| (lm.south);
+
+	\draw[-{Triangle[open, angle=60:10pt]}] (add1.north) |- ++(10mm, 7.5mm) -| (ngram.south);
+	\draw[-{Triangle[open, angle=60:10pt]}] (mkn.north) |- ++(-10mm, 7.5mm) -| (ngram.south);
+	\draw[-{Triangle[open, angle=60:10pt]}] (abs.north) |- ++(10mm, 27.5mm) -| (ngram.south);
+	\draw[-{Triangle[open, angle=60:10pt]}] (kn.north) |- ++(-10mm, 27.5mm) -| (ngram.south);
+\end{tikzpicture}
+\caption{An outline of the C++ classes in the language model inheritance hierarchy. Methods and members are omitted for simplicity.}
+\label{fig:hierarchy}
+\end{figure}
+
+The reason that there is only a single RNN language model class is that the differences between the vanilla RNN, GRU and LSTM models arise in the Python code where the models are constructed and trained. The C++ code for the RNN-based models just loads and runs inference on the model graph described in the exported protocol buffer. See~\ref{tensorflow} for more details.
 
 \section{$n$-gram Models} \label{ngram_lm}
 
@@ -1303,9 +1295,9 @@ Katz smoothing is an exception in that it does not quite match the form presente
 
 \section{Recurrent Neural Network Models} \label{rnn_lm}
 
-Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow, then I explain the structure of the RNN I use and how it applies to language modelling, and finally I give the details behind the cell architectures I used, word embeddings and parameter tuning.
+Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow in section~\ref{tensorflow}. Then, in section~\ref{rnn_structure}, I explain the structure of the RNNs I use and how they apply to language modelling. In section~\ref{architectures} I give the details of the GRU and LSTM architectures. Section~\ref{embeddings} details the word embeddings used in the models. Finally, section~\ref{tuning} describes how I tuned the RNN hyperparameters and applied techniques to encourage convergence and avoid overfitting.
 
-\subsection{TensorFlow}
+\subsection{TensorFlow} \label{tensorflow}
 
 In this section I aim to give a brief overview of TensorFlow~\cite{tensorflow:abadi2016}, the open-source machine learning library that I used to implement my RNN-based language models. \\
 
@@ -1341,31 +1333,55 @@ Each operation takes zero or more tensors as input, and produces a tensor as out
 
 The computation of a (recurrent) neural network can be described as a directed graph of tensor operations. For example: a layer of neurons can be represented as a vector and the weights in between each layer can be represented as a matrix. Then, computing the activations of the next layer is simply a case of matrix multiplying the weights with the activations from the previous layer, and applying an activation function element-wise to the result. In the context of TensorFlow, a placeholder would be used to provide the input training data, and variables would be used to store all of the trainable parameters of the network, namely the weights and the word embeddings. \\
 
-Talk about computing gradients and applying backprop. \\
+Once a neural network has been constructed, forward propagation can be computed by evaluating the output nodes of the network in a session. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}, and is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, any optimisation technique such as gradient descent can be applied to update the network. \\
 
-Talk about exporting graph to proto and running in C++. \\
+After having trained the RNN in Python, I would \tit{freeze} the computation graph and export it into a format that can be loaded into C++. This involved converting all of the variables in the graph to constants and saving the network, along with some metadata, into a protocol buffer. Using the C++ API, I could then load the network and run inference on it by evaluating the relevant tensors in a session, without having to know anything about the internal structure of the RNN.
 
-\begin{itemize}
-\item
-	How it works
-\item
-	Training vs inference flow
-\end{itemize}
+\subsection{Network Structure} \label{rnn_structure}
 
-\subsection{Network Structure}
-Explain the structure of the network, such as:
-\begin{itemize}
-\item
-	The way input words are converted to word vectors.
-\item
-	The number of layers and their size.
-\item
-	The fact that there are 2 layers of RNN cells followed by a fully connected layer which is finally fed through softmax.
-\item
-	Explain the output neurons, what they represent and the need (in some cases) for softmax.
-\end{itemize}
+The general structure of all of the RNN-based language models I trained is described below. \\
 
-\subsection{Long Short-Term Memory and Gated Recurrent Units}
+Before the RNN is constructed, an initial pass is made over the training set to construct a vocabulary $V$. This is done in exactly the same way as for the $n$-gram models, as described in section~\ref{ngram_compute_vocab}, so I will not repeat the detail. \\
+
+At the very start of the network is a word embedding lookup table, that maps words to vectors that represent points in a high dimensional space. In my implementation, I set the number of dimensions of this space (that is, the number of vector elements in each word embedding) to be the same as the number of hidden neurons in each hidden layer of the RNN. This is a configurable parameter, which was typically set to 256. \\
+
+After the embedding lookup is the input layer of the RNN into which the word embeddings are fed. There are then two hidden layers which are recurrently connected to themselves, followed by the output layer. \\
+
+There are $|V|$ neurons in the output layer, each of which represent a word in the language model vocabulary. Rather than feeding the logits of the output neurons through an activation function, they are passed through the softmax function. That is, if the vector of logits of the output neurons is denoted $\mathbf{z}$, then the output of neuron $j$ after the softmax function is defined as $\text{\scshape Softmax}(\mathbf{z})_j$, where:
+\begin{gather}
+	\text{\scshape Softmax}(\mathbf{z})_j = \frac{e^{z_j}}{\sum_i e^{z_i}}
+\end{gather}
+The outputs of the softmax function sum to 1 and are used to represent a probability distribution over all of the possible next words. That is, $\mathbb{P}(\text{next word} = j) = \text{\scshape Softmax}(\mathbf{z})_j$, where $j$ is the ID of a particular word in the vocabulary. Each ID lies in the range $[0, |V|)$.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=stealth]
+	\node[draw, rectangle, minimum width=5mm, minimum height=45mm, fill=black!10, ] (input) at (0, 0) {};
+	\node[draw, rectangle, minimum width=5mm, minimum height=45mm, fill=black!10] (hidden1) at (2, 0) {};
+	\node[draw, rectangle, minimum width=5mm, minimum height=45mm, fill=black!10] (hidden2) at (4, 0) {};
+	\node[draw, rectangle, minimum width=5mm, minimum height=55mm, fill=black!10] (output) at (6, 0) {};
+	\node[draw, ellipse, minimum width=55mm, minimum height=5mm, fill=black!10, rotate=-90] (softmax) at (7, 0) {\scshape Softmax};
+
+	\node at (-3, 3.3) {\footnotesize \tbf{Number of neurons:}};
+	\node at (0, 3.3) {$H$};
+	\node at (2, 3.3) {$H$};
+	\node at (4, 3.3) {$H$};
+	\node at (6, 3.3) {$|V|$};
+
+	\draw [<-] (input) -- ++(-0.8, 0) node [left] {$\underbrace{\tit{`elephant'} \mapsto \mathbf{x}}_{\text{Embedding lookup}} = \begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ \\ \vdots \\ \\ x_{H - 1} \\ x_H \end{pmatrix}$};
+	\draw [->, line width=0.3mm] (input) to node [above] {$W_{i, h_1}$} (hidden1);
+	\draw [->, line width=0.3mm] (hidden1) to node [above] {$W_{h_1, h_2}$} (hidden2);
+	\draw [->, line width=0.3mm, out=-45, in=225, looseness=10] (hidden1.east) to node [below right=-1mm and 2mm of hidden1.east] {$W_{h_1, h_1}$} (hidden1.west);
+	\draw [->, line width=0.3mm] (hidden2) to node [above] {$W_{h_2, o}$} (output);
+	\draw [->, line width=0.3mm, out=-45, in=225, looseness=10] (hidden2.east) to node [below right=-1mm and 2mm of hidden2.east] {$W_{h_2, h_2}$} (hidden2.west);
+	\draw [->] (output) -- (softmax);
+	\draw [->] (softmax) -- ++(0.8, 0) node [right] {$\mathbf{y}$};
+\end{tikzpicture}
+\caption{The structure of my RNN-based language models.}
+\end{figure}
+
+
+\subsection{Long Short-Term Memory and Gated Recurrent Units} \label{architectures}
 \begin{itemize}
 \item
 	Forward pass equations
@@ -1375,15 +1391,35 @@ Explain the structure of the network, such as:
 	Dropout, embedding, learning rate decay, momentum?, gradient clipping
 \end{itemize}
 
-\subsection{Word Embeddings}
+\subsection{Word Embeddings} \label{embeddings}
 \begin{itemize}
 \item
 	PCA plots
 \end{itemize}
-\subsection{Parameter Tuning}
+\subsection{Parameter Tuning} \label{tuning}
+
+Parameters:
 \begin{itemize}
 \item
-	Learning rate schedule using validation set, initial learning rate, dropout, etc
+	Learning rate and decay using validation set
+\item
+	Weight initialisation
+\item
+	Batch size
+\item
+	(H - number of hidden neurons)
+\end{itemize}
+
+Avoiding overfitting
+\begin{itemize}
+\item
+	Dropout
+\end{itemize}
+
+Encouraging convergence
+\begin{itemize}
+\item
+	Gradient clipping
 \end{itemize}
 
 \section{Mobile Keyboard} \label{mobile_keyboard}
@@ -1400,7 +1436,12 @@ In order to get an RNN-based language model to run under such memory and CPU lim
 
 A mobile keyboard should present the user with next-word predictions that are updated as they type. Querying the language model is a relatively expensive operation, so in my implementation I try to do this as little as possible. For example, when the user presses the spacebar, I query the language model to retrieve the most probable words that could follow the space. These words are returned in the form of a character-level trie, where their associated probabilities are stored in the nodes of the trie. This way, when the user types subsequent characters, the new top next-word predictions can be retrieved by traversing downwards from the root of the trie and taking the words with the highest probability on the current branch. \\
 
-\todo{Add screenshot.}
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\includegraphics[scale=0.2]{Images/MobileKeyboardOnScreen.png}
+\caption{The mobile keyboard on iOS. The top three predictions are displayed at the top of the keyboard, and are updated with every character.}
+\end{figure}
 
 \section{Extending Models to Tackle Error-Prone Text} \label{error_correcting_lm}
 
