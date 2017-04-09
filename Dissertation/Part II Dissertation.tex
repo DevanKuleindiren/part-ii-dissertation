@@ -11,7 +11,8 @@
 \usepackage{mathpartir}
 
 % For algorithms
-\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 
 % For lists
 \usepackage{enumitem}
@@ -587,7 +588,7 @@ The unusual looking input $b$ is a \tit{bias} input. This is a fixed-value input
 
 It is also worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
-Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. These are both non-linear functions squashed within the ranges $(0, 1)$ and $(-1, 1)$ respectively. Their steep slope at the origin is supposed to mimic an axon, which fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
+Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. These are both non-linear functions squashed within the ranges $(0, 1)$ and $(-1, 1)$ respectively. Their steep slope at the origin is supposed to mimic an axon, which is a neuron that fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -649,7 +650,7 @@ In order to train a neural network, you supply it with a training set, which is 
 \begin{gather*}
 	\mathbf{s} = ((\mathbf{x}_1, \mathbf{t}_1), ..., (\mathbf{x}_N, \mathbf{t}_N))
 \end{gather*}
-Where $\mathbf{t}_i$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
+Where $\mathbf{t}_k$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
 \begin{gather}
 	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
 \end{gather}
@@ -1198,7 +1199,7 @@ For $n$-gram models without any smoothing, the only information that needs to be
 
 This situation becomes more complex once smoothing techniques are included. For instance, absolute discounting requires the knowledge of $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$, the number of unique words that follow $w_{i - n + 1}^{i - 1}$, for every such $(n - 1)$-gram. Moreover, because it employs backoff, it actually requires this knowledge for every $k$-gram where $1 \leq k < n$. Kneser-Ney smoothing additionally requires $N_{1+}(\bullet w_{i - k + 1}^i)$, the number of unique words that precede $w_{i - k + 1}^i$, and $\sum_w N_{1+}(\bullet w_{i - k + 1}^iw)$, the number of unique pairs of words that follow and precede $w_{i - k + 1}^i$, for every $k$-gram where $1 \leq k < n$. \\
 
-In my implementation, I precompute and store all of these parameters in a temporary word-level trie, as shown in figure \todo{X}. This way, each parameter is only ever computed once and is accessible in $O(n)$ time. Given that I only consider $n$-grams for $n=2$, 3, 4 or 5, the access time practically constant.
+In my implementation, I precompute and store all of these parameters in a temporary word-level trie, as shown in figure~\ref{fig:count_trie}. This way, each parameter is only ever computed once and is accessible in $O(n)$ time. Given that I only consider $n$-grams for $n=2$, 3, 4 or 5, the access time practically constant.
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1253,19 +1254,53 @@ In my implementation, I precompute and store all of these parameters in a tempor
 	\node[draw, rectangle, rounded corners=2pt, thick, font=\tiny, fill=white] (inside) at (4.3, -5.5) {\begin{tabular}{l l} \ttt{count} & $c(\tit{the cat})$ \\ \ttt{sum\_following} & $\sum_w c(\tit{the cat }w)$ \\ \ttt{count\_following} & $N_{1+}(\tit{the cat }\bullet)$ \\ \ttt{count\_preceding} & $N_{1+}(\bullet \tit{ the cat})$ \\ \ttt{count\_preceding\_and\_following} &  $\sum_w N_{1+}(\bullet \tit{ the cat }w)$ \end{tabular}};
 
 	\draw[-, thick] (c2) -- ([xshift=0.8mm, yshift=-0.15mm]inside.north west);
-	\draw[-, thick] (c2) -- ([xshift=0.35mm, yshift=0.4mm]inside.south west);
+	\draw[-, thick] (c2) -- ([xshift=0.15mm, yshift=0.8mm]inside.south west);
 \end{tikzpicture}
-\caption{An example instance of the \ttt{CountTrie} class.}
+\caption{An example instance of the \ttt{CountTrie} class, which is the end result of the `Count $n$-grams' stage in figure~\ref{fig:ngram_training}.}
 \label{fig:count_trie}
 \end{figure}
 
+Populating a \ttt{CountTrie} instance works in two phases. In the first phase, all of the $k$-grams, where $1 \leq k \leq n$, from the training set are inserted into the trie. At every insertion, the relevant \ttt{count} and \ttt{count\_preceding} values are updated. The second phase involves a full traversal of the trie in which the \ttt{sum\_following}, \ttt{count\_following} and \ttt{count\_following\_and\_preceding} are computed. Each of these values can be derived for a particular node by looking at the \ttt{count} or \ttt{count\_preceding} values of its children. \\
+
+It is worth noting that this data structure is temporary. That is, it is only used to enable fast computation of the smoothing coefficients in the next stage.
+
 \subsection{Precomputing Smoothing Coefficients} \label{ngram_precompute}
-\begin{itemize}
-\item
-	How all smoothing methods can be massaged to same form, which suits storage in probability trie.
-\item
-	Probability trie - explain how it stores each parameter the minimum number of times.
-\end{itemize}
+
+With a few exceptions, most smoothing techniques can be generalised to the following form:
+\begin{gather} \label{eq:smoothing_general}
+	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape SMOOTH}} = \alpha(w_{i - n + 1}^i) + \beta(w_{i - n + 1}^{i - 1})\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape SMOOTH}}
+\end{gather}
+The probabilities of many different $n$-grams could share some of the same $\alpha$ and $\beta$ coefficients. For example, $\mathbb{P}(\tit{sat}\ |\ \tit{the cat})_{\text{\scshape SMOOTH}}$ and $\mathbb{P}(\tit{jumped}\ |\ \tit{the cat})_{\text{\scshape SMOOTH}}$ would both require $\beta(\tit{the cat})$. To avoid duplicated computation, the $\alpha$ and $\beta$ values for every $k$-gram in the \ttt{CountTrie} instance are computed exactly once and stored in a new word-level trie. Each node in this trie stores two values, $\alpha(w_i^j)$ and $\beta(w_i^j)$, where $w_i^j$ is the path of words that lead to the node. This way, the parameters can be fetched in constant time at $n$-gram model query time. The \ttt{CountTrie} instance from the previous stage indicate which $k$-grams the coefficients should be computed for, and also supplies the necessary parameters to derive them. \\
+
+Once the word-level trie of smoothing coefficients has been populated, computing the probability of any $n$-gram can be done by traversing the data structure as shown in algorithm~\ref{alg:smoothing_prob}. Using this implementation, the only thing that each smoothing subclass has to override is the way in which the coefficients $\alpha$ and $\beta$ are calculated when the data structure is initially populated. This made it much easier to add and test new smoothing techniques.
+
+\begin{algorithm}
+\caption{Computing $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape SMOOTH}}$}
+\label{alg:smoothing_prob}
+\begin{algorithmic}[1]
+\Procedure{Prob($w_i$, $w_{i - n + 1}^{i - 1}$)}{}
+\If {$length(w_{i - n + 1}^i) > 0$}
+	\State $node \gets \text{\scshape GetNode}(w_{i - n + 1}^i)$
+	\State $\alpha \gets 0$
+	\State $\beta \gets 1$
+	\If {$node$}
+		\State $\alpha \gets node.\alpha$
+	\EndIf
+	\If {$length(w_{i - n + 1}^{i - 1}) > 0$}
+		\State $b\_node \gets \text{\scshape GetNode}(w_{i - n + 1}^{i - 1})$
+		\If {$b\_node$}
+			\State $\beta \gets b\_node.\beta$
+		\EndIf
+	\EndIf
+	\State \Return $\alpha + (\beta \cdot \text{\scshape Prob}(w_i, w_{i - n + 2}^{i - 1}))$
+\EndIf
+\State \Return $0$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Katz smoothing is an exception in that it does not quite match the form presented in equation~\ref{eq:smoothing_general}. To get around this issue, the Katz subclass simply overrode algorithm~\ref{alg:smoothing_prob} to traverse the same data structure in a slightly different way.
+
 \section{Recurrent Neural Network Models} \label{rnn_lm}
 
 Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow, then I explain the structure of the RNN I use and how it applies to language modelling, and finally I give the details behind the cell architectures I used, word embeddings and parameter tuning.
@@ -1353,38 +1388,55 @@ Explain the structure of the network, such as:
 
 \section{Mobile Keyboard} \label{mobile_keyboard}
 
-As a project extension, I decided to apply one of my language models in a practical context by building a mobile keyboard. Below I describe how I went about doing this, as well as the lessons I learnt in the process. \\
+As a project extension, I decided to apply one of my RNN-based language models in a practical context by building a mobile keyboard. Below I describe how I went about doing this, as well as the lessons I learnt in the process. \\
 
 iOS applications are written in either Objective-C or Swift. An advantage of using Objective-C is that you can make use of Objective-C++ to link C++ code into your application, which is exactly what I needed to do. My C++ code, however, depended on TensorFlow, so in order to make my language models accessible within the mobile keyboard, I compiled both my RNN-language model implementation and a subset of TensorFlow's C++ API into a single static library by modifying one of the makefiles already present in the TensorFlow codebase. \\
 
 To build a mobile keyboard in iOS, you have to implement what is called an `App Extension'. App Extensions differ from normal applications in iOS in that they their functionality is system-wide. Apple insist that such ubiquitous components should be extremely responsive and light-weight, which means that they have much stricter memory and CPU limitations than normal applications. Although they do not specify exactly what these limitations are, many people in the developer community estimate that the memory limit is approximately 30 MB. \\
 
-\todo{Talk about tricks to make smaller.} \\
+In order to get an RNN-based language model to run under such memory and CPU limitations, I had to trade-off some of its prediction accuracy. In particular, I reduced the number of hidden neurons and the size of the vocabulary to reduce the space occupied by the model in memory. I also removed the softmax layer to save reduce the CPU overhead, which technically is not needed in text prediction where the sum of the output neurons does not need to sum to 1.
 
 \subsection{Updating Language Model Predictions On the Fly}
 
-A mobile keyboard should present the user with next-word predictions that are updated as they type. Querying the language model is a relatively expensive operation, so in my implementation I avoid unnecessary queries by only asking for next-word probabilities whenever the user presses the spacebar, changes their cursor position to another word or  It is only necessary to query the language model when the user is about to start typing a new word, namely, when they press the space bar\footnote{There are other edge cases where it is also required, such as when they change the position of their cursor or delete a series of words. These are all handled in my implementation.}. 
+A mobile keyboard should present the user with next-word predictions that are updated as they type. Querying the language model is a relatively expensive operation, so in my implementation I try to do this as little as possible. For example, when the user presses the spacebar, I query the language model to retrieve the most probable words that could follow the space. These words are returned in the form of a character-level trie, where their associated probabilities are stored in the nodes of the trie. This way, when the user types subsequent characters, the new top next-word predictions can be retrieved by traversing downwards from the root of the trie and taking the words with the highest probability on the current branch. \\
 
-\begin{itemize}
-\item
-	Building a character trie when a new word is requested, sifting through it as new characters are typed
-\item
-	Screenshots
-\end{itemize}
+\todo{Add screenshot.}
 
 \section{Extending Models to Tackle Error-Prone Text} \label{error_correcting_lm}
-\subsection{Preprocessing the CLC Dataset}
-\begin{itemize}
-\item
-	Tokenisation
-\item
-	Alignment and removal of identical sentences
-\end{itemize}
-\subsection{Error Correction on Word Context}
-\begin{itemize}
-\item
-	Motivation and algorithm for error-correction on the context
-\end{itemize}
+
+An issue with existing language models is that their predictions suffer when presented with error-prone text. For example, consider the two word sequences `\tit{the weather is}' and `\tit{the whether is}'. Whilst in the first case a language model might successfully predict words such as `\tit{sunny}' or `\tit{nice}', in the second case it will likely struggle to suggest reasonable word candidates. Evidence to support this claim is given in figure~\ref{fig:error_correcting_results} in section~\ref{error_prone_evaluation}. \\
+
+In the context of text prediction, it is unfortunately very rare that a human user will not make any mistakes. It is therefore an important issue to address and in this section I propose an extension to a language model which aims to improve its performance on text containing errors.
+
+\subsection{The Approach}
+
+My approach is to attack the source of the problem directly by adding a layer of error correction between the input text and the language model. There are lots of different types of error that can occur in the English language, but my implementation only focuses on correcting spelling mistakes. \\
+
+Error-correction can be broken up into two parts: detecting the errors and making suggestions to fix them. In the case of spelling mistakes, detection can be done with a single dictionary lookup. Candidate corrections for a spelling mistake should be similar to the original word and probable in the surrounding context. In my implementation, I use the Levenshtein distance as a measure of how similar two words are, and I use the language model itself to gauge how probable candidate corrections are in the surrounding context. Specifically, when searching for candidate replacements for a word $w$ that is preceded by the words $w_i^j$: the language model is used to produce a probability distribution over the words in its vocabulary for how likely they are to follow $w_i^j$, these words are then traversed in decreasing order of probability and the first one, if any, that has an edit distance within some threshold $\delta$ of the original spelling is selected as a replacement, as described in algorithm~\ref{alg:error_correction}. I implemented this approach as an extension to my RNN-based language models.
+
+\begin{algorithm}
+\caption{Computing $\mathbb{P}(w_j | w_i^{j - 1})_{\text{\scshape ERROR\_CORRECTING}}$}
+\label{alg:error_correction}
+\begin{algorithmic}[1]
+\Procedure{Prob($w_j$, $w_i^{j - 1}$)}{}
+\For {$w$ in $w_i^{j - 1}$}
+	\State $w_{correct} \gets w$
+	\If {$w \notin dictionary$}
+		\State $\text{\scshape SortByDecreasingProbability}(outputs)$
+		\For {$w'$ in $outputs$}
+			\State $d \gets \text{\scshape LevenshteinDistance}(w, w')$
+			\If {$d \leq \delta$}
+				\State $w_{correct} \gets w'$
+				\State \textbf{break}
+			\EndIf
+		\EndFor
+	\EndIf
+	\State $outputs, state \gets \text{\scshape FeedForward}(w_{correct}, state)$
+\EndFor
+\State \Return $outputs[w_i]$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 \chapter{Evaluation} \label{evaluation}
 
@@ -1773,7 +1825,7 @@ From figure~\ref{fig:average_keys_saved_vs_number_of_hidden_neurons}, it can be 
 
 Of course, there are several other techniques that can be used to optimise the memory and CPU overhead of language models for mobile platforms. These include, but are not limited to: using 16-bit floats, rather than 32-bit or 64-bit, to store the model parameters; removing the softmax layer from the RNN, since the outputs do not need to sum to 1 in text prediction; and memory-mapping the model to reduce memory pressure when it is initially being loaded.
 
-\subsection{On Error-Prone Text}
+\subsection{On Error-Prone Text} \label{error_prone_evaluation}
 
 In this section I present my findings for the performance of language models on error-prone text. In the ideal case, when presented with error-prone text, a RNN-based language model should be able to predict the next words that would follow the error-free version of the text, as shown in figure~\ref{fig:error_prone_to_error_free_rnn}.
 
@@ -1887,7 +1939,9 @@ Future work/possible extensions:
 \item
 	More intelligent ways of pruning $n$-gram models.
 \item
-	Using Neural Machine Translation to correct the context, making use of attention.	
+	Using Neural Machine Translation to correct the context, making use of attention.
+\item
+	Use the way words sound to make corrections. E.g. eatch -> each not etch or eat. Or some other example.
 \end{itemize}
 
 \todo{Final sentence could be generated by training LM on text of this dissertation.}
