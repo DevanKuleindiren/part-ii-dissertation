@@ -536,7 +536,7 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 \draw[<-] ([yshift=1mm]aux)--++(140:24mm) node [below right=-5mm and 2mm of bias] {$w_{0,j}^{l-1}$};
 \draw[<-] ([yshift=-1mm]aux)--++(-162:20mm) node [right=2mm of inpN] {$w_{n,j}^{l-1}$};
 
-\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{bw_{0,j} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{bw_{0,j}^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
 
 \end{tikzpicture}
 \caption{The computation carried out by each neuron. The outputs or \tit{activations} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the activation function is $\phi$ and $b$ is the bias input.}
@@ -727,7 +727,15 @@ The delta term for the preceding layers can be shown to have the form below. Thi
 where $v_{i,j}^l$ denotes the weight on the recurrent connection from neuron $i$ in layer $l$ back to neuron $j$ in the same layer.
 
 \subsubsection{Vanilla Recurrent Neural Networks}
-So far, the equations presented have assumed a \tit{vanilla RNN}. That is, each neuron, or \tit{cell}, simply computes the weighted sum of its inputs and then applys an activation function. A significant problem associated with this architecture is known as the \tit{vanishing gradient problem}. Namely, the influence of a particular input on the hidden layers and subsequently the output layer either decays or blows up exponentially as it cycles through the recurrent connections, which makes it difficult for this architecture to retain long-term information across several steps. Various improvements have been made to improve upon this problem, two of which are outlined below.
+So far, the equations presented have assumed a \tit{vanilla RNN}. That is, each neuron, or \tit{cell}, simply takes the activations from the previous layer, $a_i^{l - 1, t}$, and the activations from the same layer at the previous time step, $a_i^{l, t - 1}$, and applies an activation function to their weighted sum to give $a_j^{l, t}$:
+\begin{gather}
+	a_j^{l, t} = \phi \big( \sum_i a_i^{l - 1, t} w_{i,j}^{l-1} + \sum_i a_i^{l, t - 1} v_{i,j}^{l-1} + b^{l - 1}_j \big)
+\end{gather}
+which can be written in matrix notation as follows:
+\begin{gather} \label{eq:vanilla_rnn}
+	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
+\end{gather}
+A significant problem associated with this architecture is known as the \tit{vanishing gradient problem}. Namely, the influence of a particular input on the hidden layers and subsequently the output layer either decays or blows up exponentially as it cycles through the recurrent connections, which makes it difficult for this architecture to retain long-term information across several steps. Various improvements have been made to improve upon this problem, two of which are outlined below.
 
 \subsubsection{Long Short-Term Memory}
 The most effective solution so far for tackling the vanishing gradient problem is the Long Short-Term Memory architecture proposed by Hochreiter and Schmidhuber~\cite{lstm:hochreiter1997}. In their architecture, each cell maintains a state, $\mathbf{c}$, which is manipulated according to the inputs it receives to produce a new state and the cell output. At each cell, the state passes through three gates: the \tit{forget gate}, \tit{input gate} and the \tit{output gate}. The effect of such gates and a more detailed discussion of this architecture is given in chapter~\ref{implementation}.
@@ -1385,6 +1393,14 @@ The outputs of the softmax function sum to 1 and are used to represent a probabi
 
 
 \subsection{Long Short-Term Memory and Gated Recurrent Units} \label{architectures}
+
+As mentioned in section~\ref{rnns}, there are various architectures that can be used for the cells/neurons of RNNs, three of which I implemented in this project. The vanilla RNN architecture simply takes the activations from the previous layer, $\mathbf{a}^{l - 1, t}$, and the activations from the same layer at the previous time step, $\mathbf{a}^{l, t - 1}$, and applies an activation function to their weighted sum. This is shown in equation~\ref{eq:vanilla_rnn}, which is repeated below:
+\begin{gather*}
+	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
+\end{gather*}
+The more complex architectures, Long Short-Term Memory and Gated Recurrent Unit, are described in this section. \\
+
+
 \begin{itemize}
 \item
 	Forward pass equations
@@ -1405,11 +1421,53 @@ I wanted to be able to visualise the word embeddings after each RNN-based langua
 \centering
 \begin{tikzpicture}[scale=1.0]
 \begin{axis}
-\addplot[only marks, fill=black] table [x=x, y=y, col sep=comma] {Data/embeddings_all.csv};
+\addplot[only marks, fill=black, mark size=0.4] table [x=x, y=y, col sep=comma] {Data/embeddings_all.csv};
+
+\draw[thick] (axis cs:0.6, -1.02) -- (axis cs:1.0, -1.02);
+\draw[thick] (axis cs:1.0, -1.02) -- (axis cs:1.0, -1.3);
+\draw[thick] (axis cs:1.0, -1.3) -- (axis cs:0.6, -1.3);
+\draw[thick] (axis cs:0.6, -1.3) -- (axis cs:0.6, -1.02);
+
+\draw[thick] (axis cs:-1.25, -1.3) -- (axis cs:-0.6, -1.3);
+\draw[thick] (axis cs:-0.6, -1.3) -- (axis cs:-0.6, -2.7);
+\draw[thick] (axis cs:-0.6, -2.7) -- (axis cs:-1.25, -2.7);
+\draw[thick] (axis cs:-1.25, -2.7) -- (axis cs:-1.25, -1.3);
 \end{axis}
 \end{tikzpicture}
-\caption{A subsample of the LSTM-based language model word embeddings projected on two dimensions using PCA.}
+\caption{LSTM-based language model word embeddings projected onto two dimensions using PCA. The highlighted regions and are shown in figure~\ref{fig:pca_embeddings_zoomed}.}
 \label{fig:pca_embeddings_all}
+\end{figure}
+
+The words that have been assigned a more distinguishable representation are given by the points which are further from the centre in figure~\ref{fig:pca_embeddings_all}. Two regions of the plot have been highlighted, and are shown in figure~\ref{fig:pca_embeddings_zoomed}.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tikzpicture}[scale=0.9]
+	\begin{axis}[
+		xmin=0.62, xmax=1.0,
+		ymin=-1.3, ymax=-1.02]
+	\addplot[only marks, fill=black, nodes near coords, point meta=explicit symbolic] table [x=x, y=y, col sep=comma, meta=w] {Data/embeddings_similar_to_grew.csv};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{A group of words that characterise a dramatic change in value.}
+\end{subfigure}%
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\centering
+	\begin{tikzpicture}[scale=0.9]
+	\begin{axis}[
+		xmin=-1.35, xmax=-0.58,
+		ymin=-2.7, ymax=-1.25]
+	\addplot[only marks, fill=black, nodes near coords, point meta=explicit symbolic] table [x=x, y=y, col sep=comma, meta=w] {Data/embeddings_similar_to_should.csv};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Words that express necessity, overlapping with a group of words that describe quantity.}
+\end{subfigure}
+\caption{Two zoomed in regions of figure~\ref{fig:pca_embeddings_all}.}
+\label{fig:pca_embeddings_zoomed}
 \end{figure}
 
 \subsection{Parameter Tuning} \label{tuning}
@@ -1476,9 +1534,11 @@ Error-correction can be broken up into two parts: detecting the errors and makin
 \label{alg:error_correction}
 \begin{algorithmic}[1]
 \Procedure{Prob($w_j$, $w_i^{j - 1}$)}{}
+\State $outputs \gets \emptyset$
+\State $state = \mathbf{0}$
 \For {$w$ in $w_i^{j - 1}$}
 	\State $w_{correct} \gets w$
-	\If {$w \notin dictionary$}
+	\If {$w \notin dictionary\ \tbf{and}\ outputs \neq \emptyset$}
 		\State $\text{\scshape SortByDecreasingProbability}(outputs)$
 		\For {$w'$ in $outputs$}
 			\State $d \gets \text{\scshape LevenshteinDistance}(w, w')$
