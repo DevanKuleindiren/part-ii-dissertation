@@ -64,6 +64,9 @@
 % Remove paragraph indentation
 \setlength\parindent{0pt}
 
+% For an index.
+\usepackage{makeidx}
+
 % The colours used by lstlisting
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{myblue}{rgb}{0,0.5,0.8}
@@ -134,6 +137,9 @@
 
 % Set the Table of Contents depth.
 \setcounter{tocdepth}{2}
+
+% Make the index.
+\makeindex
 
 \begin{document}
 
@@ -527,24 +533,24 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 
 \node[every neuron/.try] (neuron) {$j$};
 \node[left=10mm of neuron] (mid) {};
-\node[above left=12mm and 20mm of neuron] (bias) {$b$};
+\node[above left=12mm and 20mm of neuron] (bias) {$1$};
 \node[above left=2mm and 20mm of neuron] (inp1) {$a_1^{l-1}$};
 \node[left=20mm of neuron] (var) {$\vdots$};
 \node[below left=2mm and 20mm of neuron] (inpN) {$a_n^{l-1}$};
 
 \draw[<-] (neuron.west |- mid) coordinate (aux)--++(159:20mm) node [below right=0mm and 2mm of inp1] {$w_{1,j}^{l-1}$};
-\draw[<-] ([yshift=1mm]aux)--++(140:24mm) node [below right=-5mm and 2mm of bias] {$w_{0,j}^{l-1}$};
+\draw[<-] ([yshift=1mm]aux)--++(140:24mm) node [below right=-5mm and 2mm of bias] {$b_j^{l-1}$};
 \draw[<-] ([yshift=-1mm]aux)--++(-162:20mm) node [right=2mm of inpN] {$w_{n,j}^{l-1}$};
 
-\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{bw_{0,j}^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{b_j^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
 
 \end{tikzpicture}
-\caption{The computation carried out by each neuron. The outputs or \tit{activations} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the activation function is $\phi$ and $b$ is the bias input.}
+\caption{The computation carried out by each neuron. The outputs or \tit{activations} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the activation function is $\phi$ and $b_j^{l - 1}$ is the bias variable.}
 \label{fig:neuron}
 \end{center}
 \end{figure}
 
-The unusual looking input $b$ is a \tit{bias} input. This is a fixed-value input, typically set to 1, which allows the neuron to shift the output of the activation function left and right by adjusting the weight $w_0$. Bias inputs are usually attached to every non-input neuron in the network. \\
+The unusual looking constant-valued input 1 is known as a \tit{bias}\index{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. The purpose of the bias is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
 
 It is also worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
@@ -726,43 +732,50 @@ The delta term for the preceding layers can be shown to have the form below. Thi
 \end{gather}
 where $v_{i,j}^l$ denotes the weight on the recurrent connection from neuron $i$ in layer $l$ back to neuron $j$ in the same layer.
 
-\subsubsection{Vanilla Recurrent Neural Networks}
+\subsubsection{RNN Architectures}
 So far, the equations presented have assumed a \tit{vanilla RNN}. That is, each neuron, or \tit{cell}, simply takes the activations from the previous layer, $a_i^{l - 1, t}$, and the activations from the same layer at the previous time step, $a_i^{l, t - 1}$, and applies an activation function to their weighted sum to give $a_j^{l, t}$:
 \begin{gather}
 	a_j^{l, t} = \phi \big( \sum_i a_i^{l - 1, t} w_{i,j}^{l-1} + \sum_i a_i^{l, t - 1} v_{i,j}^{l-1} + b^{l - 1}_j \big)
 \end{gather}
-which can be written in matrix notation as follows:
+This computation can be written for an entire layer of hidden neurons, $\mathbf{a}^{l, t} = (a_1^{l, t}, a_2^{l, t}, ..., a_H^{l, t})$, using matrix notation as follows:
 \begin{gather} \label{eq:vanilla_rnn}
 	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
 \end{gather}
-A significant problem associated with this architecture is known as the \tit{vanishing gradient problem}. Namely, the influence of a particular input on the hidden layers and subsequently the output layer either decays or blows up exponentially as it cycles through the recurrent connections, which makes it difficult for this architecture to retain long-term information across several steps. Various improvements have been made to improve upon this problem, two of which are outlined below.
-
-\subsubsection{Long Short-Term Memory}
-The most effective solution so far for tackling the vanishing gradient problem is the Long Short-Term Memory architecture proposed by Hochreiter and Schmidhuber~\cite{lstm:hochreiter1997}. In their architecture, each cell maintains a state, $\mathbf{c}$, which is manipulated according to the inputs it receives to produce a new state and the cell output. At each cell, the state passes through three gates: the \tit{forget gate}, \tit{input gate} and the \tit{output gate}. The effect of such gates and a more detailed discussion of this architecture is given in chapter~\ref{implementation}.
+Whilst this architecture provides a good baseline for RNNs, it struggles to maintain long-term information for reasons discussed in section~\ref{architectures}. Various modifications to the way in which the cells are wired up have been proposed to improve upon this problem. In this project, I have implemented the two most prominent alternatives, which are Long Short-Term Memory (LSTM)~\cite{lstm:hochreiter1997} and the Gated Recurrent Unit (GRU)~\cite{gru:cho2014}. These architectures are outlined in figure~\ref{fig:rnn_architectures} and discussed in much more detail in section~\ref{architectures}. \\
 
 \begin{figure}[h]
+\captionsetup{justification=centering}
 \centering
 \begin{tikzpicture}[
-	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
-	tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
-	siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
-	textb/.style={minimum width=6mm, minimum height=4mm},
-	ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
-	ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
-	filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
-	\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
-	mylabel/.style={font=\scriptsize\sffamily},
+	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm, font=\footnotesize},
+	nnlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm, font=\footnotesize},
+	textb/.style={minimum width=6mm, minimum height=4mm, text width=40mm, align=center, font=\footnotesize},
 	>=LaTeX
 ]
 
-\node[tanlayer] (nnlayer) {};
-\node[textb, below=5mm of nnlayer] (nnlayertext) {\footnotesize A neural network layer.};
-\node[scalar, left=30mm of nnlayer] (scalar) {};
-\node[textb, below=5mm of scalar] (scalartext) {\footnotesize A scalar operation.};
+\node[nnlayer] (nnlayer) {$\phi$};
+\node[left=3mm of nnlayer] (nnlayer_input) {\footnotesize $\mathbf{x}$};
+\node[right=3mm of nnlayer] (nnlayer_output) {\footnotesize $y$};
+\node[textb, below=5mm of nnlayer] (nnlayertext) {A neural network layer: $y = \phi \big([\mathbf{W} \mathbf{x}]_j + b_j \big)$};
+
+\node[scalar, left=30mm of nnlayer] (scalar) {$\bullet$};
+\node[above left=0mm and 3mm of scalar] (scalar_input1) {\footnotesize $x_1$};
+\node[below left=0mm and 3mm of scalar] (scalar_input2) {\footnotesize $x_2$};
+\node[right=3mm of scalar] (scalar_output) {\footnotesize $y$};
+\node[textb, below=5mm of scalar] (scalartext) {A scalar operation: $y = x_1 \bullet x_2$};
+
 \node[right=30mm of nnlayer] (concat) {};
-\node[textb, below=5mm of concat] (concattext) {\footnotesize Concatenation.};
+\node[textb, below=5mm of concat] (concattext) {Concatenation of two vectors.};
+
 \node[right=60mm of nnlayer] (copy) {};
-\node[textb, below=5mm of copy] (copytext) {\footnotesize Copy.};
+\node[textb, below=5mm of copy] (copytext) {Duplication of a vector or scalar.};
+
+\draw[->] (nnlayer_input) -- (nnlayer);
+\draw[->] (nnlayer) -- (nnlayer_output);
+
+\draw[->] (scalar_input1) -- (scalar);
+\draw[->] (scalar_input2) -- (scalar);
+\draw[->] (scalar) -- (scalar_output);
 
 \draw[<-, rounded corners=5pt] (concat) -| ++(-10mm,3mm);
 \draw[<-, rounded corners=5pt] (concat) -| ++(-10mm,-3mm);
@@ -776,10 +789,8 @@ The most effective solution so far for tackling the vanishing gradient problem i
 \label{fig:rnn_notation}
 \end{figure}
 
-\subsubsection{Gated Recurrent Unit}
-Whilst the LSTM architecture provides a significant improvement for retaining long-term information, it is computationally more expensive to run. Cho et al.\ propose the Gated Recurrent Unit~\cite{gru:cho2014}, which is a simplified version of LSTM that is cheaper to compute. The most significant changes are that it combines the forget and input gates into a single `update gate', and it merges the cell state and cell output. This architecture is also described in more detail in chapter~\ref{implementation}.
-
 \begin{figure}[h]
+\captionsetup{justification=centering}
 \centering
 \begin{subfigure}{0.33\linewidth}
 	\centering
@@ -799,9 +810,9 @@ Whilst the LSTM architecture provides a significant improvement for retaining lo
 	
 	\node[tanlayer] (tanh) {\scriptsize $\tanh$};
 	\node[textb, anchor=east, left=10mm of tanh] (hin) {$\mathbf{a}^{l, t - 1}$};
-	\node[textb, anchor=west, right=10mm of tanh] (hout) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=west, right=10mm of tanh] (hout) {$a_j^{l, t}$};
 	\node[textb, anchor=north, below left=10mm and -1mm of tanh] (x) {$\mathbf{a}^{l - 1, t}$};
-	\node[textb, anchor=south, above right=10mm and 1mm of tanh] (hout2) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=south, above right=10mm and 1mm of tanh] (hout2) {$a_j^{l, t}$};
 	\node[fit=(tanh), draw, inner xsep=7mm, inner ysep=7mm, rounded corners=5pt, line width=0.4mm] (fit) {};
 
 	\foreach \i/\j in {hin/tanh.west, tanh.east/hout}
@@ -839,12 +850,12 @@ Whilst the LSTM architecture provides a significant improvement for retaining lo
 	\node[siglayer, left=2mm of stanh] (isig) {$\sigma$};
 	\node[siglayer, left=4mm of isig] (fsig) {$\sigma$};
 	\node[siglayer, right=2mm of stanh] (osig) {$\sigma$};
-	\node[textb, anchor=east, left=10mm of ftimes] (Cin) {$\mathbf{c}^{l, t - 1}$};
-	\node[textb, anchor=east, below=21mm of Cin] (hin) {$\mathbf{a}^{l, t - 1}$};
-	\node[textb, anchor=west, right=33mm of plus] (Cout) {$\mathbf{c}^{l, t}$};
-	\node[textb, anchor=west, below=21mm of Cout] (hout) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=east, left=10mm of ftimes] (Cin) {$c_j^{l, t - 1}$};
+	\node[textb, anchor=east, below=20mm of Cin] (hin) {$\mathbf{a}^{l, t - 1}$};
+	\node[textb, anchor=west, right=33mm of plus] (Cout) {$c_j^{l, t}$};
+	\node[textb, anchor=west, below=19mm of Cout] (hout) {$a_j^{l, t}$};
 	\node[textb, anchor=north, below left=10mm and -2mm of fsig] (x) {$\mathbf{a}^{l - 1, t}$};
-	\node[textb, anchor=south, above right=6mm and 22mm of plus] (hout2) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=south, above right=6mm and 22mm of plus] (hout2) {$a_j^{l, t}$};
 	\node[below=2.5mm of stanh] (invisible) {};
 	\node[fit=(ftimes) (otanh) (osig) (fsig) (invisible), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
 
@@ -861,7 +872,7 @@ Whilst the LSTM architecture provides a significant improvement for retaining lo
 	\foreach \i/\j in {Cin/ftimes, ftimes/plus, plus/Cout, fsig/ftimes, itimes/plus, stanh/itimes, otanh/otimes}
 		\draw[->] (\i) -- (\j);
 
-	\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.39mm);
+	\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.34mm);
 
 	\end{tikzpicture}}
 	\caption{An LSTM cell.}
@@ -891,9 +902,9 @@ Whilst the LSTM architecture provides a significant improvement for retaining lo
 	\node[siglayer, left=4mm of sig2] (sig1) {$\sigma$};
 	\node[tanlayer, right=2mm of sig2] (tanh) {\scriptsize $\tanh$};
 	\node[textb, anchor=east, left=32mm of times] (hin) {$\mathbf{a}^{l, t - 1}$};
-	\node[textb, anchor=west, right=33mm of times] (hout) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=west, right=33mm of times] (hout) {$a_j^{l, t}$};
 	\node[textb, anchor=north, below left=10mm and 8mm of sig1] (x) {$\mathbf{a}^{l - 1, t}$};
-	\node[textb, anchor=south, above right=6mm and 22mm of times] (hout2) {$\mathbf{a}^{l, t}$};
+	\node[textb, anchor=south, above right=6mm and 22mm of times] (hout2) {$a_j^{l, t}$};
 	\node[below right=2.5mm and 17.5mm of sig2] (invisible) {};
 	\node[left=7mm of sig1] (invisible2) {};
 	\node[fit=(plus) (tanh) (invisible) (invisible2), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
@@ -919,7 +930,8 @@ Whilst the LSTM architecture provides a significant improvement for retaining lo
 	\end{tikzpicture}}
 	\caption{A GRU cell.}
 \end{subfigure}
-\caption{Various architectures of RNN neurons, using the notation from figure~\ref{fig:rnn_notation}}
+\caption{Various architectures of RNN neurons, using the notation from figure~\ref{fig:rnn_notation}. Each diagram represents the computation of the $j^{th}$ neuron or cell in layer $l$.}
+\label{fig:rnn_architectures}
 \end{figure}
 
 \subsection{Word Embeddings} \label{word_embeddings}
@@ -1305,7 +1317,7 @@ Katz smoothing is an exception in that it does not quite match the form presente
 
 \section{Recurrent Neural Network Models} \label{rnn_lm}
 
-Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow in section~\ref{tensorflow}. Then, in section~\ref{rnn_structure}, I explain the structure of the RNNs I use and how they apply to language modelling. In section~\ref{architectures} I give the details of the GRU and LSTM architectures. Section~\ref{embeddings} details the word embeddings used in the models. Finally, section~\ref{tuning} describes how I tuned the RNN hyperparameters and applied techniques to encourage convergence and avoid overfitting.
+Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow in section~\ref{tensorflow}. Then, in section~\ref{rnn_structure}, I explain the structure of the RNNs I use and how they apply to language modelling. In section~\ref{architectures} I give the details of the GRU and LSTM architectures. Section~\ref{embeddings} details the word embeddings used in the models. Finally, section~\ref{in_practice} describes how I tuned the RNN hyperparameters and applied techniques to encourage convergence and avoid overfitting.
 
 \subsection{TensorFlow} \label{tensorflow}
 
@@ -1341,7 +1353,7 @@ Computation in TensorFlow is defined in terms of a directed graph, where each no
 \end{figure}
 Each operation takes zero or more tensors as input, and produces a tensor as output. There are some notable operations that take zero inputs: a \tit{constant}, which outputs a tensor whose value cannot be changed; a \tit{variable}, which is the same except the tensor that it outputs can be changed; and a \tit{placeholder}, which is a promise to provide a tensor at execution time. \\
 
-The computation of a (recurrent) neural network can be described as a directed graph of tensor operations. For example: a layer of neurons can be represented as a vector and the weights in between each layer can be represented as a matrix. Then, computing the activations of the next layer is simply a case of matrix multiplying the weights with the activations from the previous layer, and applying an activation function element-wise to the result. In the context of TensorFlow, a placeholder would be used to provide the input training data, and variables would be used to store all of the trainable parameters of the network, namely the weights and the word embeddings. \\
+The computation of a (recurrent) neural network can be described as a directed graph of tensor operations. For example: a layer of neurons can be represented as a vector and the weights in between each layer can be represented as a matrix. Then, computing the activations of the next layer is simply a case of matrix multiplying the weights with the activations from the previous layer, and applying an activation function element-wise to the result. In the context of TensorFlow, a placeholder would be used to provide the input training data, and variables would be used to store all of the trainable parameters of the network, namely the weights, bias variables and the word embeddings. \\
 
 Once a neural network has been constructed, forward propagation can be computed by evaluating the output nodes of the network in a session. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}, and is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, any optimisation technique such as gradient descent can be applied to update the network. \\
 
@@ -1398,17 +1410,232 @@ As mentioned in section~\ref{rnns}, there are various architectures that can be 
 \begin{gather*}
 	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
 \end{gather*}
-The more complex architectures, Long Short-Term Memory and Gated Recurrent Unit, are described in this section. \\
+The fact that the vanilla RNN keeps hold of the activations of the hidden layers from the previous time step means that it implicitly maintains some state. A significant problem associated with this architecture is known as the \tit{vanishing gradient problem}\index{vanishing gradient problem}. Namely, the influence of a particular input on the hidden layers and subsequently the output layer often decays exponentially as it cycles through the recurrent connections, which makes it difficult for this architecture to retain long-term information across several steps. Various improvements have been made to improve upon this problem, two of which I implemented in my project and are outlined below.
 
+\subsubsection{Long Short-Term Memory}
 
-\begin{itemize}
-\item
-	Forward pass equations
-\item
-	Explain gates
-\item
-	Dropout, embedding, learning rate decay, momentum?, gradient clipping
-\end{itemize}
+Hochreiter and Schmidhuber~\cite{lstm:hochreiter1997} originally proposed an architecture that directly tackles the vanishing gradient problem, called Long Short-Term Memory (LSTM). The state of each hidden layer $l$ in their architecture at time step $t$ consists of a tuple $(\mathbf{a}^{l, t}, \mathbf{c}^{l, t})$. $\mathbf{a}^{l, t}$, just like in the vanilla RNN cells, allows the LSTM cells to make decisions over a short period of time. The second state vector, $\mathbf{c}^{l, t}$, serves to retain longer-term information. At time step $t + 1$, each element $c_j^{l, t}$ of $\mathbf{c}^{l, t}$ passes through a single LSTM cell in layer $l$, and can be modified by a series of three \tit{gates}\index{gates}: the \tit{forget gate}\index{gates!forget gate}, the \tit{input gate}\index{gates!input gate} and the \tit{output gate}\index{gates!output gate}. These gates can remove, add and output information respectively from $c_j^{l, t}$. \\
+
+In what follows, I use the notation from figure~\ref{fig:rnn_notation}, which is repeated below for convenience:
+
+\begin{center}
+\begin{tikzpicture}[
+	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm, font=\footnotesize},
+	nnlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm, font=\footnotesize},
+	textb/.style={minimum width=6mm, minimum height=4mm, text width=40mm, align=center, font=\footnotesize},
+	>=LaTeX
+]
+
+\node[nnlayer] (nnlayer) {$\phi$};
+\node[left=3mm of nnlayer] (nnlayer_input) {\footnotesize $\mathbf{x}$};
+\node[right=3mm of nnlayer] (nnlayer_output) {\footnotesize $y$};
+\node[textb, below=5mm of nnlayer] (nnlayertext) {A neural network layer: $y = \phi \big([\mathbf{W} \mathbf{x}]_j + b_j \big)$};
+
+\node[scalar, left=30mm of nnlayer] (scalar) {$\bullet$};
+\node[above left=0mm and 3mm of scalar] (scalar_input1) {\footnotesize $x_1$};
+\node[below left=0mm and 3mm of scalar] (scalar_input2) {\footnotesize $x_2$};
+\node[right=3mm of scalar] (scalar_output) {\footnotesize $y$};
+\node[textb, below=5mm of scalar] (scalartext) {A scalar operation: $y = x_1 \bullet x_2$};
+
+\node[right=30mm of nnlayer] (concat) {};
+\node[textb, below=5mm of concat] (concattext) {Concatenation of two vectors.};
+
+\node[right=60mm of nnlayer] (copy) {};
+\node[textb, below=5mm of copy] (copytext) {Duplication of a vector or scalar.};
+
+\draw[->] (nnlayer_input) -- (nnlayer);
+\draw[->] (nnlayer) -- (nnlayer_output);
+
+\draw[->] (scalar_input1) -- (scalar);
+\draw[->] (scalar_input2) -- (scalar);
+\draw[->] (scalar) -- (scalar_output);
+
+\draw[<-, rounded corners=5pt] (concat) -| ++(-10mm,3mm);
+\draw[<-, rounded corners=5pt] (concat) -| ++(-10mm,-3mm);
+
+\draw[rounded corners=5pt] (copy.east) -- ++(-7mm,0mm);
+\draw[->, rounded corners=5pt] (copy) -| ++(3mm,3mm);
+\draw[->, rounded corners=5pt] (copy) -| ++(3mm,-3mm);
+
+\end{tikzpicture}
+\end{center}
+
+Each LSTM gate has the following structure:
+
+\begin{center}
+\begin{tikzpicture}[
+	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm, font=\footnotesize},
+	nnlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm, font=\footnotesize},
+	textb/.style={minimum width=6mm, minimum height=4mm, text width=40mm, align=center, font=\footnotesize},
+	>=LaTeX
+]
+
+\node[scalar] (times) {$\times$};
+\node[left=4mm of times] (times_input) {$x$};
+\node[right=4mm of times] (times_output) {$x'$};
+\node[nnlayer, below=5mm of times] (sigmoid) {$\sigma$};
+\node[below=3mm of sigmoid] (sigmoid_input) {};
+
+\draw[->] (times_input) -- (times);
+\draw[->] (times) -- (times_output);
+\draw[->] (sigmoid_input) -- (sigmoid);
+\draw[->] (sigmoid) -- (times);
+\end{tikzpicture}
+\end{center}
+It is named a gate because it controls how much information from $x$ is let through the scalar operation. The sigmoid layer outputs a scalar value in the range $[0, 1]$, where 0 prevents any information from $x$ passing through and 1 allows all of it to pass through. \\
+
+The LSTM forget, input and output gates in cell $j$ of layer $l$ at time step $t$ are denoted $f_j^{l, t}$, $i_j^{l, t}$ and $o_j^{l, t}$ respectively. If $[\mathbf{x}_1, \mathbf{x}_2]$ denotes the concatenation of vectors $\mathbf{x}_1$ and $\mathbf{x}_2$, and $[\mathbf{x}]_j$ denotes the $j^{th}$ element of vector $\mathbf{x}$, then the gate values are computed as follows:
+\begin{align}
+	f_j^{l, t} &= \sigma \big( [\mathbf{W}_f^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j + [\mathbf{b}_f]_j \big) \\
+	i_j^{l, t} &= \sigma \big( [\mathbf{W}_i^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j + [\mathbf{b}_i]_j \big) \\
+	o_j^{l, t} &= \sigma \big( [\mathbf{W}_o^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j + [\mathbf{b}_o]_j \big)
+\end{align}
+Firstly, the forget gate determines how much of the long-term state value, $c_j^{l, t - 1}$, should be `forgotten'. Next, there is the opportunity for information derived from the short-term state, $\mathbf{a}^{l, t - 1}$, and the previous layer activation $\mathbf{a}^{l - 1, t}$ to be added to the long-term state. The input gate decides how much of this information should be added. The application of the forget and input gates gives the new value of the long-term state value, $c_j^{l, t}$:
+\begin{gather}
+	c_j^{l, t} = f_j^{l, t} \cdot c_j^{l, t - 1} + i_j^{l, t} \cdot \tanh \big( [\mathbf{W}_c^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j + [\mathbf{b}_c]_j \big)
+\end{gather}
+Finally, the output gate is used to control how much of the long-term state is used for the cell output, $a_j^{l, t}$:
+\begin{gather}
+	a_j^{l, t} = o_j^{l, t} \cdot \tanh (c_j^{l, t})
+\end{gather}
+This structure is summarised in figure~\ref{fig:lstm_structure}, and is the version of LSTM that I implemented in my project. There are many different variants of LSTM, but the reason I chose this one in particular is because it seemed to be the best representation of an LSTM baseline. That is, most of the other versions are some form of extension of the one presented above. A notable variant from Gers and Schmidhuber~\cite{peephole:gers2000} makes use of \tit{peephole connections}, whereby $\mathbf{c}^{l, t - 1}$ is added to the input of the forget and input gates, and $\mathbf{c}^{l, t}$ is added to the input of the output gate.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
+	tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
+	siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
+	textb/.style={minimum width=6mm, minimum height=4mm},
+	ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+	ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+	filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+	\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+	mylabel/.style={font=\scriptsize\sffamily},
+	>=LaTeX
+]
+
+\node[scalar] (plus) {$+$};
+\node[scalar, left=16mm of plus] (ftimes) {$\times$};
+\node[scalar, below=6mm of plus] (itimes) {$\times$};
+\node[scalar, right=16mm of itimes] (otimes) {$\times$};
+\node[tanlayer, above=2mm of otimes] (otanh) {\scriptsize $\tanh$};
+\node[tanlayer, below=6mm of itimes] (stanh) {\scriptsize $\tanh$};
+\node[siglayer, left=2mm of stanh] (isig) {$\sigma$};
+\node[siglayer, left=4mm of isig] (fsig) {$\sigma$};
+\node[siglayer, right=2mm of stanh] (osig) {$\sigma$};
+\node[textb, anchor=east, left=10mm of ftimes] (Cin) {$c_j^{l, t - 1}$};
+\node[textb, anchor=east, below=20mm of Cin] (hin) {$\mathbf{a}^{l, t - 1}$};
+\node[textb, anchor=west, right=33mm of plus] (Cout) {$c_j^{l, t}$};
+\node[textb, anchor=west, below=19mm of Cout] (hout) {$a_j^{l, t}$};
+\node[textb, anchor=north, below left=10mm and -2mm of fsig] (x) {$\mathbf{a}^{l - 1, t}$};
+\node[textb, anchor=south, above right=6mm and 22mm of plus] (hout2) {$a_j^{l, t}$};
+\node[left=5mm of itimes] {$i_j^{l, t}$};
+\node[left=5mm of otimes] {$o_j^{l, t}$};
+\node[below=2.5mm of stanh] (invisible) {};
+\node[fit=(ftimes) (otanh) (osig) (fsig) (invisible), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+
+\foreach \i/\j in {otimes/hout2, hin/fsig, hin/isig, hin/stanh, hin/osig}
+	\draw[->, rounded corners=5pt] (\i) -| (\j);
+
+\draw[-, rounded corners=5pt] (plus) -| (otanh);
+
+\foreach \i/\j in {isig/itimes, osig/otimes}
+	\draw[->, rounded corners=5pt] (\i) |- (\j);
+
+\draw[->, rounded corners=5pt] (otimes.east) -| ++(4mm,-17mm) -- (hout.west);
+
+\foreach \i/\j in {Cin/ftimes, ftimes/plus, plus/Cout, itimes/plus, stanh/itimes, otanh/otimes}
+	\draw[->] (\i) -- (\j);
+
+\draw[->] (fsig) to node [left] {$f_j^{l, t}$} (ftimes);
+
+\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.34mm);
+
+\end{tikzpicture}
+\caption{A summary of the structure of an LSTM cell. Specifically, this diagram represents the computation of the $j^{th}$ cell in layer $l$ at time step $t$.}
+\label{fig:lstm_structure}
+\end{figure}
+
+\subsubsection{Gated Recurrent Unit}
+Whilst the LSTM architecture provides a significant improvement for retaining long-term information, it is computationally more expensive to run. Cho et al.\ propose the Gated Recurrent Unit~\cite{gru:cho2014}, which is a simplified version of LSTM that is cheaper to compute. The most significant changes are that uses two gates rather than three, and it merges the long and short-term states into one. \\
+
+The GRU consists of a \tit{reset gate}\index{reset gate}, $r_j^{l, t}$, and an \tit{update gate}\index{update gate}, $u_j^{l, t}$:
+\begin{align}
+	r_j^{l, t} &= \sigma \big( [\mathbf{W}_r^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j \big) \\
+	u_j^{l, t} &= \sigma \big( [\mathbf{W}_u^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j \big)
+\end{align}
+The cell output, $a_j^{l, t}$, is then computed as follows:
+\begin{gather}
+	a_j^{l, t} = u_j^{l, t} \cdot a_j^{l, t - 1} + (1 - u_j^{l, t}) \cdot \tilde{a}_j^{l, t}
+\end{gather}
+where
+\begin{gather}
+	\tilde{a}_j^{l, t} = \tanh \big( [\mathbf{W}_a^l [\mathbf{a}^{l, t - 1} \odot \mathbf{r}^{l, t}, \mathbf{a}^{l - 1, t}]]_j \big)
+\end{gather}
+and $\odot$ represents element-wise multiplication. \\
+
+The reset gate acts similarly to the LSTM forget gate, in that it allows the cell to drop information that it deems irrelevant. The update gate controls how much information from the previous state carries over to the new one. With the short-term and long-term states combined into one, it follows that cells either learn to capture short or long-term information. Those that capture short-term information tend to have more active reset gates, whereas those that capture long-term information tend to have more active update gates.
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+	scalar/.style={circle, draw, inner sep=0pt, minimum width=4mm},
+	tanlayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=10mm, minimum height=4mm},
+	siglayer/.style={rectangle, draw, inner sep=0pt, fill=gray!50, minimum width=6mm, minimum height=4mm},
+	textb/.style={minimum width=6mm, minimum height=4mm},
+	ct/.style={circle, draw, inner sep=5pt, ultra thick, minimum width=10mm},
+	ft/.style={circle, draw, minimum width=8mm, inner sep=1pt},
+	filter/.style={circle, draw, minimum width=7mm, inner sep=1pt, path picture={\draw[thick, rounded corners] (path picture bounding box.center)--++(65:2mm)--++(0:1mm);
+	\draw[thick, rounded corners] (path picture bounding box.center)--++(245:2mm)--++(180:1mm);}},
+	mylabel/.style={font=\scriptsize\sffamily},
+	>=LaTeX
+]
+
+\node[scalar] (times) {$\times$};
+\node[scalar, right=16mm of times] (plus) {$+$};
+\node[scalar, below=6mm of plus] (times2) {$\times$};
+\node[scalar, left=6mm of times2] (minus1) {\small 1-};
+\node[scalar, left=36mm of times2] (times3) {$\times$};
+\node[siglayer, below=16mm of times] (sig2) {$\sigma$};
+\node[siglayer, left=4mm of sig2] (sig1) {$\sigma$};
+\node[tanlayer, right=2mm of sig2] (tanh) {\scriptsize $\tanh$};
+\node[textb, anchor=east, left=32mm of times] (hin) {$\mathbf{a}^{l, t - 1}$};
+\node[textb, anchor=west, right=33mm of times] (hout) {$a_j^{l, t}$};
+\node[textb, anchor=north, below left=10mm and 8mm of sig1] (x) {$\mathbf{a}^{l - 1, t}$};
+\node[textb, anchor=south, above right=6mm and 22mm of times] (hout2) {$a_j^{l, t}$};
+\node[below right=2.5mm and 17.5mm of sig2] (invisible) {};
+\node[left=7mm of sig1] (invisible2) {};
+\node[fit=(plus) (tanh) (invisible) (invisible2), draw, inner xsep=6mm, inner ysep=2mm, rounded corners=5pt, line width=0.4mm] (fit) {};
+
+\foreach \i/\j in {hin/times3, plus/hout2, tanh/times2}
+	\draw[->, rounded corners=5pt] (\i) -| (\j);
+
+\foreach \i/\j in {sig1/times3, sig2/minus1}
+	\draw[->, rounded corners=5pt] (\i) |- (\j);
+
+\foreach \i/\j in {hin/times, times/plus, plus/hout, times2/plus, minus1/times2, sig2/times}
+	\draw[->] (\i) -- (\j);
+
+\foreach \i/\j in {hin.east/sig1.south, hin.east/sig2.south}
+	\draw[->, rounded corners=5pt] (\i) -| ++(7mm,-25mm) -| (\j);
+
+\draw[->, rounded corners=5pt] (hin.east) -| ++(7mm,-27.32mm) -| (tanh.south);
+
+\draw[-, rounded corners=5pt] (times3.south) |- ++(3mm, -14.69mm);
+
+\draw[-, rounded corners=5pt] (x.north) |- ++(3mm, 5.045mm);
+
+\end{tikzpicture}
+\caption{A summary of the structure of a GRU cell. Specifically, this diagram represents the computation of the $j^{th}$ cell in layer $l$ at time step $t$.}
+\label{fig:gru_structure}
+\end{figure}
+
+\subsubsection{Abstraction Over the RNN Cells}
+
+The vanilla RNN, GRU and LSTM architectures only differ in how their cells are connected together internally. I exploited this in my implementation by abstracting the implementation of the RNN cell from the overall network structure that was presented in section~\ref{rnn_structure}, which made it very easy to add and test new RNN cell structures. A minor exception to this observation is that the LSTM cell maintains a tuple of vectors for its state, whereas the vanilla RNN and GRU cells only have a single state vector. To cater for this difference, I simply register which RNN cell is being used within the generic RNN instance and use that information to determine whether to expect a one or two state vectors at each time step.
 
 \subsection{Word Embeddings} \label{embeddings}
 
@@ -1470,31 +1697,15 @@ The words that have been assigned a more distinguishable representation are give
 \label{fig:pca_embeddings_zoomed}
 \end{figure}
 
-\subsection{Parameter Tuning} \label{tuning}
+\subsection{Putting Theory into Practice} \label{in_practice}
 
-Parameters:
-\begin{itemize}
-\item
-	Learning rate and decay using validation set
-\item
-	Weight initialisation
-\item
-	Batch size
-\item
-	(H - number of hidden neurons)
-\end{itemize}
+In this section, I address a number of problems that are faced when training RNNs in practice and describe how I went about mitigating them.
 
-Avoiding overfitting
-\begin{itemize}
-\item
-	Dropout
-\end{itemize}
+\subsubsection{Overfitting}
+Discuss: use of validation set to monitor overfitting; optimisation methods (ADAM vs AdaGrad, etc); dropout
 
-Encouraging convergence
-\begin{itemize}
-\item
-	Gradient clipping
-\end{itemize}
+\subsubsection{Convergence}
+Discuss gradient clipping, weight initialisation
 
 \section{Mobile Keyboard} \label{mobile_keyboard}
 
@@ -2084,4 +2295,8 @@ Future work/possible extensions:
 
 \chapter{Project Proposal}
 
+\printindex
+
 \end{document}
+
+
