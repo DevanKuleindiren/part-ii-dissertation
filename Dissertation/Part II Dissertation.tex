@@ -135,6 +135,9 @@
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
+% Command for extracting the word count.
+\newcommand\wordcount{\input{word.count}}
+
 % Set the Table of Contents depth.
 \setcounter{tocdepth}{2}
 
@@ -193,7 +196,7 @@ Name:               & \bf Devan Kuleindiren \\
 College:            & \bf Robinson College \\
 Project Title:      & \bf Language Modelling for Text Prediction \\
 Examination:        & \bf Computer Science Tripos -- Part II, June 2017 \\
-Word Count:         & \bf ? \\
+Word Count:         & \wordcount \\
 Project Originator: & Devan Kuleindiren \& Dr Marek Rei \\
 Supervisors:         & Dr Marek Rei \& Dr Ekaterina Shutova \\
 \end{tabular}
@@ -243,7 +246,7 @@ My project investigates the performance of various language models in the contex
 Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. This predictive power is useful in a variety of applications. For example, in speech recognition, if the speech recogniser has estimated two candidate word sequences from an acoustic signal; \tit{`it's not easy to wreck a nice beach'} and \tit{`it's not easy to recognise speech'}, then a language model can be used to determine that the second candidate is more probable than the first. Language models are also used in machine translation, handwriting recognition, part-of-speech tagging and information retrieval.
 
 \begin{alignat*}{2}
-	\overbrace{\tit{Do you want to grab a }}^{w_1^k}&\overbrace{\underline{\tit{drink}}}^{w_{k+1}} &&\hspace{0.5mm}\overbrace{(0.327)}^{\mathbb{P}(w_{k + 1} | w_1^k)} \\
+	\overbrace{\tit{do you want to grab a }}^{w_1^k}&\overbrace{\underline{\tit{drink}}}^{w_{k+1}} &&\hspace{0.5mm}\overbrace{(0.327)}^{\mathbb{P}(w_{k + 1} | w_1^k)} \\
 	&\tit{coffee} &&\ \ (0.211) \\
 	&\tit{bite} &&\ \ (0.190) \\
 	&\tit{spot} &&\ \ (0.084) \\
@@ -267,7 +270,7 @@ One problem with existing language models is that their next-word predictions te
 
 Chelba et al.~\cite{1bw:chelba2013} from Google explore the performance of a variety of language models on a huge, one billion word dataset. Their work presents the limits of language modelling, when vast quantities of data and computational resources are available. Chen and Goodman~\cite{smoothing:chen1996} compare the performance of a series of smoothing techniques for $n$-gram models, and later use their results to propose an extension to Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999} which is implemented in this project. \\
 
-In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. Language modelling on error-prone text, however, has an important distinction: A test time, a language model cannot use words ahead of its current position to make predictions. In other words, if a language model is predicting the probability of the next word in the middle of an error-prone sentence, then it can only use the first half of the sentence for making corrections and predictions.
+In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction techniques~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. Language modelling on error-prone text, however, has an important distinction: At test time, a language model cannot use words ahead of its current position to make predictions. In other words, if a language model is predicting the probability of the next word in the middle of an error-prone sentence, then it can only use the first half of the sentence for making corrections and predictions.
 
 
 \chapter{Preparation} \label{preparation}
@@ -276,11 +279,11 @@ My preparation consisted of thoroughly understanding $n$-gram and RNN-based lang
 
 \section{$n$-gram Models} \label{ngram_models}
 
-This section describes $n$-gram language models and the various smoothing techniques implemented in this project.
+This section describes $n$-gram\index{$n$-gram} language models and the various smoothing techniques implemented in this project.
 
 \subsection{An Overview of $n$-gram Models}
 
-Language models are concerned with the task of computing $\mathbb{P}(w_1^N)$, the probability of a sequence of words $w_1w_2...w_N = w_1^N$, where $w_i \in V$ and $V$ is some predefined vocabulary\footnote{The vocabulary is typically taken as all of the words that occur at least $k$ times in the training set. $k$ is typically around 2 or 3.}. By repeated application of the product rule, it follows that:
+Language models are concerned with the task of computing $\mathbb{P}(w_1^N)$, the probability of a sequence of words $w_1w_2...w_N = w_1^N$, where $w_i \in V$ and $V$ is some predefined vocabulary\footnote{The vocabulary is typically taken as all of the words that occur at least $k$ times in the training set. $k$ depends on the size of the dataset, but is typically around 2 or 3.}. By repeated application of the product rule, it follows that:
 \begin{gather}
 	\mathbb{P}(w_1^N) = \prod_{i = 1}^N \mathbb{P}(w_i | w_1^{i - 1})
 \end{gather}
@@ -294,9 +297,9 @@ Using the maximum likelihood estimation, $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1}
 \end{gather}
 where $c(W)$ denotes the number of times that the word sequence $W$ was seen in the training set. \\
 
-To a first approximation, the aforementioned $n$-gram language model provides reasonable results and is simple to compute. However, it does have one major issue: if, as an example, a 3-gram (trigram) model does not encounter the trigram \tit{`the cat sat'} in the data it is trained upon, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which is exponential in the value of $n$. This means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
+To a first approximation, the aforementioned $n$-gram language model provides reasonable results and is simple to compute. However, it does have one major issue: if, as an example, a 3-gram model does not encounter the trigram \tit{`the cat sat'} in the data it is trained upon, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which is exponential in the value of $n$. This means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
 
-One way to get around this problem is to exponentially increase the size of the training set. This does, however, require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this. The ones which I have implemented are described in the next section. \\
+One way to get around this problem is to exponentially increase the size of the training set. This does, however, require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}\index{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this. The ones which I have implemented are described in the next section. \\
 
 \begin{figure}[h]
 \centering
@@ -342,15 +345,15 @@ coordinates {(\tit{a}, 0.01)(\tit{cat}, 0.01)(\tit{dog}, 0.02)(\tit{is}, 0.45)(\
 
 \subsubsection{Add-One Smoothing}
 
-Add-one smoothing~\cite{add1_smoothing:johnson1932} simply involves adding 1 to each of the $n$-gram counts, and dividing by $|V|$ to ensure the probabilities sum to 1:
+Add-one smoothing~\cite{add1_smoothing:johnson1932}\index{add-one smoothing} simply involves adding 1 to each of the $n$-gram counts, and adding $|V|$ to the denominator ensure the probabilities sum to 1:
 \begin{gather}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape add-one}} = \frac{c(w_{i - n + 1}^{i}) + 1}{\sum_w c(w_{i - n + 1}^{i - 1}w) + |V|}
 \end{gather}
-One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. As an example, if both \tit{`the cat'} and \tit{`pizza cat'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{cat}\ |\ \tit{the})_{\text{\scshape add-one}} = \mathbb{P}(\tit{cat}\ |\ \tit{pizza})_{\text{\scshape add-one}}$, despite the fact that \tit{`the'} is much more likely to precede \tit{`cat'} than \tit{`pizza'}. This problem can be reduced by employing \tit{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{the})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`the cat'} is more likely than \tit{`pizza cat'}.
+One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. As an example, if both \tit{`cat is'} and \tit{`cat pizza'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{is}\ |\ \tit{cat})_{\text{\scshape add-one}} = \mathbb{P}(\tit{pizza}\ |\ \tit{cat})_{\text{\scshape add-one}}$, despite the fact that the former bigram is clearly more likely than the latter. A simple way to reduce this problem is to employ \tit{backoff}\index{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{is})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`cat is'} is more likely than \tit{`cat pizza'}.
 
 \subsubsection{Absolute Discounting}
 
-Absolute discounting employs backoff by interpolating higher and lower order $n$-gram models. It does this by subtracting a fixed discount $0 \leq D \leq 1$ from each non-zero count:
+Absolute discounting\index{absolute discounting} employs backoff by interpolating higher and lower order $n$-gram models. It does this by subtracting a fixed discount $0 \leq D \leq 1$ from each non-zero count:
 \begin{equation}
 \begin{aligned}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape ABS}} &= \frac{max\{c(w_{i - n + 1}^{i}) - D, 0\}}{\sum_w c(w_{i - n + 1}^{i - 1}w)} \\
@@ -361,9 +364,9 @@ where
 \begin{gather} \label{eq:n1plus}
 	N_{1+}(w_{i - n + 1}^{i - 1}\bullet) = |\{ w\ |\ c(w_{i - n + 1}^{i - 1}w) \geq 1 \}|
 \end{gather}
-and the base case of recursion $\mathbb{P}(w)_{\text{\scshape ABS}}$ is given by the maximum likelihood unigram model. $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$ is the number of unique words that follow the sequence $w_{i - n + 1}^{i - 1}$, which is the number of $n$-grams that $D$ is subtracted from. It is not difficult to show that the coefficient attached to the $\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}$ term ensures that the probabilities sum to 1. \\
+and the base case of recursion is given by $\mathbb{P}(w)_{\text{\scshape ABS}} = \mathbb{P}(w)_{\text{\scshape MLE}}$. $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$ is the number of unique words that follow the sequence $w_{i - n + 1}^{i - 1}$, which is the number of $n$-grams that $D$ is subtracted from. It is not difficult to show that the coefficient attached to the $\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape ABS}}$ term ensures that the probabilities sum to 1. \\
 
-Ney, Essen and Kneser~\cite{absolute_discounting:ney1994} suggested setting $D$ to the value:
+Ney, Essen and Kneser~\cite{absolute_discounting:ney1994} suggest setting $D$ to the value:
 \begin{gather} \label{eq:discount}
 	D = \frac{n_1}{n_1 + 2n_2}
 \end{gather}
@@ -371,7 +374,7 @@ where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts resp
 
 \subsubsection{Kneser-Ney Smoothing}
 
-Kneser and Ney proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
+Kneser and Ney\index{Kneser-Ney smoothing} proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
 
 From this example, it seems intuitive to assign more probability to those $n$-grams that follow a larger number of unique words. Kneser and Ney encapsulate this intuition by replacing some of the absolute counts $c(w_i^j)$ with the number of unique words that precede the word sequence $w_i^j$, $N_{1+}(\bullet w_i^j)$:
 \begin{gather}
@@ -443,16 +446,15 @@ where
 \begin{gather}
 	\alpha(w_{i - n + 1}^{i - 1}) = \frac{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape KATZ}}}{1 - \sum_{\{w_i\ |\ c(w_{i - n + 1}^i) > 0\}} \mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape KATZ}}}
 \end{gather}
-In practice, the infinite sum in equation \ref{eq:gt} cannot be computed. To get around this issue, Katz takes $n$-gram counts above some threshold $k$ as reliable and only applies the Good-Turing estimate to those with a count less than or equal to $k$. Katz suggests $k = 5$. This modification requires a slightly different equation to \ref{eq:katz} and is presented in Katz's original paper.
+In practice, the infinite sum in equation \ref{eq:gt} cannot be computed. To get around this issue, Katz takes $n$-grams with counts above some threshold $k$ as reliable and only applies the Good-Turing estimate to those with a count less than or equal to $k$. Katz suggests $k = 5$. This modification requires a slightly different equation to \ref{eq:katz} and is presented in Katz's original paper.
 
 \section{Recurrent Neural Network Models}
 
-In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling. A thorough description of the more complex RNN architectures, gated recurrent units (GRUs) and long short-term memory (LSTM), is given in chapter \ref{implementation}.
+In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling. A thorough description of the Gated Recurrent Unit (GRUs) and Long Short-Term Memory (LSTM) architectures is given in chapter \ref{implementation}.
 
 \subsection{An Overview of Neural Networks}
 
-The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks, or neural networks, were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}, which despite being substantially oversimplified, now provides an effective tool for classification and regression in modern-day machine learning. \\
-
+The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks, or neural networks, were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}, which despite being substantially oversimplified, now provide an effective tool for classification and regression in modern-day machine learning. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -499,13 +501,15 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \begin{subfigure}{0.5\linewidth}
 	\centering
 	\begin{tikzpicture}[>=stealth]
-		\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10, ] (input) at (0, 0) {};
-		\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (hidden) at (0, 2) {};
-		\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (output) at (0, 4) {};
-		\draw [<-] (input) -- ++(0, -0.8) node [below] {$\mathbf{x}$};
-		\draw [->, line width=0.3mm] (input) to node [right] {$W_{i,h}$} (hidden);
-		\draw [->, line width=0.3mm] (hidden) to node [right] {$W_{h,o}$} (output);
-		\draw [->] (output) -- ++(0, 0.8) node [above] {$\mathbf{y}$};
+
+	\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10, ] (input) at (0, 0) {};
+	\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (hidden) at (0, 2) {};
+	\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (output) at (0, 4) {};
+	\draw [<-] (input) -- ++(0, -0.8) node [below] {$\mathbf{x}$};
+	\draw [->, line width=0.3mm] (input) to node [right] {$W_{i,h}$} (hidden);
+	\draw [->, line width=0.3mm] (hidden) to node [right] {$W_{h,o}$} (output);
+	\draw [->] (output) -- ++(0, 0.8) node [above] {$\mathbf{y}$};
+
 	\end{tikzpicture}
 	\caption{A simplified notation for (a).}
 \end{subfigure}
@@ -518,12 +522,18 @@ An important distinction to be made is whether the neural network is cyclic or n
 
 \subsubsection{The Multilayer Perceptron}
 
-The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first layer is the input layer, the last is the output layer and any layers in between are called \tit{hidden layers}. If there is more than one hidden layer then it is called a \tit{deep} neural network. The input neurons simply pass on the input values that they are given. The neurons in the subsequent layers of the network compute the weighted sum of their inputs, before passing that value through an \tit{activation function} and outputting it:
+The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first layer is the input layer, the last is the output layer and any layers in between are called \tit{hidden layers}\index{hidden layer}. If there is more than one hidden layer then it is called a \tit{deep} neural network. The input neurons simply pass on the input values that they are given. Neurons in the subsequent layers, however, compute the following:
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
 \begin{center}
-\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+\begin{tikzpicture}[
+	every neuron/.style={circle, draw, minimum size=5mm},
+	neuron missing/.style={draw=none, scale=2, text height=0.1cm, execute at begin node=\color{black}$\hdots$},
+	x=1.5cm,
+	y=1.5cm,
+	>=stealth
+]
 
 \node[every neuron/.try] (neuron) {$j$};
 \node[left=10mm of neuron] (mid) {};
@@ -539,16 +549,16 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 \draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{b_j^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
 
 \end{tikzpicture}
-\caption{The computation carried out by each neuron. The outputs or \tit{activations} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the activation function is $\phi$ and $b_j^{l - 1}$ is the bias variable.}
+\caption{The computation carried out by each neuron\index{neuron}. The outputs or \tit{activations}\index{activation} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the \tit{activation function}\index{activation function} is $\phi$ and $b_j^{l - 1}$ is the bias variable.}
 \label{fig:neuron}
 \end{center}
 \end{figure}
 
-The unusual looking constant-valued input 1 is known as a \tit{bias}\index{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. The purpose of the bias is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
+The constant-valued input 1 is known as a \tit{bias}\index{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. Its purpose is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
 
 It is also worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
-Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. These are both non-linear functions squashed within the ranges $(0, 1)$ and $(-1, 1)$ respectively. Their steep slope at the origin is supposed to mimic an axon, which is a neuron that fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
+Frequently used non-linear activation functions include the sigmoid and the hyperbolic tangent functions. Their steep slope at the origin is supposed to mimic an axon, which is a neuron that fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -604,7 +614,7 @@ FNNs compute a function, $f$, parameterised by the weights $\mathbf{w}$ of the n
 \begin{gather*}
 	\mathbf{y} = f_\mathbf{w}(\mathbf{x})
 \end{gather*}
-The entire point of training a neural network is to get it to learn a particular mapping from input vectors to output vectors. What the inputs and outputs represent depends on the problem at hand. For example, in the context of classifying pictures of animals, the input vector might represent the pixel values of an image and the output vector might represent a probability distribution over the set of animals in the classification task. \\
+The entire point of training a neural network is to get it to learn a particular mapping from input vectors to output vectors. What these vectors represent depends on the problem at hand. For example, in the context of classifying pictures of animals, the input vector might represent the pixel values of an image and the output vector might represent a probability distribution over the set of animals in the classification task. \\
 
 In order to train a neural network, you supply it with a training set, which is just a list of input-target pairs:
 \begin{gather*}
@@ -614,14 +624,14 @@ Where $\mathbf{t}_k$ is the vector that the network should output given the exam
 \begin{gather}
 	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
 \end{gather}
-The end product of the \tit{backpropagation} algorithm is the partial derivative:
+The end product of the \tit{backpropagation}\index{backpropagation} algorithm is the partial derivative:
 \begin{gather*}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather*}
 for every weight $w_{i,j}^l$ in the neural network. It is a two stage algorithm that works as follows:
 \begin{enumerate}
 \item
-	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$. The process of calculating the output of the neural network given the input is known as \tit{forward propagation}, because the input is propagated through each layer in the network.
+	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$. The process of calculating the output of the neural network given the input is known as \tit{forward propagation}\index{forward propagation}.
 \item
 	Given $\mathcal{L}_{\text{\scshape total}}$, calculate $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ for each weight in each layer of the network by applying the chain rule backwards from the output layer to the input layer. This step is described in more detail below.
 \end{enumerate}
@@ -639,15 +649,15 @@ For the preceding layers, $\delta_j^l$ can be defined recursively in terms of th
 	\delta_i^l = \phi'(z_i^l) \sum_j \delta_j^{l+1} w_{i,j}^l
 \end{gather}
 
-\tit{Gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. The simplest form of gradient descent does this by changing each weight value in the direction of the negative gradient of the loss. This is is equivalent to moving the network output downwards on the error surface defined by plotting the loss against each of the weights in the network:
+\tit{Gradient descent}\index{gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. The simplest form of gradient descent does this by changing each weight value in the direction of the negative gradient of the loss. This is is equivalent to moving the network output downwards on the error surface defined by plotting the loss against each of the weights in the network:
 \begin{gather}
 	w_{i,j}^l \leftarrow w_{i,j}^l - \eta \frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather}
-$\eta$ is known as the \tit{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
+$\eta$ is known as the \tit{learning rate}\index{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
 
 \subsection{Recurrent Neural Networks} \label{rnns}
 
-In the context of language modelling, the input is a sequence of words and the output should be the same sequence of words shifted ahead in time by one word. For example, given (\tit{`the', `cat', `sat', ...}) as input, the network should produce something similar to (\tit{`cat', `sat', `on', ...}) as output. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network.
+In the context of language modelling, the input is a sequence of words and the output should be the same sequence of words shifted ahead in time by one word. For example, given (\tit{`the', `cat', `sat', ...}) as input, the network should produce something similar to (\tit{`cat', `sat', `on', ...}) as output. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network\index{RNN}.
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -700,34 +710,34 @@ In the context of language modelling, the input is a sequence of words and the o
 		\draw [->, line width=0.3mm] (hidden2.east) to node [above=1mm of hidden2] {$W_{h,h}$} (hidden3.west);
 		\draw [->, line width=0.3mm] (hidden3.east) to node [above=1mm of hidden3] {$W_{h,h}$} (cont.west);
 	\end{tikzpicture}
-	\caption{An unrolled RNN.}
+	\caption{An \tit{unrolled} RNN.}
 	\label{fig:rnn_unrolled}
 \end{subfigure}
 \caption{Two different representations of the same RNN.}
 \end{figure}
 
-A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. This gives something like the network shown in figure \ref{fig:rnn}. An easier way to visualise an RNN is by \tit{unrolling} it as shown in figure \ref{fig:rnn_unrolled}. A nice property about RNNs is that they can be unrolled an arbitrary number of steps without the need for any additional parameters, because the same weight matrices are reused at each step. For this reason, RNNs are well suited for operating over sequences of input data. In the case of language modelling, this is ideal, because the inputs are sequences of words. The problem of representing textual words as numerical input vectors for an RNN is addressed in section \ref{word_embeddings}. \\
+A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. A nice property about RNNs is that they can be unrolled to an arbitrary number of steps without the need for any additional parameters, because the same weight matrices are reused at each step. For this reason, RNNs are well suited for operating over sequences of input data. In the case of language modelling, this is ideal, because the inputs are sequences of words. The problem of representing textual words as numerical input vectors for an RNN is addressed in section \ref{word_embeddings}. \\
 
-As shown in figure \ref{fig:rnn_unrolled}, RNNs can take a sequence of vectors as input. In most applications, the vectors in such sequences are typically ordered by time, so I use the notation $\mathbf{x}^t$ and $\mathbf{y}^t$ to denote the input and output vectors at time step $t$.
+In most applications, the sequences of input vectors are typically ordered by time, so I use the notation $\mathbf{x}^t$ and $\mathbf{y}^t$ to denote the input and output vectors at time step $t$.
 
 \subsubsection{Backpropagation Through Time (BPTT)}
 
-Training an RNN is not so much different to training an FNN: the only difference is that gradients must also be calculated across time steps. As shown figure \ref{fig:rnn_unrolled}, each weight is reused at each time step. For this reason, the weight update given in equation \ref{eq:bp_weight_grad} is summed across the time steps:
-\begin{gather*}
+Training an RNN is not so much different to training an FNN: the only difference is that gradients must also be calculated across time steps\index{backpropagation through time}. As shown figure \ref{fig:rnn_unrolled}, each weight is reused at every time step, so the weight derivative is now summed across the time steps:
+\begin{gather}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big) = \sum_t \delta_j^{l+1,t} a_i^{l,t}
-\end{gather*}
+\end{gather}
 The delta term for the output layer is defined analogously to equation \ref{eq:delta_output}:
-\begin{gather} \label{eq:delta_output}
+\begin{gather} \label{eq:delta_output_rnn}
 	\delta_j^{L,t} = \frac{\partial \mathcal{L}}{\partial f_{\mathbf{w}}(\mathbf{x}_k^t)} \phi'(z_j^{L,t})
 \end{gather}
-The delta term for the preceding layers can be shown to have the form below. This is justified in more detail in appendix \ref{appendix:bp_recurrence}.
-\begin{gather} \label{eq:delta_hidden}
+The delta term for the preceding layers can be shown to have the form below. This is justified in more detail in appendix \ref{appendix:bp_recurrence}:
+\begin{gather} \label{eq:delta_hidden_rnn}
 	\delta_i^{l,t} = \phi'(z_i^{l,t}) \big( \sum_j \delta_j^{l+1,t} w_{i,j}^l + \sum_j \delta_j^{l,t+1} v_{i,j}^l \big)
 \end{gather}
 where $v_{i,j}^l$ denotes the weight on the recurrent connection from neuron $i$ in layer $l$ back to neuron $j$ in the same layer.
 
 \subsubsection{RNN Architectures}
-So far, the equations presented have assumed a \tit{vanilla RNN}. That is, each neuron, or \tit{cell}, simply takes the activations from the previous layer, $a_i^{l - 1, t}$, and the activations from the same layer at the previous time step, $a_i^{l, t - 1}$, and applies an activation function to their weighted sum to give $a_j^{l, t}$:
+So far, the equations presented have assumed a \tit{vanilla RNN}\index{vanilla RNN}. That is, the $j^{th}$ neuron, or \tit{cell}\index{cell}, in layer $l$ at time step $t$ simply computes:
 \begin{gather}
 	a_j^{l, t} = \phi \big( \sum_i a_i^{l - 1, t} w_{i,j}^{l-1} + \sum_i a_i^{l, t - 1} v_{i,j}^{l-1} + b^{l - 1}_j \big)
 \end{gather}
@@ -735,7 +745,7 @@ This computation can be written for an entire layer of hidden neurons, $\mathbf{
 \begin{gather} \label{eq:vanilla_rnn}
 	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
 \end{gather}
-Whilst this architecture provides a good baseline for RNNs, it struggles to maintain long-term information for reasons discussed in section~\ref{architectures}. Various modifications to the way in which the cells are wired up have been proposed to improve upon this problem. In this project, I have implemented the two most prominent alternatives, which are Long Short-Term Memory (LSTM)~\cite{lstm:hochreiter1997} and the Gated Recurrent Unit (GRU)~\cite{gru:cho2014}. These architectures are outlined in figure~\ref{fig:rnn_architectures} and discussed in much more detail in section~\ref{architectures}. \\
+Various improvements to this architecture have been proposed, which capture longer-term information across the inputs. In this project, I have implemented the two most prominent alternatives, which are Long Short-Term Memory (LSTM)~\cite{lstm:hochreiter1997} and the Gated Recurrent Unit (GRU)~\cite{gru:cho2014}. These are outlined in figure~\ref{fig:rnn_architectures} and discussed in much more detail in section~\ref{architectures}. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -930,13 +940,11 @@ Whilst this architecture provides a good baseline for RNNs, it struggles to main
 
 \subsection{Word Embeddings} \label{word_embeddings}
 
-RNNs take a sequence of vectors as input, and produce a sequence of vectors as output. In the context of language modelling, these inputs and outputs should represent sequences of words. In order to do this, each word is represented by a single vector, which is known as a word \tit{embedding}. \\
-
-The aim behind word embeddings is that similar words should be represented by vectors that are closer together in the vector space than those for dissimilar words. One effective way to obtain such embeddings is to learn them through backpropagation, which is the method that was used in this dissertation. The idea is that each word is mapped to a large, randomly initialised vector. Then, when the RNN is trained on sequences of words, the embedding values are updated in a way that is analogous to how the weights are updated in the network.
+In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}\index{word embedding}. Each word embedding represents a point in a high-dimensional space, and ideally, similar words will be assigned points which are closer together. In this dissertation, I map each word to a large, randomly initialised vector and get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
 
 \section{Software Engineering}
 
-In this section details the requirements of the project and the early design decisions that were made to target those goals.
+This section details the requirements of the project and early design decisions that were made to target such goals.
 
 \subsection{Requirements}
 
@@ -1005,7 +1013,7 @@ I used Google Test for C++ unit tests and the \ttt{unittest} package for testing
 
 \subsection{Starting Point}
 
-My project codebase was written from scratch, with the assistance of the tools and libraries mentioned in section \ref{tools}. Before the project, I had no understanding of language modelling. Apart from a basic knowledge of recurrent neural networks, I had to learn about language modelling, $n$-gram smoothing techniques, long short-term memory and gated recurrent units through personal reading. \\
+My project codebase was written from scratch, with the assistance of the tools and libraries mentioned in section \ref{tools}. Before the project, I had no understanding of language modelling. Apart from a basic knowledge of recurrent neural networks, I had to learn about language modelling, $n$-gram smoothing techniques, Long Short-Term Memory and Gated Recurrent Units through personal reading. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1084,15 +1092,11 @@ This chapter details how I implemented a variety $n$-gram and RNN-based language
 \label{fig:system_overview}
 \end{figure}
 
-The core components of my project are highlighted in figure~\ref{fig:system_overview}. The choices of language for each of the system components are reasoned in section~\ref{tools}. I used Protocol Buffers as a language neutral method of encapsulating a trained and exported language model that can be loaded into memory and used to make predictions. \\
-
 As shown, all of the code for training and running inference on $n$-gram models was written in C++, and is described in section~\ref{ngram_lm}. The RNN-based language models were trained in Python using TensorFlow, before being exported into a small group of protocol buffers that can be loaded into C++ for running inference, all of which is detailed in section~\ref{rnn_lm}. The `Combined LM' component represents a language model which interpolates the probabilities across one or more $n$-gram and/or RNN-based language models. This part is not described in depth, because it is mostly trivial. I outline in section~\ref{mobile_keyboard} how I built a mobile keyboard in iOS that utilises one of the RNN-based language models. Finally, the `Error-Correcting RNN LM' component denotes an extension to an existing RNN-based language model which I made in order to improve its performance on error-prone text, which is described in section~\ref{error_correcting_lm}. \\
-
-The $n$-gram, RNN, error-correcting RNN and combined language models all inherit, either directly or indirectly, from a single language model superclass, which is all that the benchmarking framework depends on. This class is described briefly below. Details of the metrics used in the benchmarking framework are left for chapter~\ref{evaluation}. \\
 
 \subsection{The Language Model Hierarchy} \label{lm_interface}
 
-All of my language model implementations in C++ were joined by the same inheritance hierarchy, at the top of which was a single language model superclass, \ttt{LM}: \\
+All of my language model implementations in C++ were joined by the same inheritance hierarchy, at the top of which was a single language model superclass, \ttt{LM}. This is the only class that the benchmarking framework depended on: \\
 
 \begin{lstlisting}[language=C++]
 class LM {
@@ -1128,7 +1132,7 @@ public:
 
 Every language model object stores a \ttt{Vocab} object, which contains the set of words in the language model vocabulary, and a mapping from those words to integer IDs. The integer IDs are used in place of the string representations of such words in various language model data structures that are discussed later in this chapter. This is simply a memory optimisation, because an integer requires less space than a string. \\
 
-\ttt{Predict()} is a special case of \ttt{PredictTopK()}, which simply uses a priority queue to extract the top $k$ predictions from result of calling \ttt{ProbAllFollowing()}. The implementations of \ttt{Prob()} and \ttt{ProbAllFollowing()} depend on the specific language model. One might think that \ttt{ProbAllFollowing()} can be implemented by calling \ttt{Prob()} for each word in the vocabulary, but this would be inefficient in the case of an RNN-based language model, which implicitly computes the probability distribution over every word in the vocabulary in each forward pass of the network, hence why the methods are kept separate. \\
+\ttt{Predict()} is a special case of \ttt{PredictTopK()}, which simply uses a priority queue to extract the top $k$ predictions from the result of calling \ttt{ProbAllFollowing()}. The implementations of \ttt{Prob()} and \ttt{ProbAllFollowing()} depend on the specific language model. One might think that \ttt{ProbAllFollowing()} can be implemented by calling \ttt{Prob()} for each word in the vocabulary, but this would be inefficient in the case of an RNN-based language model, which implicitly computes the probability distribution over every word in the vocabulary in each forward pass of the network, hence why the methods are kept separate. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1168,7 +1172,7 @@ The reason that there is only a single RNN language model class is that the diff
 
 \subsection{Testing}
 
-The correctness of my language model implementations in this project were always vital to its success. For this reason, every C++ and Python in the codebase that exhibits core language model functionality has an accompanying test class which contains one or more unit tests. In particular, the language model classes are paired with tests that query their \ttt{Prob()} and \ttt{ProbAllFollowing()} methods and compare the results with values that have been calculated by hand using the equations presented in chapter~\ref{preparation}. \\
+The correctness of my language model implementations in this project was vital. For this reason, every C++ and Python class in the codebase that exhibits core language model functionality has an accompanying test class which contains one or more unit tests. In particular, the language model classes are paired with tests that query their \ttt{Prob()} and \ttt{ProbAllFollowing()} methods and compare the results with values that have been calculated by hand using the equations presented in chapter~\ref{preparation}. \\
 
 During the development of the project, all new code was tested before being committed to the codebase, and new test cases were immediately added upon discovery of any bugs.
 
@@ -1798,30 +1802,13 @@ Perplexity is the most widely-used metric for language models, and is therefore 
 \begin{gather} \label{eq:perplexity}
 	\text{PP}_L(w_1^N) = \sqrt[N]{\frac{1}{\mathbb{P}_L(w_1^N)}} = \sqrt[N]{\prod_{i=1}^{N}\frac{1}{\mathbb{P}_L(w_i | w_1^{i-1})}}
 \end{gather}
-where $\mathbb{P}_L(w_i | w_1^{i-1})$ is the probability computed by the language model $L$ of the word $w_i$ following the words $w_1^{i-1}$. The key point is that \tbf{lower values of perplexity indicate better prediction accuracy} for language models trained on a particular training set. \\
-
-This somewhat arbitrary-looking formulation can be better understood from a touch of information theory. In information theory, the cross-entropy $H(p, q)$ between a true probability distribution $p$ and an estimate of that distribution $q$ is defined as:\footnote{Note that $H(p, q)$ is often also used to denote the joint entropy of $p$ and $q$, which is a different concept.}
-\begin{gather*}
-	H(p, q) = -\sum_x p(x) \log_2 q(x)
-\end{gather*}
-It can be shown that $H(p, q) = H(p) + D_{KL}(p || q)$ where $D_{KL}(p || q) \geq 0$ is the Kullback-Leibler distance between $p$ and $q$. Generally speaking, the better an estimate $q$ is of $p$, the lower $H(p, q)$ will be, with a lower bound of $H(p)$, the entropy of $p$. \\
-
-The perplexity PP of a model $q$, with respect to the true distribution $p$ it is attempting to estimate, is defined as:
-\begin{gather} \label{eq:perplexity_to_cross_entropy}
-	\text{PP} = 2^{H(p, q)}
-\end{gather}
-
-Language models assign probability distributions over sequences of words, and so it seems reasonable to use perplexity as a motivation for a measure of their performance. In the context of language modelling, however, we do not know what the underlying distribution of $p$ is, so it is approximated with Monte Carlo estimation by taking samples of $p$ (i.e. sequences of words from the test data) as follows:
-\begin{gather*}
-	\text{PP}_L(w_1^N) = 2^{-\frac{1}{N}\sum_i \log_2 \mathbb{P}_L(w_i | w_1^{i-1})}
-\end{gather*}
-With a little algebra, this can be rearranged to give equation~\ref{eq:perplexity}. \\
+where $\mathbb{P}_L(w_i | w_1^{i-1})$ is the probability computed by the language model $L$ of the word $w_i$ following the words $w_1^{i-1}$. This somewhat arbitrary-looking formulation is more thoroughly justified with a bit of information theory in appendix~\ref{appendix:perplexity}. The key point is that \tit{lower values of perplexity indicate better prediction accuracy} for language models trained on a particular training set. \\
 
 One issue with perplexity is that it is undefined if $\mathbb{P}_L(w_i | w_1^{i-1})$ is 0 at any point. To get around this in my implementation, I replaced probability values of 0 with the small constant \ttt{1e-9}. Results that use this approximation are marked.
 
 \subsubsection{Average-Keys-Saved}
 
-It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section~\ref{mobile_keyboard}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user would be saved from typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
+It is typical for the top three next-word predictions to be displayed and updated as the user types in a mobile keyboard, as described in section~\ref{mobile_keyboard}. Clearly, it is in the interest of the mobile keyboard developer to minimise the amount of typing a user has to do before the correct prediction is displayed. Average-keys-saved is based on this incentive, and is defined as the number of keys that the user can avoid typing as a result of the correct next word appearing in the top three predictions, averaged over the number of characters in the test data. \\
 
 As an example, if the user is typing \ttt{science} and the word \ttt{science} appears in the top three predictions after they have typed \ttt{sc}, then that would count as 5 characters being saved, averaging at $\frac{5}{7}$ keys saved per character. Averaging over the number of characters in the test data ensures that the results are not biased by the data containing particularly long words, which are easier to save characters on.
 
@@ -1839,7 +1826,7 @@ This is measured as the amount of time in milliseconds that the language model t
 
 \subsection{Datasets}
 
-I used three datasets throughout the evaluation of my project:
+I used three datasets throughout the evaluation of my project.
 
 \subsubsection{Penn Tree Bank (PTB) Dataset}
 
@@ -1853,7 +1840,7 @@ This is a much larger dataset produced by Google of approximately 1 billion word
 
 \subsubsection{Cambridge Learner Corpus (CLC)}
 
-The Cambridge Learner Corpus is a dataset of 1,244 exam scripts written by candidates sitting the Cambridge ESOL First Certificate in English (FCE) examination in 2000 and 2001~\cite{clc:yannakoudakis2011}. The original dataset contains the scripts annotated with corrections to all of the mistakes by the candidates. In this project I make use of a preprocessed version of the dataset, in which there is one file containing the error-free version of the exam scripts and there is another file containing the original exam scripts with their errors. These two files are aligned line by line. I used this dataset when exploring the performance of language models on error-prone text, and will refer to it as CLC.
+The Cambridge Learner Corpus is a dataset of 1,244 exam scripts written by candidates sitting the Cambridge ESOL First Certificate in English examination in 2000 and 2001~\cite{clc:yannakoudakis2011}. In this project I make use of a preprocessed version of the dataset, in which there is one file containing the error-free version of the exam scripts and there is another file containing the original exam scripts with their errors. These two files are aligned line by line. I used this dataset when exploring the performance of language models on error-prone text, and will refer to it as CLC.
 
 \section{Results}
 
@@ -1902,15 +1889,13 @@ coordinates {(2, 7.54)(3, 7.22)(4, 7.17)(5, 7.16)};
 \caption{Cross-entropy of $n$-gram models trained on the PTB dataset.}
 \end{figure}
 
-Recall from equation~\ref{eq:perplexity_to_cross_entropy} that cross-entropy is just the binary logarithm of perplexity, and that lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that modified Kneser-Ney smoothing offers the best prediction performance amongst the $n$-gram models. \\
+Cross-entropy is just the binary logarithm of perplexity, and lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that modified Kneser-Ney smoothing offers the best prediction performance amongst the $n$-gram models. \\
 
 The change in performance with the value of $n$ is interesting. Intuitively, one might expect that increasing $n$ will always yield better results, because this corresponds to increasing the number of words you use to make a prediction. However, for $n$-gram models with no smoothing, add-one smoothing or Katz smoothing, this is not the case. For $n$-gram models with add-one or no smoothing, this is because they do not employ backoff. At higher values of $n$, $n$-grams are much more sparse, so without any backoff higher $n$-gram models can only rely on sparse counts, resulting is lower probabilities being assigned to plausible sequences of words. Katz smoothing does employ backoff, and achieves much better performance, but it still distributes too much probability to rare $n$-grams.
 
 \subsubsection*{A comparison of RNN-based models with $n$-gram models}
 
 As described in chapter~\ref{implementation}, I also implemented three RNN-based language models which differ in the RNN cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory. \\
-
-At a qualitative level it could be seen that the RNN-based language models, with the LSTM architecture in particular, were better at making predictions with long-term word dependencies than the $n$-gram smoothed models. This is demonstrated in figure~\ref{fig:generated_sentences}, and confirmed with the quantitative readings presented in figure~\ref{fig:cross_entropy_training_set_size}. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1935,7 +1920,7 @@ At a qualitative level it could be seen that the RNN-based language models, with
 	\end{tabular}
 	\caption{2-layer LSTM with 256 hidden neurons}
 \end{subfigure}
-\caption{Sentences generated from two different language models trained on the PTB dataset. The words highlighted in bold indicate the words given to the model, and the non-bold words indicate the words that were generated by repeatedly taking the next most probable word until a full stop is predicted.}
+\caption{Sentences generated from two different language models trained on the PTB dataset. The words highlighted in bold were given to the model, and the non-bold words were generated by repeatedly taking the next most probable word until a full stop was predicted.}
 \label{fig:generated_sentences}
 \end{figure}
 
@@ -2024,9 +2009,11 @@ coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 6.98)};
 \label{fig:cross_entropy_training_set_size}
 \end{figure}
 
+At a qualitative level it can be seen that the RNN-based language models, with the LSTM architecture in particular, are better at making predictions with long-term word dependencies than the $n$-gram smoothed models. This is demonstrated in figure~\ref{fig:generated_sentences}, and confirmed by the quantitative readings presented in figure~\ref{fig:cross_entropy_training_set_size}. \\
+
 As can be seen in figure~\ref{fig:cross_entropy_training_set_size}, the RNN-based language models consistently outperform the $n$-gram based models in terms of prediction accuracy. This difference is most significant for small training sets of less than $10^5$ words, and starts to become more pronounced again once the training set grows large beyond $10^6$ words. The performance gain from adding more training data seems to start flattening out towards $10^7$ words for the smoothed $n$-gram models, whereas the RNN-based ones seem to continue improving. \\
 
-Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. Indeed, my results for 3-gram modified Kneser-Ney smoothing, 5-gram modified Kneser-Ney smoothing and the vanilla RNN are comparable to those from Mikolov~\cite{rnn_ptb:mikolov2012}, who also benchmarked these three models. \\
+Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce metrics that are comparable with the work of other authors, I have tested my language models on the Penn Tree Bank dataset, as shown in figure~\ref{fig:ptb}. The perplexity was calculated over the whole of the test set, whereas average-keys-saved, a more expensive metric to compute, was taken over the first 1000 words of the test set. \\
 
 \begin{figure}[h]
 \begin{adjustbox}{center}
@@ -2062,7 +2049,7 @@ Some datasets are more predictable than others, which means that metrics like pe
 There is a lot of information that can be drawn from figure~\ref{fig:ptb}, so I will highlight only the most important and interesting points:
 \begin{itemize}
 \item
-	In general, the RNN-based language models outperform the $n$-gram based models in terms of prediction accuracy. In my implementation, they run slightly faster at inference time and also consume less memory, although this is partly due to the fact that they are entirely unpruned. The RNN-based language models take significantly longer to train and obtain the correct hyperparameters for.
+	In general, the RNN-based language models outperform the $n$-gram models in terms of prediction accuracy. In my implementation, they also run slightly faster at inference time and also consume less memory, although this is partly due to the fact that the $n$-gram models are entirely unpruned. The RNN-based language models take significantly longer to train and obtain the correct hyperparameters for.
 \item
 	Ignoring insignificant differences in memory and time, the discounting-based smoothing techniques (absolute discounting, Kneser-Ney smoothing and modified Kneser-Ney smoothing) equal or outperform add-one and Katz smoothing in every metric.
 \item
@@ -2079,7 +2066,7 @@ Incorporating an RNN-based language model implementation into a mobile keyboard,
 
 As shown in figure~\ref{fig:ptb}, the vanilla RNN architecture presents the smallest memory overhead, and so this is what I used in the following experiments, along with the 3-gram modified Kneser-Ney smoothing model. \\
 
-Two obvious ways of decreasing the memory footprint of a language model are decreasing the vocabulary size and, for RNN-based models, decreasing the number of hidden neurons. What is less obvious, is how quickly the average-keys-saved drops with these two parameters.
+Two obvious ways of decreasing the memory footprint of a language model are decreasing the vocabulary size and, for RNN-based models, decreasing the number of hidden neurons. What is less obvious, is how quickly the average-keys-saved drops with these two parameters. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -2189,56 +2176,57 @@ In this section I present my findings for the performance of language models on 
 \begin{figure}[h]
 \captionsetup{justification=centering}
 \centering
-\begin{tikzpicture}[>=stealth]
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input1) at (0, 0) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden1) at (0, 1.5) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output1) at (0, 3) {};
+\begin{tikzpicture}[
+		scale=0.8, >=stealth,
+		layer/.style={draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10},
+	]
+	\node[layer] (input1) at (0, 0) {};
+	\node[layer] (hidden1) at (0, 1.5) {};
+	\node[layer] (output1) at (0, 3) {};
 	\draw [<-] (input1) -- ++(0, -0.8) node [below] {\tit{the}};
 	\draw [->, line width=0.3mm] (input1) -- (hidden1);
 	\draw [->, line width=0.3mm] (hidden1) -- (output1);
 	\draw [->] (output1) -- ++(0, 0.8) node [above] {\tit{weather}};
 	
-	\node[below left=6mm and 2mm of input1] (inputs) {\tbf{Inputs:}};
-	\node[above left=5mm and 2mm of output1] (targets) {\tbf{Targets:}};
+	\node[below left=5mm and 2mm of input1] (inputs) {\tbf{Inputs:}};
+	\node[above left=4mm and 2mm of output1] (targets) {\tbf{Targets:}};
 
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input2) at (3, 0) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden2) at (3, 1.5) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output2) at (3, 3) {};
+	\node[layer] (input2) at (4, 0) {};
+	\node[layer] (hidden2) at (4, 1.5) {};
+	\node[layer] (output2) at (4, 3) {};
 	\draw [<-] (input2) -- ++(0, -0.8) node [below] {\textcolor{red}{\tit{whether}}};
 	\draw [->, line width=0.3mm] (input2) -- (hidden2);
 	\draw [->, line width=0.3mm] (hidden2) -- (output2);
 	\draw [->] (output2) -- ++(0, 0.8) node [above] {\tit{is}};
 
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input3) at (6, 0) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden3) at (6, 1.5) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output3) at (6, 3) {};
+	\node[layer] (input3) at (8, 0) {};
+	\node[layer] (hidden3) at (8, 1.5) {};
+	\node[layer] (output3) at (8, 3) {};
 	\draw [<-] (input3) -- ++(0, -0.8) node [below] {\tit{is}};
 	\draw [->, line width=0.3mm] (input3) -- (hidden3);
 	\draw [->, line width=0.3mm] (hidden3) -- (output3);
 	\draw [->] (output3) -- ++(0, 0.8) node [above] {\tit{sunny}};
 	
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10, ] (input4) at (9, 0) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (hidden4) at (9, 1.5) {};
-	\node[draw, rectangle, minimum width=25mm, minimum height=4mm, fill=black!10] (output4) at (9, 3) {};
+	\node[layer] (input4) at (12, 0) {};
+	\node[layer] (hidden4) at (12, 1.5) {};
+	\node[layer] (output4) at (12, 3) {};
 	\draw [<-] (input4) -- ++(0, -0.8) node [below] {\tit{sunny}};
 	\draw [->, line width=0.3mm] (input4) -- (hidden4);
 	\draw [->, line width=0.3mm] (hidden4) -- (output4);
 	\draw [->] (output4) -- ++(0, 0.8) node [above] {\tit{today}};
 
-	\node (cont) at (11, 1.5) {$\hdots$};
+	\node (cont) at (15, 1.5) {$\hdots$};
 
 	\draw [->, line width=0.3mm] (hidden1.east) -- (hidden2.west);
 	\draw [->, line width=0.3mm] (hidden2.east) -- (hidden3.west);
 	\draw [->, line width=0.3mm] (hidden3.east) -- (hidden4.west);
 	\draw [->, line width=0.3mm] (hidden4.east) -- (cont.west);
 \end{tikzpicture}
-\caption{The ideal language model that can make predictions regardless of errors in the input text.}
+\caption{The ideal error-correcting language model.}
 \label{fig:error_prone_to_error_free_rnn}
 \end{figure}
 
-Normally, language models are evaluated by feeding them a sequence of input words (the \tit{inputs}) and seeing how well they predict that same sequence of input words shifted forward in time by one word (the \tit{targets}). When evaluating my error-correcting language models, I did exactly the same thing, except that the inputs were allowed to contain error in them and the targets were not. \\
-
-In order to obtain sequences of words with and without errors in them I used the CLC dataset. I split this dataset up into six files:
+Normally, language models are evaluated by feeding them a sequence of input words (the \tit{inputs}) and seeing how well they predict that same sequence of input words shifted forward in time by one word (the \tit{targets}). When evaluating my error-correcting language models, I did exactly the same thing, except that the inputs were allowed to contain error in them and the targets were not. I used the CLC dataset, which consisted of six files:
 \begin{center}
 \begin{tabular}{c c}
 	\ttt{train.correct.txt} & \ttt{train.incorrect.txt} \\
@@ -2248,21 +2236,19 @@ In order to obtain sequences of words with and without errors in them I used the
 \end{center}
 The training, validation and test sets all consisted of one file containing uncorrected text and another file containing the corresponding corrected text. I trained an 2-layer LSTM-based language model with 256 hidden neurons on \ttt{train.correct.txt}, and used \ttt{valid.correct.txt} to guide the learning rate decay. In order to focus the evaluation on the error-correcting ability of my language models, I removed any pairs of lines from the test set files that were identical. I also removed any pairs of lines that contained corrections that involve the insertion or deletion of words, because my model was not designed to handle these types of errors, as explained in section~\ref{error_correcting_lm}. \\
 
-Before exploring ways to improve predictions on error-prone text, I first established an approximate lower and upper bound on the performance of my model. The ideal error-correcting language model would predict words as if the input were not error-prone, therefore, to obtain the upper bound in performance, I evaluated the LSTM-based language model using \ttt{test.correct.txt} for the input words and \ttt{test.correct.txt} for the target words. In order to establish a lower bound, I evaluated the performance of the same model using \ttt{test.incorrect.txt} for the input words and \ttt{test.correct.txt} for the target words. This model did not contain any error-correcting capabilities. \\
-
-As explained in section~\ref{error_correcting_lm}, my error-correcting language model attempted to replace words in the context that were not contained in a dictionary of English words, by going through the language model vocabulary in order of decreasing probability and picking the first candidate word within an edit distance $\delta$ of the original word. \\
+The ideal error-correcting language model would predict words as if the input were not error-prone, therefore, to obtain the \tit{upper bound} in performance, I evaluated the LSTM-based language model using \ttt{test.correct.txt} for the input words and \ttt{test.correct.txt} for the target words. In order to establish a \tit{lower bound}, I evaluated the performance of the same model using \ttt{test.incorrect.txt} for the input words and \ttt{test.correct.txt} for the target words. This model did not contain any error-correcting capabilities. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
 \begin{adjustbox}{center}
-\begin{tabular}{| L{3.5cm} | L{8cm} | C{2.2cm} | C{2cm} |}
+\begin{tabular}{| L{6cm} | C{3cm} | C{5cm} |}
 	\hline
-	\tbf{Language model} & \tbf{Description} & \tbf{Perplexity} & \tbf{Average-keys-saved} \\ \hline
-	\tit{Upper bound} & The best performance achievable assuming perfect error-correction. & 77.83 & 0.65483 \\ \hline
-	\tit{Error-correcting LSTM} & $\delta$ = 1 & 87.99 & 0.64453 \\ \hline
-	\tit{Error-correcting LSTM} & $\delta$ = 2 & 88.47 & 0.64376 \\ \hline
-	\tit{Error-correcting LSTM} & $\delta$ = 3 & 88.57 & 0.64273 \\ \hline
-	\tit{Lower bound} & The performance that would be achieved with no error-correction. & 89.70 & 0.63912 \\ \hline
+	\tbf{Language model} & \tbf{Perplexity} & \tbf{Average-keys-saved} \\ \hline
+	\tit{Upper bound} & 77.83 & 0.65483 \\ \hline
+	\tit{Error-correcting LSTM}; $\delta$ = 1 & 87.99 & 0.64453 \\ \hline
+	\tit{Error-correcting LSTM}; $\delta$ = 2 & 88.47 & 0.64376 \\ \hline
+	\tit{Error-correcting LSTM}; $\delta$ = 3 & 88.57 & 0.64273 \\ \hline
+	\tit{Lower bound} & 89.70 & 0.63912 \\ \hline
 \end{tabular}
 \end{adjustbox}
 \caption{The performance of my error-correcting language model with respect to the upper and lower bound, using the CLC dataset.}
@@ -2273,41 +2259,46 @@ It can be seen from figure~\ref{fig:error_correcting_results} that this approach
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
-\begin{adjustbox}{center}
-\begin{tabular}{L{2.5cm} | L{12cm}}
-	\tbf{Input} & i am more than happy to give you the \tbf{nessessary} information. \\ \hline
-	\tbf{Target} & i am more than happy to give you the \tbf{necessary} information. \\ \hline
-	\tbf{Prediction} & i am more than happy to give you the \tbf{necessary} information. \\
-\end{tabular}
-\end{adjustbox}
-\caption{An example of an accurate correction made by my model, with $\delta = 2$.}
-\label{fig:error_correcting_good}
-\end{figure}
-
-\begin{figure}[h]
-\captionsetup{justification=centering}
-\begin{adjustbox}{center}
-\begin{tabular}{L{2.5cm} | L{12cm}}
-	\tbf{Input} & the bus will pick you up right at your hotel \tbf{entery}. \\ \hline
-	\tbf{Target} & the bus will pick you up right at your hotel \tbf{entrance}. \\ \hline
-	\tbf{Prediction} & the bus will pick you up right at your hotel \tbf{every}. \\
-\end{tabular}
-\end{adjustbox}
-\caption{An example of a false correction made by my model, with $\delta = 2$.}
-\label{fig:error_correcting_false}
-\end{figure}
-
-\begin{figure}[h]
-\captionsetup{justification=centering}
-\begin{adjustbox}{center}
-\begin{tabular}{L{2.5cm} | L{12cm}}
-	\tbf{Input} & \tbf{appart of} that , there is no recommendation as to what to wear. \\ \hline
-	\tbf{Target} & \tbf{apart from} that, there is no recommendation as to what to wear. \\ \hline
-	\tbf{Prediction} & \tbf{apart of} that, there is no recommendation as to what to wear. \\
-\end{tabular}
-\end{adjustbox}
-\caption{An example of a correction that my model failed to make, with $\delta = 2$.}
-\label{fig:error_correcting_bad}
+\centering
+\begin{subfigure}{\linewidth}
+	\centering
+	\begin{adjustbox}{center}
+	\begin{tabular}{L{2.5cm} | L{12cm}}
+		\tbf{Input} & i am more than happy to give you the \tbf{nessessary} information. \\ \hline
+		\tbf{Target} & i am more than happy to give you the \tbf{necessary} information. \\ \hline
+		\tbf{Prediction} & i am more than happy to give you the \tbf{necessary} information.
+	\end{tabular}
+	\end{adjustbox}
+	\caption{An example of an accurate correction made by my model, with $\delta = 2$.}
+	\label{fig:error_correcting_good}
+\end{subfigure}
+~\\~\\
+\begin{subfigure}{\linewidth}
+	\centering
+	\begin{adjustbox}{center}
+	\begin{tabular}{L{2.5cm} | L{12cm}}
+		\tbf{Input} & the bus will pick you up right at your hotel \tbf{entery}. \\ \hline
+		\tbf{Target} & the bus will pick you up right at your hotel \tbf{entrance}. \\ \hline
+		\tbf{Prediction} & the bus will pick you up right at your hotel \tbf{every}.
+	\end{tabular}
+	\end{adjustbox}
+	\caption{An example of a false correction made by my model, with $\delta = 2$.}
+	\label{fig:error_correcting_false}
+\end{subfigure}
+~\\~\\
+\begin{subfigure}{\linewidth}
+	\centering
+	\begin{adjustbox}{center}
+	\begin{tabular}{L{2.5cm} | L{12cm}}
+		\tbf{Input} & \tbf{appart of} that , there is no recommendation as to what to wear. \\ \hline
+		\tbf{Target} & \tbf{apart from} that, there is no recommendation as to what to wear. \\ \hline
+		\tbf{Prediction} & \tbf{apart of} that, there is no recommendation as to what to wear.
+	\end{tabular}
+	\end{adjustbox}
+	\caption{An example of a correction that my model failed to make, with $\delta = 2$.}
+	\label{fig:error_correcting_bad}
+\end{subfigure}
+\caption{Examples of good and bad corrections made by my error-correcting RNN.}
 \end{figure}
 
 There is still a gap to be closed, which is demonstrated in figure~\ref{fig:error_correcting_bad} by the fact that my model does not correct non-spelling mistakes.
@@ -2316,17 +2307,22 @@ There is still a gap to be closed, which is demonstrated in figure~\ref{fig:erro
 
 The project was a success: I implemented a variety of $n$-gram and RNN-based language models, and benchmarked them in terms of both their prediction performance and their applicability to running on a mobile platform, as set out in my project proposal. Additionally, I built a mobile keyboard for iOS that uses my language models as a library, and proposed a novel extension to an existing language model that improves its performance on error-prone text. \\
 
-My implementation of existing language models, which consists of an $n$-gram model with 5 different smoothing techniques and an RNN-based model of 3 different architectures, saw a level of performance that was comparable with measures made by existing authors. For example, my 5-gram modified Kneser-Ney smoothing model, vanilla RNN model and LSTM model all matched the results from Mikolov on the Penn Tree Bank dataset~\cite{rnn_ptb:mikolov2012}~\cite{lstm_ptb:mikolov2014}. \\
+My implementation of existing language models saw a level of performance that was comparable with measures made by existing authors. For example, my 5-gram modified Kneser-Ney smoothing model, vanilla RNN model and LSTM model all matched the results from Mikolov on the Penn Tree Bank dataset~\cite{rnn_ptb:mikolov2012}~\cite{lstm_ptb:mikolov2014}. \\
 
-As well as confirming that modified Kneser-Ney is the best smoothing technique for $n$-gram models, and that LSTM-based models offer the strongest predictions, I also demonstrated that such models complement one another, in that the interpolation of their probability distributions surpasses the performance of all stand-alone language models in this dissertation. This suggests that the best option for language modelling on a mobile device could be to interpolate several extremely light-weight $n$-gram and RNN-based language models. \\
+As well as drawing comparisons between the $n$-gram and RNN-based models, I also demonstrated that such models complement one another, in that the interpolation of their probability distributions surpasses the performance of the stand-alone language models. This suggests that the best option for language modelling on a mobile device could be to interpolate several extremely light-weight $n$-gram and RNN-based language models. \\
 
 I explicitly demonstrated that language model performance is deterred by error-prone text. Whilst I made some modifications to an existing model that saw an increase in performance on such text, there is still room for improvement. If I were given more time to work on the project, I would investigate ways to cater for non-spelling corrections. From the CoNLL shared tasks of 2013~\cite{error_correction2013:ng2013} and 2014~\cite{error_correction2014:ng2014}, it is clear that there is a plethora of methods that already exist for grammatical error-correction. It would be interesting to see which of these could be applied to improve the performance of language models on error-prone text. \\
 
-Throughout this dissertation, I have learnt a great deal about language modelling, but what have my language models learnt from me? Here is a one line summary of my work, in the words of an LSTM-based language model, trained on the text of this \LaTeX file: \\
+Throughout this dissertation, I have learnt a great deal about language modelling, but what have my language models learnt from me? Here is a one line summary of my work, in the words of an LSTM-based language model, trained on the significantly small training set that is the text of this \LaTeX file:
 
 \begin{center}
-	\tit{Blah blah blah.}
+\begin{tabular}{C{15cm}}
+	\hline
+	\tit{`the number of words that the language model is a mobile of the network, and the input is the input set.'} \\ \hline
+\end{tabular}
 \end{center}
+
+At least it seems to be on the right lines.
 
 % Get texcount to ignore the words in the bibliography, appendix and index.
 %TC:ignore
@@ -2374,7 +2370,7 @@ To see how the recurrence relation for $\delta_i^l$ is derived, consider the neu
 	\draw [<-] (input-\i) -- ++(-1,0) node [above, midway] {$x_\l$};
 
 \foreach \l [count=\i] in {1, m}
-	\draw [->] (output-\i) -- ++(1,0) node [above, midway] {$y_\l$};
+	\draw [->, line width=0.5mm] (output-\i) -- ++(1,0) node [above, midway] {$y_\l$};
 
 \foreach \i in {1, ..., 4}
 	\foreach \j in {1, ..., 3}
@@ -2418,6 +2414,29 @@ Again, plugging in the definition of $\delta_i^{l, t}$ and simplifying gives:
 	\delta_i^{l, t} = \sum_j \delta_j^{l+1, t} \frac{\partial z_j^{l+1, t}}{\partial z_i^{l, t}} + \sum_j \delta_j^{l, t + 1} \frac{\partial z_j^{l, t + 1}}{\partial z_i^{l, t}} = \phi'(z_i^{l,t}) \big( \sum_j \delta_j^{l+1,t} w_{i,j}^l + \sum_j \delta_j^{l,t+1} v_{i,j}^l \big)
 \end{gather*}
 as required.
+
+\chapter{Perplexity} \label{appendix:perplexity}
+
+The formula for perplexity, presented in equation~\ref{eq:perplexity} and repeated below for convenience, can be better understood from a touch of information theory.
+\begin{gather*}
+	\text{PP}_L(w_1^N) = \sqrt[N]{\frac{1}{\mathbb{P}_L(w_1^N)}} = \sqrt[N]{\prod_{i=1}^{N}\frac{1}{\mathbb{P}_L(w_i | w_1^{i-1})}}
+\end{gather*}
+In information theory, the cross-entropy $H(p, q)$ between a true probability distribution $p$ and an estimate of that distribution $q$ is defined as:\footnote{Note that $H(p, q)$ is often also used to denote the joint entropy of $p$ and $q$, which is a different concept.}
+\begin{gather*}
+	H(p, q) = -\sum_x p(x) \log_2 q(x)
+\end{gather*}
+It can be shown that $H(p, q) = H(p) + D_{KL}(p || q)$ where $D_{KL}(p || q) \geq 0$ is the Kullback-Leibler distance between $p$ and $q$. Generally speaking, the better an estimate $q$ is of $p$, the lower $H(p, q)$ will be, with a lower bound of $H(p)$, the entropy of $p$. \\
+
+The perplexity PP of a model $q$, with respect to the true distribution $p$ it is attempting to estimate, is defined as:
+\begin{gather*}
+	\text{PP} = 2^{H(p, q)}
+\end{gather*}
+
+Language models assign probability distributions over sequences of words, and so it seems reasonable to use perplexity as a measure of how accurately they model the real distribution. Unfortunately, in language modelling, the underlying distribution of $p$ is not known, so it is approximated with Monte Carlo estimation by taking samples of $p$ (i.e. sequences of words from the test data) as follows:
+\begin{gather*}
+	\text{PP}_L(w_1^N) = 2^{-\frac{1}{N}\sum_i \log_2 \mathbb{P}_L(w_i | w_1^{i-1})}
+\end{gather*}
+With a little algebra, this can be rearranged to give equation~\ref{eq:perplexity}. \\
 
 \chapter{Project Proposal}
 
