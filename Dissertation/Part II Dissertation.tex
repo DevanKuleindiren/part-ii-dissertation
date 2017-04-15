@@ -1,6 +1,9 @@
 % The document class
 \documentclass[a4paper, 12pt]{report}
 
+% Get texcount to ignore the preamble.
+%TC:ignore
+
 % The geometry of the pages
 \usepackage[a4paper, margin=25mm]{geometry}
 
@@ -138,11 +141,20 @@
 % Command for extracting the word count.
 \newcommand\wordcount{\input{word.count}}
 
+% Command for including images in-line with text.
+\newcommand{\picchar}[1]{
+	\begingroup\normalfont
+	\includegraphics[height=\fontcharht\font`\B]{#1}
+	\endgroup
+}
+
 % Set the Table of Contents depth.
 \setcounter{tocdepth}{2}
 
 % Make the index.
 \makeindex
+
+%TC:endignore 
 
 % Get texcount to count the text in tables.
 %TC:group tabular 1 1
@@ -187,6 +199,9 @@
 % Proforma, table of contents and list of figures
 
 \pagestyle{plain}
+
+% Get texcount to ignore the proforma.
+%TC:ignore
 
 \chapter*{Proforma}
 
@@ -237,9 +252,11 @@ I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the C
 
 \pagestyle{headings}
 
+%TC:endignore
+
 \chapter{Introduction}
 
-My project investigates the performance of various language models in the context of text prediction. I started by implementing a series of well-established models and comparing their performance, before assessing the tradeoffs that occur when you attempt to apply them in a practical context, such as in a mobile keyboard. Finally, I proposed a novel extension to an existing model which aims to improve its performance on error-prone text.
+My project investigates the performance of various language models in the context of text prediction. I started by implementing a series of well-established models and comparing their performance, before assessing the tradeoffs that occur when you attempt to apply them in a practical context, such as in a mobile keyboard. Finally, I proposed a novel extension to an existing model which improves its performance on error-prone text.
 
 \section{Language Models}
 
@@ -253,24 +270,23 @@ Language models (LMs) produce a probability distribution over a sequence of word
 	&\vdots &&\ \ \vdots
 \end{alignat*}
 
-My project focuses on language modelling in the context of text prediction. That is, given a sequence of words $w_1w_2...w_k = w_1^k$, I want to estimate $\mathbb{P}(w_{k + 1} | w_1^k)$. For instance, if a user has typed \tit{`do you want to grab a '}, then a language model could be used to suggest probable next words such as \tit{`coffee'}, \tit{`drink'} or \tit{`bite'}, and these predictions could further be narrowed down as the user continues typing.
+My project focuses on language modelling in the context of text prediction. That is, given a sequence of words $w_1w_2...w_k = w_1^k$, I want to estimate $\mathbb{P}(w_{k + 1} | w_1^k)$. For instance, if a user has typed \tit{`do you want to grab a '}, then a language model could be used to suggest probable next words such as \tit{`coffee'}, \tit{`drink'} or \tit{`bite'}.
 
 \section{Motivation}
 
-
 \subsection*{Benchmarking}
 
-Language models are central to a wide range of applications, but there are so many different ways of implementing them. Before using a language model in a particular context, it is important to understand how it performs in comparison to other methods available. In this project I focused in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network-based models. $n$-gram models are typically coupled with smoothing techniques, which are explained in section \ref{ngram_models}. I investigated 5 different smoothing techniques and 3 different recurrent neural network architectures on a variety of datasets.
+Language models are central to a wide range of applications, but there are so many different ways of implementing them. In this project I tackled this vast array of choice by focusing in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network-based models. I investigated $n$-gram models coupled with five different smoothing techniques and three different recurrent neural network architectures on a variety of datasets.
 
 \subsection*{Error-prone Text}
 
-One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. This is not surprising, because they are only ever trained on sentences that do not contain any errors. Unfortunately, the assumption that humans will not make any mistakes when typing text is almost never valid.  For this reason, I also investigated ways to narrow the gap in performance between language model predictions on error-prone text and language model predictions on error-free text. 
+One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. Unfortunately, the assumption that humans will not make any mistakes when typing text is almost never valid.  For this reason, I also investigated ways to narrow the gap in performance between language model predictions on error-prone text and language model predictions on error-free text. 
 
 \section{Related Work}
 
 Chelba et al.~\cite{1bw:chelba2013} from Google explore the performance of a variety of language models on a huge, one billion word dataset. Their work presents the limits of language modelling, when vast quantities of data and computational resources are available. Chen and Goodman~\cite{smoothing:chen1996} compare the performance of a series of smoothing techniques for $n$-gram models, and later use their results to propose an extension to Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999} which is implemented in this project. \\
 
-In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction techniques~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. Language modelling on error-prone text, however, has an important distinction: At test time, a language model cannot use words ahead of its current position to make predictions. In other words, if a language model is predicting the probability of the next word in the middle of an error-prone sentence, then it can only use the first half of the sentence for making corrections and predictions.
+In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction techniques~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. These methods, however, are allowed to take the whole text as input, whereas a language model cannot see beyond the next word it is trying to predict. Therefore, language modelling on error-prone text presents a slightly different challenge.
 
 
 \chapter{Preparation} \label{preparation}
@@ -297,9 +313,9 @@ Using the maximum likelihood estimation, $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1}
 \end{gather}
 where $c(W)$ denotes the number of times that the word sequence $W$ was seen in the training set. \\
 
-To a first approximation, the aforementioned $n$-gram language model provides reasonable results and is simple to compute. However, it does have one major issue: if, as an example, a 3-gram model does not encounter the trigram \tit{`the cat sat'} in the data it is trained upon, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which is exponential in the value of $n$. This means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
+This mode provides reasonable results and is simple to compute, but it does have one major issue: if, for example, a 3-gram model does not encounter the trigram \tit{`the cat sat'} in its training data, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
 
-One way to get around this problem is to exponentially increase the size of the training set. This does, however, require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}\index{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this. The ones which I have implemented are described in the next section. \\
+A crude solution to this problem is to exponentially increase the size of the training set, but this does require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}\index{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this, and the ones which I have implemented are described in the next section. \\
 
 \begin{figure}[h]
 \centering
@@ -338,7 +354,7 @@ coordinates {(\tit{a}, 0.01)(\tit{cat}, 0.01)(\tit{dog}, 0.02)(\tit{is}, 0.45)(\
 
 \end{axis}
 \end{tikzpicture}}}$
-\caption{A toy example of smoothing. The probabilities of words that frequently follow \tit{`the cat'} are distributed to other less frequently occurring words in the vocabulary. The vocabulary is $V = \{$\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}$\}$.}
+\caption{A toy example of smoothing, where the vocabulary is\\$V = \{$\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}$\}$.}
 \end{figure}
 
 \subsection{Smoothing Techniques}
@@ -349,7 +365,7 @@ Add-one smoothing~\cite{add1_smoothing:johnson1932}\index{add-one smoothing} sim
 \begin{gather}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape add-one}} = \frac{c(w_{i - n + 1}^{i}) + 1}{\sum_w c(w_{i - n + 1}^{i - 1}w) + |V|}
 \end{gather}
-One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. As an example, if both \tit{`cat is'} and \tit{`cat pizza'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{is}\ |\ \tit{cat})_{\text{\scshape add-one}} = \mathbb{P}(\tit{pizza}\ |\ \tit{cat})_{\text{\scshape add-one}}$, despite the fact that the former bigram is clearly more likely than the latter. A simple way to reduce this problem is to employ \tit{backoff}\index{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{is})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`cat is'} is more likely than \tit{`cat pizza'}.
+One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. For example, if both \tit{`cat is'} and \tit{`cat pizza'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{is}\ |\ \tit{cat})_{\text{\scshape add-one}} = \mathbb{P}(\tit{pizza}\ |\ \tit{cat})_{\text{\scshape add-one}}$. A simple way to reduce this problem is to employ \tit{backoff}\index{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{is})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`cat is'} is more likely than \tit{`cat pizza'}.
 
 \subsubsection{Absolute Discounting}
 
@@ -374,7 +390,7 @@ where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts resp
 
 \subsubsection{Kneser-Ney Smoothing}
 
-Kneser and Ney\index{Kneser-Ney smoothing} proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigram \tit{`bottle cap'}. If \tit{`bottle cap'} has never been seen in the training data, then the absolute discounting model would backoff onto the unigram distribution for \tit{`cap'}. Using the unigram distribution, \tit{`Francisco'} might be given a higher probability than \tit{`cap'} (assuming \tit{`Francisco'} occurs more frequently than \tit{`cap'}). This would result in the bigram \tit{`bottle Francisco'} being given a higher probability than \tit{`bottle cap'}. Clearly, this is undesirable, because \tit{`Francisco'} only ever follows \tit{`San'}. \\
+Kneser and Ney\index{Kneser-Ney smoothing} proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigrams \tit{`bottle cap'} and \tit{`bottle Francisco'}. If neither have been seen in the training data, and \tit{`Francisco'} occurs more frequently than \tit{`cap'}, then the absolute discounting model would backoff onto the unigram distribution and assign a higher probability to the \tit{`bottle Francisco'} bigram, despite the fact that \tit{`Francisco'} only ever follows \tit{`San'}. \\
 
 From this example, it seems intuitive to assign more probability to those $n$-grams that follow a larger number of unique words. Kneser and Ney encapsulate this intuition by replacing some of the absolute counts $c(w_i^j)$ with the number of unique words that precede the word sequence $w_i^j$, $N_{1+}(\bullet w_i^j)$:
 \begin{gather}
@@ -427,7 +443,7 @@ where $D$ is as defined in equation \ref{eq:discount}.
 
 \subsubsection{Katz Smoothing}
 
-Katz smoothing is a popular smoothing technique based on the Good-Turing estimate~\cite{good_turing:good1953}. The Good-Turing estimate states an $n$-gram that occurs $r$ times should be treated as occurring $r^*$ times, where:
+Katz smoothing is a popular smoothing technique based on the Good-Turing estimate~\cite{good_turing:good1953}, which states that an $n$-gram that occurs $r$ times should be treated as occurring $r^*$ times, where:
 \begin{gather}
 	r^* = (r + 1)\frac{n_{r + 1}}{n_r}
 \end{gather}
@@ -450,11 +466,11 @@ In practice, the infinite sum in equation \ref{eq:gt} cannot be computed. To get
 
 \section{Recurrent Neural Network Models}
 
-In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling. A thorough description of the Gated Recurrent Unit (GRUs) and Long Short-Term Memory (LSTM) architectures is given in chapter \ref{implementation}.
+In this section I give a brief introduction to neural networks, recurrent neural networks (RNNs) and how RNNs can be used in the context of language modelling.
 
 \subsection{An Overview of Neural Networks}
 
-The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks, or neural networks, were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}, which despite being substantially oversimplified, now provide an effective tool for classification and regression in modern-day machine learning. \\
+The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. (Artificial) neural networks were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}, which despite being substantially oversimplified, now provide an effective tool for classification and regression in modern-day machine learning. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -462,6 +478,7 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \begin{subfigure}{0.5\linewidth}
 	\centering
 	\begin{tikzpicture}[
+		scale=0.8,
 		every neuron/.style={circle, draw, minimum size=5mm},
 		neuron missing/.style={draw=none, scale=2, text height=0.1cm, execute at begin node=\color{black}$\hdots$},
 		>=stealth
@@ -500,7 +517,10 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \end{subfigure}%
 \begin{subfigure}{0.5\linewidth}
 	\centering
-	\begin{tikzpicture}[>=stealth]
+	\begin{tikzpicture}[
+		scale=0.8,
+		>=stealth
+	]
 
 	\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10, ] (input) at (0, 0) {};
 	\node[draw, rectangle, minimum width=45mm, minimum height=5mm, fill=black!10] (hidden) at (0, 2) {};
@@ -513,16 +533,16 @@ The human brain is a furiously complicated organ, packed with a network of appro
 	\end{tikzpicture}
 	\caption{A simplified notation for (a).}
 \end{subfigure}
-\caption{Two alternative notations for the same network: a multilayer perceptron with one hidden layer. In the simplified notation, the grey rectangle represents a vector of neurons, the thin arrow represents a vector and the thick arrow represents a matrix of weights.}
+\caption{Two alternative notations for the same network. In the simplified notation, the grey rectangle represents a vector of neurons, the thin arrow represents a vector and the thick arrow represents a matrix of weights.}
 \end{figure}
 
 Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. In the context of the brain, the nodes represent neurons, the weighted connections represent synapses and the flow of information represents electrochemical signals. \\
 
-An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section \ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}, which I will outline below. \\
+An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section \ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}, which I will outline below.
 
 \subsubsection{The Multilayer Perceptron}
 
-The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first layer is the input layer, the last is the output layer and any layers in between are called \tit{hidden layers}\index{hidden layer}. If there is more than one hidden layer then it is called a \tit{deep} neural network. The input neurons simply pass on the input values that they are given. Neurons in the subsequent layers, however, compute the following:
+The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first and last layers are the input and output layers, and any layers in between are called \tit{hidden layers}\index{hidden layer}. The input neurons simply pass on the input values that they are given. Neurons in the subsequent layers, however, compute the following:
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -546,7 +566,7 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 \draw[<-] ([yshift=1mm]aux)--++(140:24mm) node [below right=-5mm and 2mm of bias] {$b_j^{l-1}$};
 \draw[<-] ([yshift=-1mm]aux)--++(-162:20mm) node [right=2mm of inpN] {$w_{n,j}^{l-1}$};
 
-\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{b_j^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{b_j^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}\index{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
 
 \end{tikzpicture}
 \caption{The computation carried out by each neuron\index{neuron}. The outputs or \tit{activations}\index{activation} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the \tit{activation function}\index{activation function} is $\phi$ and $b_j^{l - 1}$ is the bias variable.}
@@ -620,7 +640,7 @@ In order to train a neural network, you supply it with a training set, which is 
 \begin{gather*}
 	\mathbf{s} = ((\mathbf{x}_1, \mathbf{t}_1), ..., (\mathbf{x}_N, \mathbf{t}_N))
 \end{gather*}
-Where $\mathbf{t}_k$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
+where $\mathbf{t}_k$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
 \begin{gather}
 	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
 \end{gather}
@@ -633,7 +653,7 @@ for every weight $w_{i,j}^l$ in the neural network. It is a two stage algorithm 
 \item
 	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$. The process of calculating the output of the neural network given the input is known as \tit{forward propagation}\index{forward propagation}.
 \item
-	Given $\mathcal{L}_{\text{\scshape total}}$, calculate $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ for each weight in each layer of the network by applying the chain rule backwards from the output layer to the input layer. This step is described in more detail below.
+	Given $\mathcal{L}_{\text{\scshape total}}$, calculate $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ for each weight in each layer of the network by applying the chain rule backwards from the output layer to the input layer.
 \end{enumerate}
 
 $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ is calculated as follows:
@@ -649,15 +669,55 @@ For the preceding layers, $\delta_j^l$ can be defined recursively in terms of th
 	\delta_i^l = \phi'(z_i^l) \sum_j \delta_j^{l+1} w_{i,j}^l
 \end{gather}
 
-\tit{Gradient descent}\index{gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. The simplest form of gradient descent does this by changing each weight value in the direction of the negative gradient of the loss. This is is equivalent to moving the network output downwards on the error surface defined by plotting the loss against each of the weights in the network:
+\tit{Gradient descent}\index{gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. It does this by changing each weight value in the direction of the negative gradient of the loss, which can be visualised as moving downhill on the error surface plotted with respect to the weights in the network:
 \begin{gather}
 	w_{i,j}^l \leftarrow w_{i,j}^l - \eta \frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather}
-$\eta$ is known as the \tit{learning rate}\index{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
+$\eta > 0$ is known as the \tit{learning rate}\index{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
 
 \subsection{Recurrent Neural Networks} \label{rnns}
 
-In the context of language modelling, the input is a sequence of words and the output should be the same sequence of words shifted ahead in time by one word. For example, given (\tit{`the', `cat', `sat', ...}) as input, the network should produce something similar to (\tit{`cat', `sat', `on', ...}) as output. The problem with FNNs is that these sequences may have a varying number of words in them, yet FNNs have fixed input and output vector sizes. One way to get around this problem is to look at a finite window of words at any given time, and encode that window into a vector, but even for modest window sizes this can lead to a huge number of weights in the network, which becomes more difficult to train. A better solution is to use a recurrent neural network\index{RNN}.
+In the context of language modelling, the input is a sequence of words and the output is a sequence of probability distributions over the possible next words at each point. Ideally, the word with the highest probability at each step should be the next word in the input sequence. For example, given (\tit{`the', `cat', `sat', ...}) as input, the network should produce something along the lines of (~%
+\begin{tikzpicture}[scale=0.05]
+\begin{axis}[
+	clip=false,
+	hide y axis,
+	axis x line*=bottom,
+	ymin=0, ymax=5,
+	xticklabels={,,,,},
+]
+\addplot[ybar, fill=black]
+coordinates {(1, 1)(2, 5)(3, 2)(4, 1.5)(5, 0.5)};
+\end{axis}
+\node at (3, 8) {\tiny \tit{`cat'}};
+\end{tikzpicture}, %
+\begin{tikzpicture}[scale=0.05]
+\begin{axis}[
+	clip=false,
+	hide y axis,
+	axis x line*=bottom,
+	ymin=0, ymax=5,
+	xticklabels={,,,,},
+]
+\addplot[ybar, fill=black]
+coordinates {(1, 1)(2, 1)(3, 3)(4, 5)(5, 0.5)};
+\end{axis}
+\node at (3, 8) {\tiny \tit{`sat'}};
+\end{tikzpicture}, %
+\begin{tikzpicture}[scale=0.05]
+\begin{axis}[
+	clip=false,
+	hide y axis,
+	axis x line*=bottom,
+	ymin=0, ymax=5,
+	xticklabels={,,,,},
+]
+\addplot[ybar, fill=black]
+coordinates {(1, 1)(2, 1.5)(3, 5)(4, 1)(5, 2)};
+\end{axis}
+\node at (3, 8) {\tiny \tit{`on'}};
+\end{tikzpicture}, %
+... ) as output. The problem with FNNs is that these sequences may have varying length, yet FNNs have fixed input and output vector sizes. Recurrent neural networks (RNNs)\index{recurrent neural network (RNN)} naturally lend themselves to tackling this issue. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -716,7 +776,7 @@ In the context of language modelling, the input is a sequence of words and the o
 \caption{Two different representations of the same RNN.}
 \end{figure}
 
-A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. A nice property about RNNs is that they can be unrolled to an arbitrary number of steps without the need for any additional parameters, because the same weight matrices are reused at each step. For this reason, RNNs are well suited for operating over sequences of input data. In the case of language modelling, this is ideal, because the inputs are sequences of words. The problem of representing textual words as numerical input vectors for an RNN is addressed in section \ref{word_embeddings}. \\
+A recurrent neural network can be constructed from an FNN by adding connections from each neuron in a hidden layer back to every neuron in that layer, including itself. A nice property about RNNs is that they can be unrolled to an arbitrary number of steps without the need for any additional parameters, because the same weight matrices are reused at each step. For this reason, RNNs are well suited for operating over sequences of input data, which is of course ideal in the context of language modelling. The problem of representing textual words as numerical input vectors for an RNN is addressed in section \ref{word_embeddings}. \\
 
 In most applications, the sequences of input vectors are typically ordered by time, so I use the notation $\mathbf{x}^t$ and $\mathbf{y}^t$ to denote the input and output vectors at time step $t$.
 
@@ -944,7 +1004,7 @@ In order for an RNN to take a sequence of words as input, each word must first b
 
 \section{Software Engineering}
 
-This section details the requirements of the project and early design decisions that were made to target such goals.
+This section details the project requirements and early design decisions that were made.
 
 \subsection{Requirements}
 
@@ -980,7 +1040,7 @@ All requirements and extensions depend on \tbf{R1}, so I implemented that first.
 
 \subsection{Tools and Technologies Used} \label{tools}
 
-Below I describe and justify where necessary the tools and technologies that I selected to build my project.
+Below I describe and justify where necessary the tools and technologies that I used.
 
 \subsubsection{Version Control and Build Tools}
 
@@ -991,9 +1051,9 @@ I hosted my project in a repository on GitHub, used Git for version control, and
 I chose to use TensorFlow, an open source machine learning library, to assist in the implementation of my recurrent neural networks. There are two key reasons for this:
 \begin{enumerate}
 \item
-	TensorFlow supports \tit{automatic differentiation}. That is, each tensor operation has a partial derivative associated with it, so when you want to apply the second stage of backpropagation, TensorFlow can automatically apply the chain rule through any sequence of tensor operations. Without this, I would have to hard-code new gradient calculations every time I change the structure of the network, which is tedious and error-prone.
+	TensorFlow supports \tit{automatic differentiation}\index{TensorFlow!automatic differentiation}. That is, each tensor operation has a partial derivative associated with it, so when you want to apply the second stage of backpropagation, TensorFlow can automatically apply the chain rule through any sequence of tensor operations. Without this, I would have to hard-code new gradient calculations every time I change the structure of the network, which is tedious and error-prone.
 \item
-	TensorFlow supports GPU-accelerated matrix operations. Without this, training my recurrent neural networks would take significantly longer.
+	TensorFlow supports GPU-accelerated matrix operations.
 \end{enumerate}
 Of course, there are many other machine learning libraries that offer comparable features. The reason I picked TensorFlow in particular was because I was already familiar with its codebase from using and contributing to it during an internship at Google in 2016. \\
 
@@ -1105,16 +1165,15 @@ protected:
     ...
 public:
     ...
-    // Given a sequence of words, `seq', return the most probable next word, with its
-    // associated probability.
-    virtual void Predict(std::list<std::string> seq,
-                         std::pair<std::string, double> &pred);
-    
-    // Given a sequence of words, `seq', return the top k most probable next words, in
+    // Initialise `preds' with the top k most probable next words the follow `seq', in
     // order of decreasing probability.
     virtual void PredictTopK(std::list<std::string> seq,
                              std::list<std::pair<std::string, double>> &preds, int k);
-    
+
+    // Initialise `pred' with the most probable next word the follows `seq'.
+    virtual void Predict(std::list<std::string> seq,
+                         std::pair<std::string, double> &pred);
+
     // Return the probability of the word sequence, `seq'.
     virtual double Prob (std::list<std::string> seq) = 0;
     
@@ -1130,9 +1189,9 @@ public:
 \end{lstlisting}
 ~\\
 
-Every language model object stores a \ttt{Vocab} object, which contains the set of words in the language model vocabulary, and a mapping from those words to integer IDs. The integer IDs are used in place of the string representations of such words in various language model data structures that are discussed later in this chapter. This is simply a memory optimisation, because an integer requires less space than a string. \\
+Every language model object stores a \ttt{Vocab} object, which contains the set of words in the language model vocabulary, and a mapping from those words to integer IDs. As a simple memory optimisation, the integer IDs are used in place of the string representations of such words in various language model data structures that are discussed later in this chapter. \\
 
-\ttt{Predict()} is a special case of \ttt{PredictTopK()}, which simply uses a priority queue to extract the top $k$ predictions from the result of calling \ttt{ProbAllFollowing()}. The implementations of \ttt{Prob()} and \ttt{ProbAllFollowing()} depend on the specific language model. One might think that \ttt{ProbAllFollowing()} can be implemented by calling \ttt{Prob()} for each word in the vocabulary, but this would be inefficient in the case of an RNN-based language model, which implicitly computes the probability distribution over every word in the vocabulary in each forward pass of the network, hence why the methods are kept separate. \\
+\ttt{Predict()} and \ttt{PredictTopK()} both call \ttt{ProbAllFollowing()}. \ttt{Predict()} takes the maximum over the result and \ttt{PredictTopK()} uses a priority queue to extract the top $k$ predictions. \ttt{ProbAllFollowing()} could be implemented by calling \ttt{Prob()} for each word in the vocabulary, but this would be inefficient in the case of an RNN-based language model, which implicitly computes the probability distribution over every word in each forward pass of the network, hence why the methods are kept separate. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1168,11 +1227,11 @@ Every language model object stores a \ttt{Vocab} object, which contains the set 
 \label{fig:hierarchy}
 \end{figure}
 
-The reason that there is only a single RNN language model class is that the differences between the vanilla RNN, GRU and LSTM models arise in the Python code where the models are constructed and trained. The C++ code for the RNN-based models just loads and runs inference on the model graph described in the exported protocol buffer. See~\ref{tensorflow} for more details.
+For the RNN-based language models, the differences between the vanilla RNN, GRU and LSTM implementations arise in the Python code where the models are constructed and trained. The C++ code for the RNN-based models just loads and runs inference on the model graph described in the exported protocol buffer. See~\ref{tensorflow} for more details.
 
 \subsection{Testing}
 
-The correctness of my language model implementations in this project was vital. For this reason, every C++ and Python class in the codebase that exhibits core language model functionality has an accompanying test class which contains one or more unit tests. In particular, the language model classes are paired with tests that query their \ttt{Prob()} and \ttt{ProbAllFollowing()} methods and compare the results with values that have been calculated by hand using the equations presented in chapter~\ref{preparation}. \\
+To encourage correctness, every C++ and Python class in the codebase that exhibits core language model functionality has an accompanying test class which contains one or more unit tests. In particular, the language model classes are paired with tests that query their \ttt{Prob()} and \ttt{ProbAllFollowing()} methods and compare the results with values that I calculated by hand using the equations presented in chapter~\ref{preparation}. \\
 
 During the development of the project, all new code was tested before being committed to the codebase, and new test cases were immediately added upon discovery of any bugs.
 
@@ -1205,7 +1264,7 @@ One of the first things I discovered when implementing $n$-gram language models 
 \label{fig:ngram_training}
 \end{figure}
 
-The process of training an $n$-gram model in my implementation is outlined in figure~\ref{fig:ngram_training}. The three stages of the pipeline are outlined in sections~\ref{ngram_compute_vocab}, \ref{ngram_count} and \ref{ngram_precompute} respectively.
+The three stages of my $n$-gram training pipeline are outlined in sections~\ref{ngram_compute_vocab}, \ref{ngram_count} and \ref{ngram_precompute} respectively.
 
 \subsection{Computing the Vocabulary} \label{ngram_compute_vocab}
 
@@ -1288,9 +1347,9 @@ With a few exceptions, most smoothing techniques can be generalised to the follo
 \begin{gather} \label{eq:smoothing_general}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape SMOOTH}} = \alpha(w_{i - n + 1}^i) + \beta(w_{i - n + 1}^{i - 1})\mathbb{P}(w_i | w_{i - n + 2}^{i - 1})_{\text{\scshape SMOOTH}}
 \end{gather}
-The probabilities of many different $n$-grams could share some of the same $\alpha$ and $\beta$ coefficients. For example, $\mathbb{P}(\tit{sat}\ |\ \tit{the cat})_{\text{\scshape SMOOTH}}$ and $\mathbb{P}(\tit{jumped}\ |\ \tit{the cat})_{\text{\scshape SMOOTH}}$ would both require $\beta(\tit{the cat})$. To avoid duplicated computation, the $\alpha$ and $\beta$ values for every $k$-gram in the \ttt{CountTrie} instance are computed exactly once and stored in a new word-level trie. Each node in this trie stores two values, $\alpha(w_i^j)$ and $\beta(w_i^j)$, where $w_i^j$ is the path of words that lead to the node. This way, the parameters can be fetched in constant time at $n$-gram model query time. The \ttt{CountTrie} instance from the previous stage indicate which $k$-grams the coefficients should be computed for, and also supplies the necessary parameters to derive them. \\
+The probabilities of many different $n$-grams could share some of the same $\alpha$ and $\beta$ coefficients. For example, $\mathbb{P}(\tit{sat}\ |\ \tit{the cat})_{\text{\scshape SMOOTH}}$ and $\mathbb{P}(\tit{jumped}\ |\ \tit{the cat})_{\text{\scshape SMOOTH}}$ would both require $\beta(\tit{the cat})$. To avoid duplicated computation, the $\alpha$ and $\beta$ values for every $k$-gram in the \ttt{CountTrie} instance are computed exactly once and stored in a new word-level trie, called \ttt{ProbTrie}. Each node in this trie stores two values, $\alpha(w_i^j)$ and $\beta(w_i^j)$, where $w_i^j$ is the path of words that lead to the node. This way, the parameters can be fetched in $O(n)$ time at $n$-gram model query time, which again is practically constant since I only use $n \leq 5$. The \ttt{CountTrie} instance supplies the necessary parameters for deriving the smoothing coefficients used to populate the \ttt{ProbTrie} instance. \\
 
-Once the word-level trie of smoothing coefficients has been populated, computing the probability of any $n$-gram can be done by traversing the data structure as shown in algorithm~\ref{alg:smoothing_prob}. Using this implementation, the only thing that each smoothing subclass has to override is the way in which the coefficients $\alpha$ and $\beta$ are calculated when the data structure is initially populated. This made it much easier to add and test new smoothing techniques.
+Once the \ttt{ProbTrie} instance has been populated, computing the probability of any $n$-gram can be done by traversing the data structure as shown in algorithm~\ref{alg:smoothing_prob}. Using this implementation, the only thing that each smoothing subclass has to override is the way in which the coefficients $\alpha$ and $\beta$ are calculated when the \ttt{ProbTrie} instance is initially populated. This made it much easier to add and test new smoothing techniques.
 
 \begin{algorithm}
 \caption{Computing $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape SMOOTH}}$}
@@ -1317,17 +1376,17 @@ Once the word-level trie of smoothing coefficients has been populated, computing
 \end{algorithmic}
 \end{algorithm}
 
-Katz smoothing is an exception in that it does not quite match the form presented in equation~\ref{eq:smoothing_general}. To get around this issue, the Katz subclass simply overrode algorithm~\ref{alg:smoothing_prob} to traverse the same data structure in a slightly different way.
+Katz smoothing is an exception in that it does not quite match the form presented in equation~\ref{eq:smoothing_general}. To get around this issue, the Katz subclass simply overrides algorithm~\ref{alg:smoothing_prob} to traverse the same data structure in a slightly different way.
 
 \section{Recurrent Neural Network Models} \label{rnn_lm}
 
-Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow in section~\ref{tensorflow}. Then, in section~\ref{rnn_structure}, I explain the structure of the RNNs I use and how they apply to language modelling. In section~\ref{architectures} I give the details of the GRU and LSTM architectures. Section~\ref{embeddings} details the word embeddings used in the models. Finally, section~\ref{in_practice} describes how I tuned the RNN hyperparameters and applied techniques to encourage convergence and avoid overfitting.
+Below, I explain how I implemented my RNN-based language models. To do this, I first give a brief overview of TensorFlow in section~\ref{tensorflow}. Then, in section~\ref{rnn_structure}, I explain the structure of the RNNs I use and how they apply to language modelling. In section~\ref{architectures} I give details of the GRU and LSTM architectures. Section~\ref{embeddings} describes the word embeddings used in the models. Finally, section~\ref{in_practice} outlines how I tuned the RNN hyperparameters and applied techniques to encourage convergence and avoid overfitting.
 
 \subsection{TensorFlow} \label{tensorflow}
 
-In this section I aim to give a brief overview of TensorFlow~\cite{tensorflow:abadi2016}, the open-source machine learning library that I used to implement my RNN-based language models. \\
+TensorFlow~\cite{tensorflow:abadi2016}\index{TensorFlow} is an open-source machine learning library that I used to implement my RNN-based language models. \\
 
-Computation in TensorFlow is defined in terms of a directed graph, where each node represents an operation and each directed edge represents the flow of a tensor, hence the name. TensorFlow programs consist of two key sections: the first is constructing the graph, and the second is executing one or more paths through the graph in what is called a `session'. In order to execute a path through a graph, you specify one or more nodes to evaluate, and then TensorFlow automatically executes all operations that are required to evaluate the tensor at the specified node(s). \\
+Computation in TensorFlow is defined in terms of a directed graph, where each node represents an operation and each directed edge represents the flow of a tensor, hence the name. TensorFlow programs consist of two key sections: the first is constructing the graph, and the second is executing one or more paths through the graph in what is called a \tit{session}\index{TensorFlow!session}. In order to execute a path through a graph, you specify one or more nodes to evaluate, and then TensorFlow automatically executes all operations that are required to evaluate the tensor(s) at the specified node(s). \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1352,20 +1411,20 @@ Computation in TensorFlow is defined in terms of a directed graph, where each no
 	\draw[->] (d) -- (f);
 	\draw[->] (c) -- (f);
 \end{tikzpicture}
-\caption{The toy TensorFlow computation graph. On evaluation of node $x$, only the operations on the highlighted paths are computed, and the scalar (rank-0 tensor) 20 is returned.}
+\caption{A toy TensorFlow computation graph. On evaluation of node $x$, only the operations on the highlighted paths are computed, and the scalar (rank-0 tensor) 20 is returned.}
 \label{fig:tensorflow}
 \end{figure}
-Each operation takes zero or more tensors as input, and produces a tensor as output. There are some notable operations that take zero inputs: a \tit{constant}, which outputs a tensor whose value cannot be changed; a \tit{variable}, which is the same except the tensor that it outputs can be changed; and a \tit{placeholder}, which is a promise to provide a tensor at execution time. \\
+Each operation takes zero or more tensors as input, and produces a tensor as output. There are some notable operations that take zero inputs: a \tit{constant}\index{TensorFlow!constant}, which outputs a tensor whose value cannot be changed; a \tit{variable}, which is the same except the tensor that it outputs can be changed; and a \tit{placeholder}\index{TensorFlow!placeholder}, which is a promise to provide a tensor at execution time. \\
 
-The computation of a (recurrent) neural network can be described as a directed graph of tensor operations. For example: a layer of neurons can be represented as a vector and the weights in between each layer can be represented as a matrix. Then, computing the activations of the next layer is simply a case of matrix multiplying the weights with the activations from the previous layer, and applying an activation function element-wise to the result. In the context of TensorFlow, a placeholder would be used to provide the input training data, and variables would be used to store all of the trainable parameters of the network, namely the weights, bias variables and the word embeddings. \\
+In my implementation, I described my RNN-based language models as a directed graph of tensor operations. For example: layers of neurons were represented as a vectors and the weights in-between each layer were represented as a matrix. In the case of a vanilla RNN, I computed a layer of activations using the matrix operations presented in equation~\ref{eq:vanilla_rnn}. I used a \tit{placeholder} to provide the input training data, and \tit{variables} to store all of the trainable parameters of the network, namely the weights, bias variables and the word embeddings. \\
 
-Once a neural network has been constructed, forward propagation can be computed by evaluating the output nodes of the network in a session. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}, and is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, any optimisation technique such as gradient descent can be applied to update the network. \\
+Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}, and is known as \tit{automatic differentiation}\index{TensorFlow!automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, I then applied an optimisation technique such as gradient descent to update the trainable parameters of the network. \\
 
 After having trained the RNN in Python, I would \tit{freeze} the computation graph and export it into a format that can be loaded into C++. This involved converting all of the variables in the graph to constants and saving the network, along with some metadata, into a protocol buffer. Using the C++ API, I could then load the network and run inference on it by evaluating the relevant tensors in a session, without having to know anything about the internal structure of the RNN.
 
 \subsection{Network Structure} \label{rnn_structure}
 
-The general structure of all of the RNN-based language models I trained is described below. \\
+The general structure of all of my RNN-based language models is described below. \\
 
 Before the RNN is constructed, an initial pass is made over the training set to construct a vocabulary $V$. This is done in exactly the same way as for the $n$-gram models, as described in section~\ref{ngram_compute_vocab}, so I will not repeat the detail. \\
 
@@ -1410,11 +1469,11 @@ The outputs of the softmax function sum to 1 and are used to represent a probabi
 
 \subsection{Long Short-Term Memory and Gated Recurrent Units} \label{architectures}
 
-As mentioned in section~\ref{rnns}, there are various architectures that can be used for the cells/neurons of RNNs, three of which I implemented in this project. The vanilla RNN architecture simply takes the activations from the previous layer, $\mathbf{a}^{l - 1, t}$, and the activations from the same layer at the previous time step, $\mathbf{a}^{l, t - 1}$, and applies an activation function to their weighted sum. This is shown in equation~\ref{eq:vanilla_rnn}, which is repeated below. The fact that the vanilla RNN keeps hold of the activations of the hidden layers from the previous time step means that it implicitly maintains some state:
+As mentioned in section~\ref{rnns}, there are various architectures that can be used for the cells/neurons of RNNs, three of which I implemented in this project. Under the vanilla RNN architecture, a layer of neuron activations is computed as shown in equation~\ref{eq:vanilla_rnn}, which is repeated below. The fact that the vanilla RNN keeps hold of the activations of the hidden layers from the previous time step means that it implicitly maintains some state:
 \begin{gather*}
 	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
 \end{gather*}
-Unfortunately, it has been observed that it is difficult to train vanilla RNNs to capture long-term dependencies, because the influence of the inputs as they cycle through the recurrent connections in the network often either decay or blow up exponentially~\cite{vanishing_gradient:hochreiter1991}~\cite{vanishing_gradient:bengio1994}. These phenomena result in weights earlier on in the network either vanishing or exploding disproportionately, and are known as the \tit{vanishing gradient problem}\index{vanishing gradient problem} and the \tit{exploding gradient problem}\index{exploding gradient problem} respectively. Various improvements have been made to improve upon these problems, two of which I implemented in my project and are outlined below.
+Unfortunately, it has been observed that it is difficult to train vanilla RNNs to capture long-term dependencies, because the influence of the inputs as they cycle through the recurrent connections in the network often either decay or blow up exponentially~\cite{vanishing_gradient:hochreiter1991}~\cite{vanishing_gradient:bengio1994}. These phenomena result in the gradients of weights in the network either vanishing or exploding disproportionately, and are known as the \tit{vanishing gradient problem}\index{vanishing gradient problem} and the \tit{exploding gradient problem}\index{exploding gradient problem} respectively. Various improvements have been made to improve upon these problems, two of which I implemented in my project and are outlined below.
 
 \subsubsection{Long Short-Term Memory}
 
@@ -1780,7 +1839,7 @@ Error-correction can be broken up into two parts: detecting the errors and makin
 
 \chapter{Evaluation} \label{evaluation}
 
-In this chapter, I will first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I present the performance of the existing language models that I implemented, secondly I focus on the tradeoffs faced when employing those models on a mobile device, and finally I display my findings in language modelling on error-prone text.
+In this chapter, I first describe the benchmarking framework that I built to evaluate the language models, before proceeding onto the results. The results section is threefold: firstly I present the performance of the existing language models that I implemented, secondly I focus on the tradeoffs faced when employing those models on a mobile device, and finally I display my findings in language modelling on error-prone text.
 
 \section{Evaluation Methodology}
 
