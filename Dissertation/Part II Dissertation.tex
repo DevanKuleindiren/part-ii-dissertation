@@ -295,11 +295,11 @@ My preparation consisted of thoroughly understanding $n$-gram and RNN-based lang
 
 \section{$n$-gram Models} \label{ngram_models}
 
-This section describes $n$-gram\index{$n$-gram} language models and the various smoothing techniques implemented in this project.
+This section describes $n$-gram language models and the various smoothing techniques implemented in this project.
 
 \subsection{An Overview of $n$-gram Models}
 
-Language models are concerned with the task of computing $\mathbb{P}(w_1^N)$, the probability of a sequence of words $w_1w_2...w_N = w_1^N$, where $w_i \in V$ and $V$ is some predefined vocabulary\footnote{The vocabulary is typically taken as all of the words that occur at least $k$ times in the training set. $k$ depends on the size of the dataset, but is typically around 2 or 3.}. By repeated application of the product rule, it follows that:
+Language models are concerned with the task of computing $\mathbb{P}(w_1^N)$, the probability of a sequence of words $w_1w_2...w_N = w_1^N$, where $w_i \in V$ and $V$ is some predefined vocabulary. By repeated application of the product rule, it follows that:
 \begin{gather}
 	\mathbb{P}(w_1^N) = \prod_{i = 1}^N \mathbb{P}(w_i | w_1^{i - 1})
 \end{gather}
@@ -313,15 +313,15 @@ Using the maximum likelihood estimation, $\mathbb{P}(w_i | w_{i - n + 1}^{i - 1}
 \end{gather}
 where $c(W)$ denotes the number of times that the word sequence $W$ was seen in the training set. \\
 
-This mode provides reasonable results and is simple to compute, but it does have one major issue: if, for example, a 3-gram model does not encounter the trigram \tit{`the cat sat'} in its training data, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
+This model provides reasonable results and is simple to compute, but it does have one major issue: if, for example, a 3-gram model does not encounter the trigram \tit{`the cat sat'} in its training data, then it will assign a probability of 0 to that word sequence. This is problematic, because \tit{`the cat sat'} and many other plausible sequences of words might not occur in the training data. In fact, there are $|V|^n$ possible $n$-grams for a language model with vocabulary $V$, which means that as the value of $n$ is increased, the chances of encountering a given $n$-gram in the training data becomes exponentially less likely. \\
 
-A crude solution to this problem is to exponentially increase the size of the training set, but this does require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}\index{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this, and the ones which I have implemented are described in the next section. \\
+A crude solution to this problem is to exponentially increase the size of the training set, but this does require significantly more memory and computation, and assumes that additional training data is available in the first place. An alternative solution is to adopt a technique called \tit{smoothing}. The idea behind smoothing is to `smooth' the probability distribution over the words in the vocabulary such that rare or unseen $n$-grams are given a non-zero probability. There are a variety of methods that achieve this, and the ones which I have implemented are described in the next section. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
 \centering
 $\vcenter{\hbox{
-\begin{tikzpicture}[scale=0.6]
+\begin{tikzpicture}[scale=0.7]
 \begin{axis}[
 	symbolic x coords={\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}},
 	xtick=data,
@@ -338,7 +338,7 @@ coordinates {(\tit{a}, 0)(\tit{cat}, 0)(\tit{dog}, 0)(\tit{is}, 0.6)(\tit{mat}, 
 \end{axis}
 \end{tikzpicture}}}
 ~~\vcenter{\hbox{\scalebox{1}{$\rightarrow$}}}~~
-\vcenter{\hbox{\begin{tikzpicture}[scale=0.6]
+\vcenter{\hbox{\begin{tikzpicture}[scale=0.7]
 \begin{axis}[
 	symbolic x coords={\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}},
 	xtick=data,
@@ -361,15 +361,15 @@ coordinates {(\tit{a}, 0.01)(\tit{cat}, 0.01)(\tit{dog}, 0.02)(\tit{is}, 0.45)(\
 
 \subsubsection{Add-One Smoothing}
 
-Add-one smoothing~\cite{add1_smoothing:johnson1932}\index{add-one smoothing} simply involves adding 1 to each of the $n$-gram counts, and adding $|V|$ to the denominator ensure the probabilities sum to 1:
+Add-one smoothing~\cite{add1_smoothing:johnson1932} simply involves adding 1 to each of the $n$-gram counts, and adding $|V|$ to the denominator ensure the probabilities sum to 1:
 \begin{gather}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape add-one}} = \frac{c(w_{i - n + 1}^{i}) + 1}{\sum_w c(w_{i - n + 1}^{i - 1}w) + |V|}
 \end{gather}
-One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. For example, if both \tit{`cat is'} and \tit{`cat pizza'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{is}\ |\ \tit{cat})_{\text{\scshape add-one}} = \mathbb{P}(\tit{pizza}\ |\ \tit{cat})_{\text{\scshape add-one}}$. A simple way to reduce this problem is to employ \tit{backoff}\index{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{is})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`cat is'} is more likely than \tit{`cat pizza'}.
+One issue with add-one smoothing is that it gives an equal amount of probability to all $n$-grams, regardless of how likely they actually are. For example, if both \tit{`cat is'} and \tit{`cat pizza'} are unseen in the training data of a bigram model, then $\mathbb{P}(\tit{is}\ |\ \tit{cat})_{\text{\scshape add-one}} = \mathbb{P}(\tit{pizza}\ |\ \tit{cat})_{\text{\scshape add-one}}$. A simple way to reduce this problem is to employ \tit{backoff}, a technique whereby you recurse on the probability calculated by the $(n - 1)$-gram model. In this case, it is likely that $\mathbb{P}(\tit{is})_{\text{\scshape add-one}} > \mathbb{P}(\tit{pizza})_{\text{\scshape add-one}}$, which could be used to deduce that \tit{`cat is'} is more likely than \tit{`cat pizza'}.
 
 \subsubsection{Absolute Discounting}
 
-Absolute discounting\index{absolute discounting} employs backoff by interpolating higher and lower order $n$-gram models. It does this by subtracting a fixed discount $0 \leq D \leq 1$ from each non-zero count:
+Absolute discounting employs backoff by interpolating higher and lower order $n$-gram models. It does this by subtracting a fixed discount $0 \leq D \leq 1$ from each non-zero count:
 \begin{equation}
 \begin{aligned}
 	\mathbb{P}(w_i | w_{i - n + 1}^{i - 1})_{\text{\scshape ABS}} &= \frac{max\{c(w_{i - n + 1}^{i}) - D, 0\}}{\sum_w c(w_{i - n + 1}^{i - 1}w)} \\
@@ -390,7 +390,7 @@ where $n_1$ and $n_2$ are the total number of $n$-grams with 1 and 2 counts resp
 
 \subsubsection{Kneser-Ney Smoothing}
 
-Kneser and Ney\index{Kneser-Ney smoothing} proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigrams \tit{`bottle cap'} and \tit{`bottle Francisco'}. If neither have been seen in the training data, and \tit{`Francisco'} occurs more frequently than \tit{`cap'}, then the absolute discounting model would backoff onto the unigram distribution and assign a higher probability to the \tit{`bottle Francisco'} bigram, despite the fact that \tit{`Francisco'} only ever follows \tit{`San'}. \\
+Kneser and Ney proposed an extension to absolute discounting which takes into account the number of unique words that precede a given $n$-gram~\cite{kneser_ney_smoothing:kneser1995}. As a motivating example, consider the bigrams \tit{`bottle cap'} and \tit{`bottle Francisco'}. If neither have been seen in the training data, and \tit{`Francisco'} occurs more frequently than \tit{`cap'}, then the absolute discounting model would backoff onto the unigram distribution and assign a higher probability to the \tit{`bottle Francisco'} bigram, despite the fact that \tit{`Francisco'} only ever follows \tit{`San'}. \\
 
 From this example, it seems intuitive to assign more probability to those $n$-grams that follow a larger number of unique words. Kneser and Ney encapsulate this intuition by replacing some of the absolute counts $c(w_i^j)$ with the number of unique words that precede the word sequence $w_i^j$, $N_{1+}(\bullet w_i^j)$:
 \begin{gather}
@@ -415,7 +415,7 @@ and the unigram probability is given as:
 
 \subsubsection{Modified Kneser-Ney Smoothing}
 
-Chen and Goodman experimented with different discount values $D$ in Kneser-Ney smoothing and noticed that the ideal average discount value for $n$-grams with one or two counts is substantially different from the ideal average discount for $n$-grams with higher counts. Upon this discovery, they introduced a modified version of Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999}:
+Chen and Goodman noticed that the ideal average discount value, $D$, for $n$-grams with one or two counts is substantially different from the ideal average discount for $n$-grams with higher counts. Upon this discovery, they introduced a modified version of Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999}:
 \begin{equation}
 \begin{aligned}
 	\mathbb{P}(w_i | w_{i - k + 1}^{i - 1})_{\text{\scshape MKN}} &= \frac{max\{\gamma(w_{i - k + 1}^{i}) - D(c(w_{i - k + 1}^{i}), 0\}}{\sum_w \gamma(w_{i - k + 1}^{i - 1}w)} \\
@@ -435,7 +435,7 @@ and
 		D_{3+} &\text{if }c \geq 3 \\
 	\end{cases}
 \end{gather}
-where $N_1$, $N_2$ and $N_{3+}$ are defined analogously to $N_{1+}$ in equation~\ref{eq:n1plus}. Chen and Goodman suggest setting the discounts to be:
+where $N_1$, $N_2$ and $N_{3+}$ are defined analogously to $N_{1+}$ in equation~\ref{eq:n1plus}. Chen and Goodman suggest:
 \begin{align}
 	D_1 = 1 - 2D\frac{n_2}{n_1} && D_2 = 2 - 3D\frac{n_3}{n_2} && D_{3+} = 3 - 4D\frac{n_4}{n_3}
 \end{align}
@@ -542,7 +542,7 @@ An important distinction to be made is whether the neural network is cyclic or n
 
 \subsubsection{The Multilayer Perceptron}
 
-The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first and last layers are the input and output layers, and any layers in between are called \tit{hidden layers}\index{hidden layer}. The input neurons simply pass on the input values that they are given. Neurons in the subsequent layers, however, compute the following:
+The multilayer perceptron consists of layers of neurons, where each layer is fully connected to the next one. The first and last layers are the input and output layers, and any layers in between are called \tit{hidden layers}. The input neurons simply pass on the input values that they are given. Neurons in the subsequent layers, however, compute the following:
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -566,15 +566,15 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 \draw[<-] ([yshift=1mm]aux)--++(140:24mm) node [below right=-5mm and 2mm of bias] {$b_j^{l-1}$};
 \draw[<-] ([yshift=-1mm]aux)--++(-162:20mm) node [right=2mm of inpN] {$w_{n,j}^{l-1}$};
 
-\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{b_j^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}\index{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
+\draw[->] (neuron.east) -- ++(0:5mm) node [right] {$\overbrace{\phi \big( \underbrace{b_j^{l - 1} + \sum_i a_i^{l - 1} w_{i,j}^{l-1}}_{z_j^l\text{ - the \tit{logit}}} \big)}^{a_j^l\text{ - the \tit{activation}}}$};
 
 \end{tikzpicture}
-\caption{The computation carried out by each neuron\index{neuron}. The outputs or \tit{activations}\index{activation} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the \tit{activation function}\index{activation function} is $\phi$ and $b_j^{l - 1}$ is the bias variable.}
+\caption{The computation carried out by each neuron. The outputs or \tit{activations} of the neurons from the previous layer, $(l - 1)$, are denoted $a_i^{l-1}$, the weights on the input connections are $w_{i,j}^{l-1}$, the \tit{activation function} is $\phi$ and $b_j^{l - 1}$ is the bias variable.}
 \label{fig:neuron}
 \end{center}
 \end{figure}
 
-The constant-valued input 1 is known as a \tit{bias}\index{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. Its purpose is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
+The constant-valued input 1 is known as a \tit{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. Its purpose is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
 
 Activation functions were originally created to mimic the firing activity of neurons. It is important that they are chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
@@ -644,7 +644,7 @@ where $\mathbf{t}_k$ is the vector that the network should output given the exam
 \begin{gather}
 	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
 \end{gather}
-The end product of the \tit{backpropagation}\index{backpropagation} algorithm is the partial derivative:
+The end product of the \tit{backpropagation} algorithm is the partial derivative:
 \begin{gather*}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather*}
@@ -669,11 +669,11 @@ For the preceding layers, $\delta_j^l$ can be defined recursively in terms of th
 	\delta_i^l = \phi'(z_i^l) \sum_j \delta_j^{l+1} w_{i,j}^l
 \end{gather}
 
-\tit{Gradient descent}\index{gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. It does this by changing each weight value in the direction of the negative gradient of the loss, which can be visualised as moving downhill on the error surface plotted with respect to the weights in the network:
+\tit{Gradient descent} is an optimisation technique that uses the derivatives produced by the backpropagation algorithm to adjust the weights such that the loss is minimised over the training set. It does this by changing each weight value in the direction of the negative gradient of the loss, which can be visualised as moving downhill on the error surface plotted with respect to the weights in the network:
 \begin{gather}
 	w_{i,j}^l \leftarrow w_{i,j}^l - \eta \frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather}
-$\eta > 0$ is known as the \tit{learning rate}\index{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
+$\eta > 0$ is known as the \tit{learning rate}, which determines how large the steps are in the negative direction of the gradient. Ways for setting $\eta$, and other useful techniques when training neural networks in practice are described in chapter \ref{implementation}.
 
 \subsection{Recurrent Neural Networks} \label{rnns}
 
@@ -717,7 +717,7 @@ coordinates {(1, 1)(2, 1.5)(3, 5)(4, 1)(5, 2)};
 \end{axis}
 \node at (3, 8) {\tiny \tit{`on'}};
 \end{tikzpicture}, %
-... ) as output. The problem with FNNs is that these sequences may have varying length, yet FNNs have fixed input and output vector sizes. Recurrent neural networks (RNNs)\index{recurrent neural network (RNN)} naturally lend themselves to tackling this issue. \\
+... ) as output. The problem with FNNs is that these sequences may have varying length, yet FNNs have fixed input and output vector sizes. Recurrent neural networks (RNNs) naturally lend themselves to tackling this issue. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -782,7 +782,7 @@ In most applications, the sequences of input vectors are typically ordered by ti
 
 \subsubsection{Backpropagation Through Time (BPTT)}
 
-Training an RNN is not so much different to training an FNN: the only difference is that gradients must also be calculated across time steps\index{backpropagation through time}. As shown figure \ref{fig:rnn_unrolled}, each weight is reused at every time step, so the weight derivative is now summed across the time steps:
+Training an RNN is not so much different to training an FNN: the only difference is that gradients must also be calculated across time steps. As shown figure \ref{fig:rnn_unrolled}, each weight is reused at every time step, so the weight derivative is now summed across the time steps:
 \begin{gather}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big) = \sum_t \delta_j^{l+1,t} a_i^{l,t}
 \end{gather}
@@ -797,7 +797,7 @@ The delta term for the preceding layers can be shown to have the form below. Thi
 where $v_{i,j}^l$ denotes the weight on the recurrent connection from neuron $i$ in layer $l$ back to neuron $j$ in the same layer.
 
 \subsubsection{RNN Architectures}
-So far, the equations presented have assumed a \tit{vanilla RNN}\index{vanilla RNN}. That is, the $j^{th}$ neuron, or \tit{cell}\index{cell}, in layer $l$ at time step $t$ simply computes:
+So far, the equations presented have assumed a \tit{vanilla RNN}. That is, the $j^{th}$ neuron, or \tit{cell}, in layer $l$ at time step $t$ simply computes:
 \begin{gather}
 	a_j^{l, t} = \phi \big( \sum_i a_i^{l - 1, t} w_{i,j}^{l-1} + \sum_i a_i^{l, t - 1} v_{i,j}^{l-1} + b^{l - 1}_j \big)
 \end{gather}
@@ -1000,7 +1000,7 @@ Various improvements to this architecture have been proposed, which capture long
 
 \subsection{Word Embeddings} \label{word_embeddings}
 
-In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}\index{word embedding}. Each word embedding represents a point in a high-dimensional space, and ideally, similar words will be assigned points which are closer together. In this dissertation, I get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
+In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}. Each word embedding represents a point in a high-dimensional space, and ideally, similar words will be assigned points which are closer together. In this dissertation, I get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
 
 \section{Software Engineering}
 
@@ -1051,7 +1051,7 @@ I hosted my project in a repository on GitHub, used Git for version control, and
 I chose to use TensorFlow, an open source machine learning library, to assist in the implementation of my recurrent neural networks. There are two key reasons for this:
 \begin{enumerate}
 \item
-	TensorFlow supports \tit{automatic differentiation}\index{TensorFlow!automatic differentiation}. That is, each tensor operation has a partial derivative associated with it, so when you want to apply the second stage of backpropagation, TensorFlow can automatically apply the chain rule through any sequence of tensor operations. Without this, I would have to hard-code new gradient calculations every time I change the structure of the network, which is tedious and error-prone.
+	TensorFlow supports \tit{automatic differentiation}. That is, each tensor operation has a partial derivative associated with it, so when you want to apply the second stage of backpropagation, TensorFlow can automatically apply the chain rule through any sequence of tensor operations. Without this, I would have to hard-code new gradient calculations every time I change the structure of the network, which is tedious and error-prone.
 \item
 	TensorFlow supports GPU-accelerated matrix operations.
 \end{enumerate}
@@ -1065,7 +1065,7 @@ At the time of writing my code, TensorFlow had both a C++ and a Python API. Howe
 
 One of the possible extensions I set out in my project proposal was to implement a mobile keyboard that makes use of my language model implementations. Android and iOS both provide little or no support for applications written in Python, but they do support code written in C++ via the JNI and Objective-C++ respectively. \\
 
-I used C++ to write the benchmarking framework and all $n$-gram language models, so that they could easily be used within a mobile application. As for the RNN-based language models, I wrote code to train and export them in Python, and then wrote some C++ classes for loading and running inference on them. This way, I could leverage the power of TensorFlow's Python API whilst also supporting the use of such models in a mobile keyboard. In order to export and import trained language models across different languages, I used Google's protocol buffers, a language neutral mechanism for serialising structured data.
+For these reasons, I wrote code to train and export my RNN-based models in Python, and then wrote some C++ classes for loading and running inference on them. The benchmarking framework and my $n$-gram models were all written in C++. In order to export and import trained language models across different languages, I used Google's protocol buffers: a language neutral mechanism for serialising structured data.
 
 \subsubsection{Testing}
 
@@ -1384,9 +1384,9 @@ Below, I explain how I implemented my RNN-based language models. To do this, I f
 
 \subsection{TensorFlow} \label{tensorflow}
 
-TensorFlow~\cite{tensorflow:abadi2016}\index{TensorFlow} is an open-source machine learning library that I used to implement my RNN-based language models. \\
+TensorFlow~\cite{tensorflow:abadi2016} is an open-source machine learning library that I used to implement my RNN-based language models. \\
 
-Computation in TensorFlow is defined in terms of a directed graph, where each node represents an operation and each directed edge represents the flow of a tensor, hence the name. TensorFlow programs consist of two key sections: the first is constructing the graph, and the second is executing one or more paths through the graph in what is called a \tit{session}\index{TensorFlow!session}. In order to execute a path through a graph, you specify one or more nodes to evaluate, and then TensorFlow automatically executes all operations that are required to evaluate the tensor(s) at the specified node(s). \\
+Computation in TensorFlow is defined in terms of a directed graph, where each node represents an operation and each directed edge represents the flow of a tensor, hence the name. TensorFlow programs consist of two key sections: the first is constructing the graph, and the second is executing one or more paths through the graph in what is called a \tit{session}. In order to execute a path through a graph, you specify one or more nodes to evaluate, and then TensorFlow automatically executes all operations that are required to evaluate the tensor(s) at the specified node(s). \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1411,14 +1411,14 @@ Computation in TensorFlow is defined in terms of a directed graph, where each no
 	\draw[->] (d) -- (f);
 	\draw[->] (c) -- (f);
 \end{tikzpicture}
-\caption{A toy TensorFlow computation graph. On evaluation of node $x$, only the operations on the highlighted paths are computed, and the scalar (rank-0 tensor) 20 is returned.}
+\caption{A toy TensorFlow computation graph. On evaluation of node $x$, only the operations on the highlighted paths are computed, and 20 (a rank-0 tensor) is returned.}
 \label{fig:tensorflow}
 \end{figure}
-Each operation takes zero or more tensors as input, and produces a tensor as output. There are some notable operations that take zero inputs: a \tit{constant}\index{TensorFlow!constant}, which outputs a tensor whose value cannot be changed; a \tit{variable}, which is the same except the tensor that it outputs can be changed; and a \tit{placeholder}\index{TensorFlow!placeholder}, which is a promise to provide a tensor at execution time. \\
+Each operation takes zero or more tensors as input, and produces a tensor as output. There are some notable operations that take zero inputs: a \tit{constant}, which outputs a tensor whose value cannot be changed; a \tit{variable}, which is the same except the tensor that it outputs can be changed; and a \tit{placeholder}, which is a promise to provide a tensor at execution time. \\
 
 In my implementation, I described my RNN-based language models as a directed graph of tensor operations. For example: layers of neurons were represented as a vectors and the weights in-between each layer were represented as a matrix. In the case of the vanilla RNN, I computed a layer of activations using the matrix operations presented in equation~\ref{eq:vanilla_rnn}. I used a \tit{placeholder} to provide the input training data, and \tit{variables} to store all of the trainable parameters of the network, namely the weights, bias variables and the word embeddings. \\
 
-Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}. This is known as \tit{automatic differentiation}\index{TensorFlow!automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, I then applied an optimisation technique such as gradient descent to update the trainable parameters of the network. \\
+Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}. This is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, I then applied an optimisation technique such as gradient descent to update the trainable parameters of the network. \\
 
 After having trained the RNN in Python, I would \tit{freeze} the computation graph and export it into a format that can be loaded into C++. This involved converting all of the variables in the graph to constants and saving the network, along with some metadata, into a protocol buffer. Using the C++ API, I could then load the network and run inference on it by evaluating the relevant tensors in a session, without having to know anything about the internal structure of the RNN.
 
@@ -1473,11 +1473,11 @@ As mentioned in section~\ref{rnns}, there are various architectures that can be 
 \begin{gather*}
 	\mathbf{a}^{l, t} = \phi \big( \mathbf{W}^{l - 1} \mathbf{a}^{l - 1, t} + \mathbf{V}^{l - 1} \mathbf{a}^{l, t - 1} + \mathbf{b}^{l - 1} \big)
 \end{gather*}
-Unfortunately, it is difficult to train vanilla RNNs to capture long-term dependencies, because the influence of the inputs as they cycle through the recurrent connections in the network often either decay or blow up exponentially~\cite{vanishing_gradient:hochreiter1991}~\cite{vanishing_gradient:bengio1994}, resulting in the weight gradients either vanishing or exploding disproportionately. These problems are known as the \tit{vanishing gradient problem}\index{vanishing gradient problem} and the \tit{exploding gradient problem}\index{exploding gradient problem} respectively. Various RNN architectures have been constructed to improve upon these problems, two of which I implemented in my project and are outlined below.
+Unfortunately, it is difficult to train vanilla RNNs to capture long-term dependencies, because the influence of the inputs as they cycle through the recurrent connections in the network often either decay or blow up exponentially~\cite{vanishing_gradient:hochreiter1991}~\cite{vanishing_gradient:bengio1994}, resulting in the weight gradients either vanishing or exploding disproportionately. These problems are known as the \tit{vanishing gradient problem} and the \tit{exploding gradient problem} respectively. Various RNN architectures have been constructed to improve upon these problems, two of which I implemented in my project and are outlined below.
 
 \subsubsection{Long Short-Term Memory}
 
-Hochreiter and Schmidhuber~\cite{lstm:hochreiter1997} originally proposed an architecture that directly tackles the vanishing gradient problem, called Long Short-Term Memory (LSTM). The state of each hidden layer $l$ in their architecture at time step $t$ consists of a tuple $(\mathbf{a}^{l, t}, \mathbf{c}^{l, t})$. $\mathbf{a}^{l, t}$, just like in the vanilla RNN cells, allows the LSTM cells to make decisions over a short period of time. The second state vector, $\mathbf{c}^{l, t}$, serves to retain longer-term information. At time step $t + 1$, each element $c_j^{l, t}$ of $\mathbf{c}^{l, t}$ passes through a single LSTM cell in layer $l$, and can be modified by a series of three \tit{gates}\index{gates}: the \tit{forget gate}\index{gates!forget gate}, the \tit{input gate}\index{gates!input gate} and the \tit{output gate}\index{gates!output gate}. These gates can remove, add and output information respectively from $c_j^{l, t}$. \\
+Hochreiter and Schmidhuber~\cite{lstm:hochreiter1997} originally proposed an architecture that directly tackles the vanishing gradient problem, called Long Short-Term Memory (LSTM). The state of each hidden layer $l$ in their architecture at time step $t$ consists of a tuple $(\mathbf{a}^{l, t}, \mathbf{c}^{l, t})$. $\mathbf{a}^{l, t}$, just like in the vanilla RNN cells, allows the LSTM cells to make decisions over a short period of time. The second state vector, $\mathbf{c}^{l, t}$, serves to retain longer-term information. At time step $t + 1$, each element $c_j^{l, t}$ of $\mathbf{c}^{l, t}$ passes through a single LSTM cell in layer $l$, and can be modified by a series of three \tit{gates}: the \tit{forget gate}, the \tit{input gate} and the \tit{output gate}. These gates can remove, add and output information respectively from $c_j^{l, t}$. \\
 
 \begin{center}
 \begin{tikzpicture}[
@@ -1679,7 +1679,7 @@ Whilst the LSTM architecture provides a significant improvement for retaining lo
 \label{fig:gru_structure}
 \end{figure}
 
-The GRU consists of a \tit{reset gate}\index{reset gate}, $r_j^{l, t}$, and an \tit{update gate}\index{update gate}, $u_j^{l, t}$:
+The GRU consists of a \tit{reset gate}, $r_j^{l, t}$, and an \tit{update gate}, $u_j^{l, t}$:
 \begin{align}
 	r_j^{l, t} &= \sigma \big( [\mathbf{W}_r^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j \big) \\
 	u_j^{l, t} &= \sigma \big( [\mathbf{W}_u^l [\mathbf{a}^{l, t - 1}, \mathbf{a}^{l - 1, t}]]_j \big)
@@ -1765,16 +1765,16 @@ The words that have been assigned a more distinguishable representation are give
 In this section, I address a number of problems that are faced when training RNNs in practice and describe how I went about mitigating them.
 
 \subsubsection{Underfitting and Overfitting}
-In any supervised machine learning problem, there are one or more underlying patterns in the training data that need to be learned. \tit{Underfitting}\index{underfitting} occurs when the model fails to capture these patterns, and is typically the case when the model is too simple for the training data, or it is not trained for long enough. This problem was easy to mitigate by adding more parameters to the model, such as the number of hidden neurons, and training it for a sufficient amount of time. \\
+In any supervised machine learning problem, there are one or more underlying patterns in the training data that need to be learned. \tit{Underfitting} occurs when the model fails to capture these patterns, and is typically the case when the model is too simple for the training data, or it is not trained for long enough. This problem was easy to mitigate by adding more parameters to the model, such as the number of hidden neurons, and training it for a sufficient amount of time. \\
 
 As well as underlying patterns in the training data, there also often exists some noise which you do not want the model to learn. \tit{Overfitting} occurs when the model learns this noise, which makes it difficult for it to generalise to new data that it has not seen before. When each of my models were trained, a portion of the data called the test set was reserved for evaluating the performance of the model. The model was not allowed to see any of the data from the test set during training, so that its ability to generalise to unseen data was fairly assessed. In order to avoid overfitting my RNN-based language models, I also set aside a portion of data called the validation set. I used this to monitor, during training, the performance of my models on unseen data. As soon as this performance plateaued, I stopped the training process. \\
 
 In my implementation, I evaluate the perplexity\footnote{Perplexity is the standard performance measure for language models, explained in depth in section~\ref{perplexity}.} of my language model on the validation set at the end of each training iteration. The learning rate starts at some initial value, $\eta_0$, and is then halved on every new iteration once the improvement of the perplexity on the validation set between two iterations drops below some threshold, $\Delta$. After this point, when the improvement of the perplexity on the validation set drops below 0.1\%, the training process is halted. I tried various values for $\eta_0$ and $\Delta$, and chose the best ones for each RNN architecture: $\eta_0 \in \{1, 0.5, 0.1, 0.01, 0.001\}$, $\Delta \in \{10\%, 5\%, 1\%, 0.5\%\}$. \\
 
-RNNs with a large number of parameters can be particularly susceptible to overfitting. Srivastava proposes a technique called \tit{dropout}\index{dropout} for reducing this problem~\cite{dropout:srivastava2013}, whereby some of the neurons and their connections are randomly dropped from the network during training. Zaremba et al.\ found that dropout works best in RNNs if it is only applied to the non-recurrent connections~\cite{dropout_rnns:zaremba2014}, which is the method I used in my RNN implementation.
+RNNs with a large number of parameters can be particularly susceptible to overfitting. Srivastava proposes a technique called \tit{dropout} for reducing this problem~\cite{dropout:srivastava2013}, whereby some of the neurons and their connections are randomly dropped from the network during training. Zaremba et al.\ found that dropout works best in RNNs if it is only applied to the non-recurrent connections~\cite{dropout_rnns:zaremba2014}, which is the method I used in my RNN implementation.
 
 \subsubsection{Convergence}
-Whilst the LSTM and GRU architectures directly combat the aforementioned vanishing gradient problem, there is still the possibility that the gradients can explode, which can make the network unstable during training. In my implementation, I used \tit{gradient clipping}\index{gradient clipping} to mitigate this issue, whereby the gradients are clipped once their norm exceeds a certain threshold. \\
+Whilst the LSTM and GRU architectures directly combat the aforementioned vanishing gradient problem, there is still the possibility that the gradients can explode, which can make the network unstable during training. In my implementation, I used \tit{gradient clipping} to mitigate this issue, whereby the gradients are clipped once their norm exceeds a certain threshold. \\
 
 The selection of the initial learning rate value, $\eta_0$, was also important for ensuring convergence in my RNNs. If the learning rate is too large, then the weight updates may overshoot the minimum which they are directed towards. On the other hand, learning rates that are too small result in very slow convergence or the network becoming stuck in local minima.
 
@@ -2489,8 +2489,6 @@ Language models assign probability distributions over sequences of words, and so
 With a little algebra, this can be rearranged to give equation~\ref{eq:perplexity}. \\
 
 \chapter{Project Proposal}
-
-\printindex
 
 %TC:endignore 
 
