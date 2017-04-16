@@ -13,3 +13,7 @@
 *.out
 *.synctex.gz
 *.toc
+*.dvi
+*.idx
+*.ilg
+*.ind
