@@ -533,12 +533,12 @@ The human brain is a furiously complicated organ, packed with a network of appro
 	\end{tikzpicture}
 	\caption{A simplified notation for (a).}
 \end{subfigure}
-\caption{Two alternative notations for the same network. In the simplified notation, the grey rectangle represents a vector of neurons, the thin arrow represents a vector and the thick arrow represents a matrix of weights.}
+\caption{Two alternative notations for the same network.}
 \end{figure}
 
 Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. In the context of the brain, the nodes represent neurons, the weighted connections represent synapses and the flow of information represents electrochemical signals. \\
 
-An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section \ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}, which I will outline below.
+An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in section \ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}.
 
 \subsubsection{The Multilayer Perceptron}
 
@@ -576,9 +576,9 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 
 The constant-valued input 1 is known as a \tit{bias}\index{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. Its purpose is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
 
-It is also worth noting that activation functions should be chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
+Activation functions were originally created to mimic the firing activity of neurons. It is important that they are chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006}~\cite{scaling:bengio2007}. In fact, is has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
-Frequently used non-linear activation functions include the sigmoid and the hyperbolic tangent functions. Their steep slope at the origin is supposed to mimic an axon, which is a neuron that fires its output after the input reaches a certain potential. More importantly, these functions are differentiable, which allows for the network to be trained using gradient descent. This is discussed below. \\
+Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. Another important property of these functions is that they are differentiable, which allows for the network to be trained using \tit{gradient descent}, which is discussed below. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -651,7 +651,7 @@ The end product of the \tit{backpropagation}\index{backpropagation} algorithm is
 for every weight $w_{i,j}^l$ in the neural network. It is a two stage algorithm that works as follows:
 \begin{enumerate}
 \item
-	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$. The process of calculating the output of the neural network given the input is known as \tit{forward propagation}\index{forward propagation}.
+	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$.
 \item
 	Given $\mathcal{L}_{\text{\scshape total}}$, calculate $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ for each weight in each layer of the network by applying the chain rule backwards from the output layer to the input layer.
 \end{enumerate}
@@ -1000,7 +1000,7 @@ Various improvements to this architecture have been proposed, which capture long
 
 \subsection{Word Embeddings} \label{word_embeddings}
 
-In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}\index{word embedding}. Each word embedding represents a point in a high-dimensional space, and ideally, similar words will be assigned points which are closer together. In this dissertation, I map each word to a large, randomly initialised vector and get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
+In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}\index{word embedding}. Each word embedding represents a point in a high-dimensional space, and ideally, similar words will be assigned points which are closer together. In this dissertation, I get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
 
 \section{Software Engineering}
 
@@ -1702,7 +1702,7 @@ The LSTM architecture maintains 2-tuples of state vectors, whereas the vanilla R
 
 \subsection{Word Embeddings} \label{embeddings}
 
-As mentioned in section~\ref{rnn_structure}, each input word is first mapped to a vector representation known as a \tit{word embedding} which is learned as the network is trained. The goal behind representing words as points in a high-dimensional space is that similar words will cluster close together. This way, the RNN-based language model can more easily generalise to combinations of words that it has not seen before, by understanding which words can be substituted for one another. \\
+As mentioned in section~\ref{rnn_structure}, each input word is first mapped to a vector representation known as a \tit{word embedding} which is learned as the network is trained. The aim is that similar words will be assigned points in the high-dimensional space which are closer together. This way, the RNN-based language model can more easily generalise to combinations of words that it has not seen before, by understanding which words can be substituted for one another. \\
 
 I wanted to be able to visualise the word embeddings after each RNN-based language model had been trained. To do this, I used principle component analysis (PCA) to reduce the word embeddings to two-dimensional points that can be plotted on a scatter diagram. PCA is a dimensionality reduction technique that transforms the input data to a new coordinate system such that the first coordinate represents some projection that achieves the greatest variance, the second coordinate the second greatest variance, and so on.
 
@@ -1809,7 +1809,7 @@ In the context of text prediction, it is unfortunately very rare that a human us
 
 My approach is to attack the source of the problem directly by adding a layer of error correction between the input text and the language model. There are lots of different types of error that can occur in the English language, but my implementation only focuses on correcting spelling mistakes. \\
 
-Error-correction can be broken up into two parts: detecting the errors and making suggestions to fix them. In the case of spelling mistakes, detection can be done with a single dictionary lookup. Candidate corrections for a spelling mistake should be similar to the original word and probable in the surrounding context. In my implementation, I use the Levenshtein distance as a measure of how similar two words are, and I use the language model itself to gauge how probable candidate corrections are in the surrounding context. Specifically, when searching for candidate replacements for a word $w$ that is preceded by the words $w_i^j$: the language model is used to produce a probability distribution over the words in its vocabulary for how likely they are to follow $w_i^j$, these words are then traversed in decreasing order of probability and the first one, if any, that has an edit distance within some threshold $\delta$ of the original spelling is selected as a replacement, as described in algorithm~\ref{alg:error_correction}. I implemented this approach as an extension to my RNN-based language models.
+Error-correction can be broken up into two parts: detecting the errors and making suggestions to fix them. In the case of spelling mistakes, detection can be done with a single dictionary lookup. Candidate corrections for a spelling mistake should be similar to the original word and probable in the surrounding context. In my implementation, I use the Levenshtein distance as a measure of how similar two words are, which is the minimum number of single character insertions, deletions and/or substitutions that need to be made to get from one word to the other. I also use the language model itself to gauge how probable candidate corrections are in the surrounding context. Specifically, when searching for candidate replacements for a word $w$ that is preceded by the words $w_i^j$, I feed $w_i^j$ to the language model and iterate through the next-word predictions in order of decreasing probability and select the first word that has an edit distance within some threshold $\delta$ of the original spelling, as described in algorithm~\ref{alg:error_correction}.
 
 \begin{algorithm}
 \caption{Computing $\mathbb{P}(w_j | w_i^{j - 1})_{\text{\scshape ERROR\_CORRECTING}}$}
@@ -1837,7 +1837,7 @@ Error-correction can be broken up into two parts: detecting the errors and makin
 \end{algorithmic}
 \end{algorithm}
 
-$outputs$ denotes the probability distribution returned by the RNN-based language model, which is indexable by word, and $state$ represents the state of the RNN from the previous time step.
+I implemented this approach as an extension to my RNN-based language models, hence the use of {\scshape FeedForward}() and $state$.
 
 \chapter{Evaluation} \label{evaluation}
 
@@ -2018,8 +2018,8 @@ At a qualitative level it can be seen that the RNN-based language models are bet
 %coordinates {(1e3, 16.46)(1e4, 12.58)(1e5, 9.84)(1e6, 8.40)(1e7, 7.53)};
 
 % 5gram
-\addplot[color=lightgray, mark=x]
-coordinates {(1e3, 29.89)(1e4, 29.83)(1e5, 29.58)(1e6, 28.86)(1e7, 27.10)};
+%\addplot[color=lightgray, mark=x]
+%coordinates {(1e3, 29.89)(1e4, 29.83)(1e5, 29.58)(1e6, 28.86)(1e7, 27.10)};
 
 % 5gram + add-one
 \addplot[color=brown, mark=|]
@@ -2055,7 +2055,7 @@ coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 6.98)};
 
 \legend{
 %	3gram, 3gram + add-one, 3gram + Katz, 3gram + absolute discounting, 3gram + Kneser-Ney, 3gram + Modified Kneser-Ney,
-	5gram, 5gram + add-one, 5gram + Katz, 5gram + absolute discounting, 5gram + Kneser-Ney, 5gram + Modified Kneser-Ney,
+	5gram + add-one, 5gram + Katz, 5gram + absolute discounting, 5gram + Kneser-Ney, 5gram + Modified Kneser-Ney,
 	Vanilla RNN, GRU, LSTM,
 }
  
@@ -2094,7 +2094,7 @@ Some datasets are more predictable than others, which means that metrics like pe
 \end{tabular}
 \end{adjustbox}
 \begin{center}
-	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section \ref{metrics}. $^\dagger$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing Service.}}
+	{\footnotesize\tit{$^*$These perplexity scores use the approximation mentioned in section \ref{metrics}. $^\dagger$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing service.}}
 \end{center}
 \caption{A benchmark of various language models on the PTB dataset.}
 \label{fig:ptb}
@@ -2323,7 +2323,7 @@ It can be seen from figure~\ref{fig:error_correcting_results} that my error-corr
 		\tbf{Prediction} & i am more than happy to give you the \tbf{necessary} information.
 	\end{tabular}
 	\end{adjustbox}
-	\caption{An example of an accurate correction made by my model, with $\delta = 2$.}
+	\caption{An accurate correction.}
 	\label{fig:error_correcting_good}
 \end{subfigure}
 ~\\~\\
@@ -2336,7 +2336,7 @@ It can be seen from figure~\ref{fig:error_correcting_results} that my error-corr
 		\tbf{Prediction} & the bus will pick you up right at your hotel \tbf{every}.
 	\end{tabular}
 	\end{adjustbox}
-	\caption{An example of a false correction made by my model, with $\delta = 2$.}
+	\caption{A false correction.}
 	\label{fig:error_correcting_false}
 \end{subfigure}
 ~\\~\\
@@ -2349,10 +2349,10 @@ It can be seen from figure~\ref{fig:error_correcting_results} that my error-corr
 		\tbf{Prediction} & \tbf{apart of} that, there is no recommendation as to what to wear.
 	\end{tabular}
 	\end{adjustbox}
-	\caption{An example of a correction that my model failed to make, with $\delta = 2$.}
+	\caption{A missed correction.}
 	\label{fig:error_correcting_bad}
 \end{subfigure}
-\caption{Examples of good and bad corrections made by my error-correcting RNN.}
+\caption{Example corrections made by my error-correcting RNN with $\delta = 2$.}
 \end{figure}
 
 There is still a gap to be closed, which is demonstrated in figure~\ref{fig:error_correcting_bad} by the fact that my model does not correct non-spelling mistakes.
