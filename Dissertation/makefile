@@ -2,7 +2,7 @@ diss : tex1 index bibliography tex2
 	pdflatex Part\ II\ Dissertation.tex
 
 count : 
-	texcount -1 -sum Part\ II\ Dissertation.tex
+	texcount -1 -sum Part\ II\ Dissertation.tex > word.count
 
 index :
 	makeindex Part\ II\ Dissertation.tex

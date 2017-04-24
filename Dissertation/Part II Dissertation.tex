@@ -286,7 +286,7 @@ One problem with existing language models is that their next-word predictions te
 
 Chelba et al.~\cite{1bw:chelba2013} from Google explore the performance of a variety of language models on a huge, one billion word dataset. Their work presents the limits of language modelling, when vast quantities of data and computational resources are available. Chen and Goodman~\cite{smoothing:chen1996} compare the performance of a series of smoothing techniques for $n$-gram models, and later use their results to propose an extension to Kneser-Ney smoothing~\cite{modified_kneser_ney:chen1999} which is implemented in this project. \\
 
-In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction techniques~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. These methods, however, are allowed to take the whole text as input, whereas a language model cannot see beyond the next word it is trying to predict. Therefore, language modelling on error-prone text presents a slightly different challenge.
+In recent years, there have been joint efforts from Ng et al.\ at CoNLL to improve and compare the performance of grammatical error correction techniques~\cite{error_correction2013:ng2013}~\cite{error_correction2014:ng2014}. These methods, however, are allowed to take the whole text as input, whereas language models cannot see beyond the next word that they are trying to predict. Therefore, language modelling on error-prone text presents a slightly different challenge.
 
 
 \chapter{Preparation} \label{preparation}
@@ -337,7 +337,7 @@ coordinates {(\tit{a}, 0)(\tit{cat}, 0)(\tit{dog}, 0)(\tit{is}, 0.6)(\tit{mat}, 
 
 \end{axis}
 \end{tikzpicture}}}
-~~\vcenter{\hbox{\scalebox{1}{$\rightarrow$}}}~~
+~~\vcenter{\hbox{\scalebox{1}{$\xrightarrow{\tit{smooth}}$}}}~~
 \vcenter{\hbox{\begin{tikzpicture}[scale=0.7]
 \begin{axis}[
 	symbolic x coords={\tit{a}, \tit{cat}, \tit{dog}, \tit{is}, \tit{mat}, \tit{on}, \tit{sat}, \tit{the}, \tit{was}},
@@ -660,7 +660,7 @@ $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \
 \begin{gather} \label{eq:bp_weight_grad}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big) = \sum_{k = 1}^N \underbrace{\frac{\partial \mathcal{L}}{\partial f_{\mathbf{w}}(\mathbf{x}_k)}  \frac{\partial f_{\mathbf{w}}(\mathbf{x}_k)}{\partial z_j^{l + 1}}}_{\delta_j^{l+1}}  \frac{\partial z_j^{l + 1}}{\partial w_{i,j}^l} = \delta_j^{l+1} a_i^l
 \end{gather}
-The term $\delta_j^{l+1}$ varies in form for each layer. For the output layer, it has the following form:
+The delta term $\delta_j^{l+1}=\frac{\partial \mathcal{L}}{\partial z_j^{l + 1}}$ varies in form for each layer. For the output layer, it has the following form:
 \begin{gather} \label{eq:delta_output}
 	\delta_j^L = \frac{\partial \mathcal{L}}{\partial f_{\mathbf{w}}(\mathbf{x}_k)} \phi'(z_j^L)
 \end{gather}
@@ -1152,7 +1152,7 @@ This chapter details how I implemented a variety $n$-gram and RNN-based language
 \label{fig:system_overview}
 \end{figure}
 
-As shown, all of the code for training and running inference on $n$-gram models was written in C++, and is described in section~\ref{ngram_lm}. The RNN-based language models were trained in Python using TensorFlow, before being exported into a small group of protocol buffers that can be loaded into C++ for running inference, all of which is detailed in section~\ref{rnn_lm}. The `Combined LM' component represents a language model which interpolates the probabilities across one or more $n$-gram and/or RNN-based language models. This part is not described in depth, because it is mostly trivial. I outline in section~\ref{mobile_keyboard} how I built a mobile keyboard in iOS that utilises one of the RNN-based language models. Finally, the `Error-Correcting RNN LM' component denotes an extension to an existing RNN-based language model which I made in order to improve its performance on error-prone text, which is described in section~\ref{error_correcting_lm}. \\
+As shown, all of the code for training and running inference on $n$-gram models was written in C++, and is described in section~\ref{ngram_lm}. The RNN-based language models were trained in Python using TensorFlow, before being exported into a small group of protocol buffers that can be loaded into C++ for running inference, all of which is detailed in section~\ref{rnn_lm}. The `Combined LM' component represents a language model which interpolates the probabilities across one or more $n$-gram and/or RNN-based language models. This part is not described in depth, because it is mostly trivial. I outline in section~\ref{mobile_keyboard} how I built a mobile keyboard for iOS that utilises one of the RNN-based language models. Finally, the `Error-Correcting RNN LM' component denotes an extension of my RNN-based language models which I made in order to improve their performance on error-prone text, which is described in section~\ref{error_correcting_lm}. \\
 
 \subsection{The Language Model Hierarchy} \label{lm_interface}
 
@@ -1170,7 +1170,7 @@ public:
     virtual void PredictTopK(std::list<std::string> seq,
                              std::list<std::pair<std::string, double>> &preds, int k);
 
-    // Initialise `pred' with the most probable next word the follows `seq'.
+    // Initialise `pred' with the most probable next word that follows `seq'.
     virtual void Predict(std::list<std::string> seq,
                          std::pair<std::string, double> &pred);
 
@@ -1231,7 +1231,7 @@ For the RNN-based language models, the differences between the vanilla RNN, GRU 
 
 \subsection{Testing}
 
-To encourage correctness, every C++ and Python class in the codebase that exhibits core language model functionality has an accompanying test class which contains one or more unit tests. In particular, the language model classes are paired with tests that query their \ttt{Prob()} and \ttt{ProbAllFollowing()} methods and compare the results with values that I calculated by hand using the equations presented in chapter~\ref{preparation}. \\
+To encourage correctness, every non-trivial C++ and Python class in the codebase has an accompanying test class which contains one or more unit tests. In particular, the language model classes are paired with tests that query their \ttt{Prob()} and \ttt{ProbAllFollowing()} methods and compare the results with values that I calculated by hand using the equations presented in chapter~\ref{preparation}. \\
 
 During the development of the project, all new code was tested before being committed to the codebase, and new test cases were immediately added upon discovery of any bugs.
 
@@ -1239,7 +1239,7 @@ During the development of the project, all new code was tested before being comm
 
 Below I detail my implementation of the $n$-gram models and their associated smoothing techniques. \\
 
-One of the first things I discovered when implementing $n$-gram language models is that there is a tradeoff between how much computation is done at training time, and how much computation is done at inference time. For example, at one extreme you could compute only the number of times each $n$-gram occurs at training time, and leave the computation of the coefficients in the smoothing equations to be calculated on the fly. At the other extreme, you could compute and store the final value of the probability for every possible $n$-gram that can be formed from the words in the language model vocabulary, and then return the relevant probability immediately at inference time. The problem with the first approach is that the language model would be too slow at inference time, and the problem with the second approach is that storing absolute probabilities for every possible $n$-gram would occupy far too much space to be practical. In my implementation, I try to strike a balance between these two extremes by precomputing and efficiently storing all of the relevant coefficients for the smoothing equations, and then combining them at inference time to compute the required $n$-gram probability. \\
+One of the first things I discovered when implementing $n$-gram language models is that there is a trade-off between how much computation is done at training time, and how much computation is done at inference time. For example, at one extreme you could compute only the number of times each $n$-gram occurs at training time, and leave the computation of the coefficients in the smoothing equations to be calculated on the fly. At the other extreme, you could compute and store the final value of the probability for every possible $n$-gram that can be formed from the words in the language model vocabulary, and then return the relevant probability immediately at inference time. The problem with the first approach is that the language model would be too slow at inference time, and the problem with the second approach is that storing absolute probabilities for every possible $n$-gram would occupy far too much space to be practical. In my implementation, I try to strike a balance between these two extremes by precomputing and efficiently storing all of the relevant coefficients for the smoothing equations, and then combining them at inference time to compute the required $n$-gram probability. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1272,7 +1272,7 @@ The first stage involves a single pass over \ttt{train.txt}, where words that oc
 
 \subsection{Counting $n$-grams Efficiently} \label{ngram_count}
 
-For $n$-gram models without any smoothing, the only information that needs to be computed at this stage is $c(w_{i - n + 1}^{i})$ and $\sum_w c(w_{i - n + 1}^{i - 1}w)$, which are the number of times each $n$-gram $w_{i - n + 1}^i$ occurred in \ttt{train.txt}, and the sum of all such counts for all words that follow the $(n-1)$-gram $w_{i - n + 1}^{i - 1}$ respectively. Then, given these two precomputed numbers, when the $n$-gram model is queried for the probability of $w_{i - n + 1}^i$, it can simply return the first number divided by the second, as required in equation~\ref{eq:ngram}. \\
+For $n$-gram models without any smoothing, the only information that needs to be computed at this stage is $c(w_{i - n + 1}^{i})$ and $\sum_w c(w_{i - n + 1}^{i - 1}w)$, which are the number of times each $n$-gram $w_{i - n + 1}^i$ occurred in \ttt{train.txt}, and the sum of all such counts for all words that follow the $(n-1)$-gram $w_{i - n + 1}^{i - 1}$ respectively. Then, when the $n$-gram model is queried for the probability of $w_{i - n + 1}^i$, it can simply return the first number divided by the second, as required in equation~\ref{eq:ngram}. \\
 
 This situation becomes more complex once smoothing techniques are included. For instance, absolute discounting requires the knowledge of $N_{1+}(w_{i - n + 1}^{i - 1}\bullet)$, the number of unique words that follow $w_{i - n + 1}^{i - 1}$, for every such $(n - 1)$-gram. Moreover, because it employs backoff, it actually requires this knowledge for every $k$-gram where $1 \leq k < n$. Kneser-Ney smoothing additionally requires $N_{1+}(\bullet w_{i - k + 1}^i)$, the number of unique words that precede $w_{i - k + 1}^i$, and $\sum_w N_{1+}(\bullet w_{i - k + 1}^iw)$, the number of unique pairs of words that follow and precede $w_{i - k + 1}^i$, for every $k$-gram where $1 \leq k < n$. \\
 
@@ -1376,7 +1376,9 @@ Once the \ttt{ProbTrie} instance has been populated, computing the probability o
 \end{algorithmic}
 \end{algorithm}
 
-Katz smoothing is an exception in that it does not quite match the form presented in equation~\ref{eq:smoothing_general}. To get around this issue, the Katz subclass simply overrides algorithm~\ref{alg:smoothing_prob} to traverse the same data structure in a slightly different way.
+Katz smoothing is an exception in that it does not quite match the form presented in equation~\ref{eq:smoothing_general}. To get around this issue, the Katz subclass simply overrides algorithm~\ref{alg:smoothing_prob} to traverse the same data structure in a slightly different way. \\
+
+Once the \ttt{ProbTrie} instance is populated, it is exported to a protocol buffer in binary format, \ttt{ngram.pb}. The vocabulary is exported to a protocol buffer in textual format, \ttt{vocab.pbtxt}.
 
 \section{Recurrent Neural Network Models} \label{rnn_lm}
 
@@ -1418,7 +1420,7 @@ Each operation takes zero or more tensors as input, and produces a tensor as out
 
 In my implementation, I described my RNN-based language models as a directed graph of tensor operations. For example: layers of neurons were represented as a vectors and the weights in-between each layer were represented as a matrix. In the case of the vanilla RNN, I computed a layer of activations using the matrix operations presented in equation~\ref{eq:vanilla_rnn}. I used a \tit{placeholder} to provide the input training data, and \tit{variables} to store all of the trainable parameters of the network, namely the weights, bias variables and the word embeddings. \\
 
-Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}. This is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hardcode the backpropagation computation. Using these partial derivatives, I then applied an optimisation technique such as gradient descent to update the trainable parameters of the network. \\
+Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}. This is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hard-code the backpropagation computation. Using these partial derivatives, I then applied an optimisation technique such as gradient descent to update the trainable parameters of the network. \\
 
 After having trained the RNN in Python, I would \tit{freeze} the computation graph and export it into a format that can be loaded into C++. This involved converting all of the variables in the graph to constants and saving the network, along with some metadata, into a protocol buffer. Using the C++ API, I could then load the network and run inference on it by evaluating the relevant tensors in a session, without having to know anything about the internal structure of the RNN.
 
@@ -1780,7 +1782,7 @@ The selection of the initial learning rate value, $\eta_0$, was also important f
 
 \section{Mobile Keyboard} \label{mobile_keyboard}
 
-As a project extension, I decided to apply one of my RNN-based language models in a practical context by building a mobile keyboard. Below I describe how I went about doing this. \\
+As a project extension, I decided to apply one of my RNN-based language models in a practical context by building a mobile keyboard. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -1793,7 +1795,7 @@ iOS applications are written in either Objective-C or Swift. An advantage of usi
 
 To build a mobile keyboard in iOS, you have to implement what is called an `App Extension'. App Extensions differ from normal applications in iOS in that they their functionality is system-wide. Apple insist that such ubiquitous components should be extremely responsive and light-weight, which means that they have much stricter memory and CPU limitations than normal applications. Although they do not specify exactly what these limitations are, many people in the developer community estimate that the memory limit is approximately 30 MB. \\
 
-In order to get an RNN-based language model to run under such memory and CPU limitations, I had to trade-off some of its prediction accuracy. In particular, I reduced the number of hidden neurons and the size of the vocabulary to reduce the space occupied by the model in memory. I also removed the softmax layer to reduce the CPU overhead, which technically is not needed in text prediction where the sum of the output neurons does not need to sum to 1.
+In order to get an RNN-based language model to run under such memory and CPU limitations, I had to trade-off some of its prediction accuracy. In particular, I reduced the number of hidden layers, the number of hidden neurons and the size of the vocabulary to cut down both the CPU and memory pressure from the model at run time. The final model I used was a 1-layer vanilla RNN with 32 hidden neurons. I also removed the softmax layer, which is technically is not needed to rank the predictions, to further reduce the CPU overhead.
 
 \subsection{Updating Language Model Predictions On the Fly}
 
@@ -2361,7 +2363,7 @@ There is still a gap to be closed, which is demonstrated in figure~\ref{fig:erro
 
 The project was a success: I implemented a variety of $n$-gram and RNN-based language models, and benchmarked them in terms of both their prediction performance and their applicability to running on a mobile platform, as set out in my project proposal. Additionally, I built a mobile keyboard for iOS that uses my language models as a library, and proposed a novel extension to an existing language model that improves its performance on error-prone text. \\
 
-My implementation of existing language models saw a level of performance that was comparable with measures made by existing authors. For example, my 5-gram modified Kneser-Ney smoothing model, vanilla RNN model and LSTM model all matched the results from Mikolov on the Penn Tree Bank dataset~\cite{rnn_ptb:mikolov2012}~\cite{lstm_ptb:mikolov2014}. This allowed me to make comprehensive and reliable comparisons between each of my models, and assess the tradeoffs between accuracy and resource consumption. My work also saw such models complement one another, in that the interpolation of their probability distributions surpassed the performance of all of my stand-alone models. \\
+My implementation of existing language models saw a level of performance that was comparable with measures made by existing authors. For example, my 5-gram modified Kneser-Ney smoothing model, vanilla RNN model and LSTM model all matched the results from Mikolov on the Penn Tree Bank dataset~\cite{rnn_ptb:mikolov2012}~\cite{lstm_ptb:mikolov2014}. This allowed me to make comprehensive and reliable comparisons between each of my models, and assess the trade-offs between accuracy and resource consumption. My work also saw such models complement one another, in that the interpolation of their probability distributions surpassed the performance of all of my stand-alone models. \\
 
 I explicitly demonstrated that language model performance is deterred by error-prone text. Whilst I made some modifications to an existing model that saw an increase in performance on such text, there is still room for improvement. If I were given more time to work on the project, I would investigate ways to cater for non-spelling corrections. From the CoNLL shared tasks of 2013~\cite{error_correction2013:ng2013} and 2014~\cite{error_correction2014:ng2014}, it is clear that there is a plethora of methods that already exist for grammatical error-correction. It would be interesting to see which of these could be applied to improve the performance of language models on error-prone text. \\
 
