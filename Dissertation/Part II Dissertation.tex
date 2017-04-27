@@ -12,6 +12,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{mathpartir}
+\usepackage{mathtools}
 
 % For algorithms
 \usepackage{algorithm}
@@ -49,6 +50,9 @@
 
 % For subfigures.
 \usepackage{subcaption}
+
+% For keyboard buttons.
+\usepackage{menukeys}
 
 % For temporarily splitting the document into multiple columns
 \usepackage{multicol}
@@ -1789,6 +1793,7 @@ As a project extension, I decided to apply one of my RNN-based language models i
 \centering
 \includegraphics[scale=0.25]{Images/MobileKeyboardOnScreen.png}
 \caption{The mobile keyboard on iOS. The top three predictions are displayed at the top of the keyboard, and are updated with every character.}
+\label{fig:mobile_keyboard_screenshot}
 \end{figure}
 
 iOS applications are written in either Objective-C or Swift. An advantage of using Objective-C is that you can make use of Objective-C++ to link C++ code into your application, which is exactly what I needed to do. My C++ code, however, depended on TensorFlow, so in order to make my language models accessible within the mobile keyboard, I compiled both my RNN-language model implementation and a subset of TensorFlow's C++ API into a single static library by modifying one of the makefiles already present in the TensorFlow codebase. \\
@@ -1799,7 +1804,45 @@ In order to get an RNN-based language model to run under such memory and CPU lim
 
 \subsection{Updating Language Model Predictions On the Fly}
 
-A mobile keyboard should present the user with next-word predictions that are updated as they type. Querying the language model is a relatively expensive operation, so in my implementation I tried to do this as little as possible. For example, when the user presses the spacebar, I query the language model to retrieve the most probable words that could follow the space. These words are returned in the form of a character-level trie, where their associated probabilities are stored in the nodes of the trie. This way, when the user types subsequent characters, the new next-word predictions can be retrieved by traversing downwards from the root of the trie and taking the words with the highest probability on the current branch. \\
+A mobile keyboard should present the user with next-word predictions that are updated as they type. In my implementation, I model the state of the input text as a tuple $(W, S, C)$, where $W$, $S$ and $C$ represent a sequence of words, spaces and non-space characters respectively. For example, the text in figure~\ref{fig:mobile_keyboard_screenshot} would be represented as:
+\begin{gather*}
+	\underbrace{\ttt{Remember\textvisiblespace to\textvisiblespace pack\textvisiblespace your}}_{\mathclap{W}}\underbrace{\vphantom{\ttt{pack}}\textvisiblespace}_{\mathclap{S}}\underbrace{\vphantom{\ttt{pack}}\ttt{c}}_{\mathclap{C}}
+\end{gather*}
+With every new character insertion or deletion, this state is implicitly updated. The interaction with the language model as a response to each insertion or deletion is illustrated in figure~\ref{fig:mobile_keyboard_fsm}. \\
+
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{tikzpicture}[
+	state/.style={circle, draw, inner sep=0pt, minimum width=15mm, thick},
+	arrow/.style={->, >=LaTeX, font=\scriptsize},
+]
+
+\node[state] (state1) at (-3, 0) {$C = \epsilon$};
+\node[state] (state2) at (3, 0) {$C \neq \epsilon$};
+\node[left=40mm of state1] (start) {};
+
+\draw[arrow, line width=0.4mm] (start) to node [above] {$\text{start}\ \big|\ \text{query LM}$} (state1);
+
+\draw[arrow] (state1) [out=-110, in=-160, looseness=8] to node [below, -] {$\backdel, |S| > 1\ \Big|\ -$} (state1);
+\draw[arrow] (state1) [out=160, in=110, looseness=8] to node [above, -] {$\textvisiblespace\ \Big|\ -$} (state1);
+
+\draw[arrow, line width=0.4mm] (state1) [out=30, in=150] to node [above, -] {$c\ \Big|\ \text{filter predictions}$} (state2);
+\draw[arrow] (state1) [out=60, in=120] to node [above, -] {$\backdel, |S| = 1\ \Big|\ \text{query LM; filter predictions}$} (state2);
+
+\draw[arrow, line width=0.4mm] (state2) [out=70, in=20, looseness=8] to node [above, -] {$c\ \Big|\ \text{filter predictions}$} (state2);
+\draw[arrow] (state2) [out=-20, in=-70, looseness=8] to node [below, -] {$\backdel\ \Big|\ \text{filter predictions}$} (state2);
+
+\draw[arrow, line width=0.4mm] (state2) [out=-150, in=-30] to node [below, -] {$\textvisiblespace\ \Big|\ \text{query LM}$} (state1);
+\draw[arrow] (state2) [out=-120, in=-60] to node [below, -] {$\backdel, |C| = 1\ \Big|\ \text{filter predictions}$} (state1);
+
+\end{tikzpicture}
+\caption{An FSM representing the language model interaction. The thick arrows denote the path taken when the user is inserting text without any deletions or unnecessary spaces.}
+\label{fig:mobile_keyboard_fsm}
+\end{figure}
+$c$, \textvisiblespace\ and \keys{\backdel} represent a non-space character insertion, a space insertion and a backspace respectively. `Query LM' represents the process of querying the language model with $W$. The language model vocabulary is stored in a character-level trie, and the probabilities for each word from the query result are inserted at the nodes of the trie. `Filter predictions' represents the process of traversing this trie using $C$ and taking the top three most probable words on the current branch. This approach finds the most probable next-word predictions that begin with the characters that the user has already typed for the current word, whilst avoiding unnecessary language model queries. \\
+
+As well as the basic input events illustrated in figure~\ref{fig:mobile_keyboard_fsm}, my implementation also caters for: the shift key, caps lock, dragging the cursor to a new position, switching between letters and special characters, selecting displayed predictions and auto-capitalisation of new sentences.
 
 \section{Extending Models to Tackle Error-Prone Text} \label{error_correcting_lm}
 
@@ -1811,7 +1854,7 @@ In the context of text prediction, it is unfortunately very rare that a human us
 
 My approach is to attack the source of the problem directly by adding a layer of error correction between the input text and the language model. There are lots of different types of error that can occur in the English language, but my implementation only focuses on correcting spelling mistakes. \\
 
-Error-correction can be broken up into two parts: detecting the errors and making suggestions to fix them. In the case of spelling mistakes, detection can be done with a single dictionary lookup. Candidate corrections for a spelling mistake should be similar to the original word and probable in the surrounding context. In my implementation, I use the Levenshtein distance as a measure of how similar two words are, which is the minimum number of single character insertions, deletions and/or substitutions that need to be made to get from one word to the other. I also use the language model itself to gauge how probable candidate corrections are in the surrounding context. Specifically, when searching for candidate replacements for a word $w$ that is preceded by the words $w_i^j$, I feed $w_i^j$ to the language model, iterate through the next-word predictions in order of decreasing probability and select the first word that has an edit distance within some threshold $\delta$ of the original spelling, as described in algorithm~\ref{alg:error_correction}.
+Error-correction can be broken up into two parts: detecting the errors and making suggestions to fix them. In the case of spelling mistakes, detection can be done with a single dictionary lookup. Candidate corrections for a spelling mistake should be similar to the original word and probable in the surrounding context. In my implementation, I use the Levenshtein distance as a measure of how similar two words are, which is the minimum number of single character insertions, deletions and/or substitutions that need to be made to get from one word to the other. I also use the language model itself to gauge how probable candidate corrections are in the surrounding context. Specifically, when searching for candidate replacements for a word $w$ that is preceded by the words $w_i^j$, I feed $w_i^j$ to the language model, iterate through the next-word predictions in order of decreasing probability and select the first word that has an edit distance within some threshold $\delta$ of the original spelling, as described in algorithm~\ref{alg:error_correction}. \\
 
 \begin{algorithm}
 \caption{Computing $\mathbb{P}(w_j | w_i^{j - 1})_{\text{\scshape ERROR\_CORRECTING}}$}
@@ -1839,7 +1882,7 @@ Error-correction can be broken up into two parts: detecting the errors and makin
 \end{algorithmic}
 \end{algorithm}
 
-I implemented this approach as an extension to my RNN-based language models, hence the use of {\scshape FeedForward}() and $state$.
+I implemented this approach as an extension to my RNN-based language models, hence the use of {\scshape FeedForward}() and $state$ in algorithm~\ref{alg:error_correction}.
 
 \chapter{Evaluation} \label{evaluation}
 
