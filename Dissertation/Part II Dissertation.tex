@@ -260,14 +260,18 @@ I, Devan Kuleindiren of Robinson College, being a candidate for Part II of the C
 
 \chapter{Introduction}
 
-My project investigates the performance of various language models in the context of text prediction. Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. Specifically, given a vocabulary $V$ and a sequence of words $w_1w_2...w_N = w_1^N \in V^N$, they estimate $\mathbb{P}(w_1^N)$. Using repeated application of the product rule, this is often reduced to the task of estimating the probability of seeing the word, $w_i$, given the words that precede it, $w_1^{i - 1}$:
+Typing on a mobile device can be a tedious experience. Predictive keyboards serve to somewhat alleviate this, by enabling faster word completion and fewer mistakes. In this project, I investigate a variety of language models for text prediction, and implement a predictive mobile keyboard on iOS. I also introduce a novel extension to an existing language model that improves its performance on error-prone input. \\
+
+Language models (LMs) produce a probability distribution over a sequence of words, which can be used to estimate the relative likelihood of words or phrases occurring in various contexts. Specifically, given a vocabulary $V$ and a sequence of words $w_1w_2...w_N \in V^N$, they estimate $\mathbb{P}(w_1w_2...w_N)$. Using repeated application of the product rule, this is often reduced to the task of estimating the probability of seeing the word, $w_i$, given the words that precede it:
 \begin{gather} \label{eq:lm_decomposition}
-	\mathbb{P}(w_1^N) = \prod_{i = 1}^N \mathbb{P}(w_i | w_1^{i - 1})
+	\mathbb{P}(w_1w_2...w_N) = \prod_{i = 1}^N \mathbb{P}(w_i | w_1w_2...w_{i - 1})
 \end{gather}
+From now on, I will use $w_i^j$ as shorthand for the sequence of words $w_iw_{i+1}...w_j$, where $i \leq j$. \\
+
 The predictive power of language models is useful in a variety of applications. For example, in speech recognition, if the speech recogniser has estimated two candidate word sequences from an acoustic signal; \tit{`it's not easy to wreck a nice beach'} and \tit{`it's not easy to recognise speech'}, then a language model can be used to determine that the second candidate is more probable than the first. Language models are also used in machine translation, handwriting recognition, part-of-speech tagging and information retrieval.
 
 \begin{alignat*}{2}
-	\overbrace{\tit{do you want to grab a }}^{w_1^{i - 1}}&\overbrace{\underline{\tit{drink}}}^{w_i} &&\hspace{0.5mm}\overbrace{(0.327)}^{\mathbb{P}(w_i | w_1^{i - 1})} \\
+	\overbrace{\tit{do you want to grab a }}^{w_1^6}&\overbrace{\underline{\tit{drink}}}^{w_7} &&\hspace{0.5mm}\overbrace{(0.327)}^{\mathbb{P}(w_7 | w_1^6)} \\
 	&\tit{coffee} &&\ \ (0.211) \\
 	&\tit{bite} &&\ \ (0.190) \\
 	&\tit{spot} &&\ \ (0.084) \\
@@ -276,15 +280,13 @@ The predictive power of language models is useful in a variety of applications. 
 
 My project focuses on language modelling in the context of text prediction. For instance, if a user has typed \tit{`do you want to grab a '}, then a language model could be used to suggest probable next words such as \tit{`coffee'}, \tit{`drink'} or \tit{`bite'}. \\
 
-There are many different ways of implementing language models. In this project, I focused in depth on the two most prominent types: $n$-gram models and recurrent neural network (RNN)-based models. I implemented and benchmarked $n$-gram models coupled with five different smoothing techniques and RNN models of three different flavours on a variety of datasets. \\
+In this project, I focused in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network (RNN)-based models. I implemented and benchmarked $n$-gram models coupled with five different smoothing techniques and RNN models of three different flavours on a variety of datasets. I also assessed the trade-offs between prediction accuracy and resource consumption for my model implementations, which became relevant when I applied them in the context of a mobile keyboard. \\
 
-The most common use case for language models in the context of text prediction is on a mobile device, where CPU and memory resources are limited. For this reason, I also evaluated the trade-offs between prediction accuracy and resource consumption for my model implementations. As an extension, I applied these findings to a practical application by implementing a mobile keyboard. \\
-
-One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. Unfortunately, the assumption that humans will not make any mistakes when typing text is almost never valid. For this reason, I also investigated ways to narrow the gap in performance between language model predictions on error-prone text and language model predictions on error-free text. I present an extension to an existing RNN-based language model that improves its predictions on error-prone text.
+One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. Unfortunately, humans are error-prone and inevitably do make mistakes when typing. For this reason, I also investigated ways to narrow the gap in performance between language model predictions on error-prone text and language model predictions on error-free text. I present a novel extension to an existing RNN-based language model that improves its predictions on error-prone text.
 
 \chapter{Preparation} \label{preparation}
 
-My preparation consisted of thoroughly understanding $n$-gram and RNN-based language models, as well as planning how to tie them all together in an efficient implementation.
+My preparation consisted of background reading to thoroughly understand $n$-gram and RNN-based language models, as well as planning how to tie them all together in an efficient implementation.
 
 \section{$n$-gram Models} \label{ngram_models}
 
@@ -459,7 +461,7 @@ In this section I give a brief introduction to neural networks, recurrent neural
 
 \subsection{An Overview of Neural Networks}
 
-The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}, which despite being substantially oversimplified, now provide an effective tool for classification and regression in modern-day machine learning. \\
+The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}. Despite the fact that they are oversimplified to the point of almost no resemblance to actual biological neurons, they provide an effective tool for classification and regression in modern-day machine learning. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -467,7 +469,7 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \begin{subfigure}{0.5\linewidth}
 	\centering
 	\begin{tikzpicture}[
-		scale=0.8,
+		scale=1.0,
 		every neuron/.style={circle, draw, minimum size=5mm},
 		neuron missing/.style={draw=none, scale=2, text height=0.1cm, execute at begin node=\color{black}$\hdots$},
 		>=stealth
@@ -507,7 +509,7 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \begin{subfigure}{0.5\linewidth}
 	\centering
 	\begin{tikzpicture}[
-		scale=0.8,
+		scale=1.0,
 		>=stealth
 	]
 
@@ -525,7 +527,7 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \caption{Two alternative notations for the same network.}
 \end{figure}
 
-Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. In the context of the brain, the nodes represent neurons, the weighted connections represent synapses and the flow of information represents electrochemical signals. \\
+Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. \\
 
 An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in Section~\ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}.
 
@@ -565,7 +567,7 @@ The multilayer perceptron consists of layers of neurons, where each layer is ful
 
 The constant-valued input 1 is known as a \tit{bias} input, which is weighted by a bias variable $b_j^{l - 1}$. Its purpose is to allow the neuron to shift the output of the activation function left and right by adjusting the value of $b_j^{l - 1}$. Bias inputs are usually attached to every non-input neuron in the network. \\
 
-Activation functions were originally created to mimic the firing activity of neurons. It is important that they are chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006, scaling:bengio2007}. In fact, it has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
+It is important that the activation function, $\phi$, is chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006, scaling:bengio2007}. In fact, it has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
 Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. Another important property of these functions is that they are differentiable, which allows for the network to be trained using \tit{gradient descent}, which is discussed below. \\
 
@@ -625,11 +627,11 @@ FNNs compute a function, $f$, parameterised by the weights $\mathbf{w}$ of the n
 \end{gather*}
 The entire point of training a neural network is to get it to learn a particular mapping from input vectors to output vectors. What these vectors represent depends on the problem at hand. For example, in the context of classifying pictures of animals, the input vector might represent the pixel values of an image and the output vector might represent a probability distribution over the set of animals in the classification task. \\
 
-In order to train a neural network, you supply it with a training set, which is just a list of input-target pairs:
+In order to train a neural network, it is supplied with a training set, which is just a list of input-target pairs:
 \begin{gather*}
 	\mathbf{s} = ((\mathbf{x}_1, \mathbf{t}_1), ..., (\mathbf{x}_N, \mathbf{t}_N))
 \end{gather*}
-where $\mathbf{t}_k$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which essentially says how badly the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
+where $\mathbf{t}_k$ is the vector that the network should output given the example input $\mathbf{x}_k$. A differentiable loss function, $\mathcal{L}(\mathbf{y}, \mathbf{t})$, is also defined, which quantifies how well the network output $\mathbf{y}$ matches the target output $\mathbf{t}$. Then, a measure of how much error the network produces over the whole training set can be defined as follows:
 \begin{gather}
 	\mathcal{L}_{\text{\scshape total}} = \sum_{k = 1}^N \mathcal{L}(f_{\mathbf{w}}(\mathbf{x}_k), \mathbf{t}_k)
 \end{gather}
@@ -989,7 +991,9 @@ Various improvements to this architecture have been proposed, which capture long
 
 \subsection{Word Embeddings} \label{word_embeddings}
 
-In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}, which represents a point in a high-dimensional space. Ideally, similar words will be assigned points which are closer together. In this dissertation, I get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
+In order for an RNN to take a sequence of words as input, each word must first be mapped to a vector representation, known as a \tit{word embedding}, which represents a point in a high-dimensional space. Ideally, similar words will be assigned points which are closer together, so that it is easier for the RNN to generalise to words that it has not seen before. \\
+
+In this dissertation, I get the RNN to learn good word embeddings through the application of backpropagation and gradient descent to the vector elements.
 
 \section{Software Engineering}
 
@@ -1025,7 +1029,7 @@ The project proposal also suggested two possible extensions:
 \end{tabular}
 \end{center}
 
-All requirements and extensions depend on \tbf{R1}, so I implemented that first. Afterwards, I built \tbf{R2} and \tbf{R3} in parallel before moving onto \tbf{E1} and \tbf{E2}.
+All requirements and extensions depend on \tbf{R1}, so I implemented that first. Afterwards, I built \tbf{R2} and \tbf{R3} in parallel before completing \tbf{E1} and \tbf{E2}.
 
 \subsection{Tools and Technologies Used} \label{tools}
 
@@ -1079,7 +1083,7 @@ My project codebase was written from scratch, with the assistance of the tools a
 
 \chapter{Implementation} \label{implementation}
 
-This chapter details how I implemented a variety $n$-gram and RNN-based language models, how I built the mobile keyboard on iOS and how I extended an existing language model to improve its performance on error-prone text.
+This chapter details how I implemented a variety of $n$-gram and RNN-based language models, how I built the mobile keyboard on iOS and how I extended an existing language model to improve its performance on error-prone text.
 
 \section{System Overview}
 
@@ -1409,7 +1413,7 @@ Each operation takes zero or more tensors as input, and produces a tensor as out
 
 In my implementation, I described my RNN-based language models as a directed graph of tensor operations. For example: layers of neurons were represented as vectors and the weights in-between each layer were represented as a matrix. In the case of the vanilla RNN, I computed a layer of activations using the matrix operations presented in Equation~\ref{eq:vanilla_rnn}. I used a \tit{placeholder} to provide the input training data, and \tit{variables} to store all of the trainable parameters of the network, namely the weights, bias variables and the word embeddings. \\
 
-Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}. This is known as \tit{automatic differentiation}. By setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function, I avoided having to hard-code the backpropagation computation. Using these partial derivatives, I then applied an optimisation technique such as gradient descent to update the trainable parameters of the network. \\
+Once I constructed my RNN, I ran forward propagation through the network by evaluating the output nodes of the network in a \tit{session}. TensorFlow has a useful method called \ttt{tf.gradients(ys, xs)}, which returns the partial derivatives of the sum of the tensor(s) in \ttt{ys} with respect to the variables in \ttt{xs}. This is known as \tit{automatic differentiation}, which allowed me to compute backpropagation by setting \ttt{xs} to the trainable parameters of the network and \ttt{ys} to the loss function. Using these partial derivatives, I then applied gradient descent to update the trainable parameters of the network. \\
 
 After having trained the RNN in Python, I would \tit{freeze} the computation graph and export it into a format that can be loaded into C++. This involved converting all of the variables in the graph to constants and saving the network, along with some metadata, into a protocol buffer. Using the C++ API, I could then load the network and run inference on it by evaluating the relevant tensors in a session, without having to know anything about the internal structure of the RNN.
 
@@ -1782,7 +1786,7 @@ As a project extension, I decided to apply one of my RNN-based language models i
 
 iOS applications are written in either Objective-C or Swift. I chose Objective-C so that I could use Objective-C++ to link C++ code into my application. My C++ code, however, depended on TensorFlow, so in order to make my language models accessible within the mobile keyboard, I compiled both my RNN language model implementation and a subset of TensorFlow's C++ API into a single static library by modifying one of the makefiles already present in the TensorFlow codebase. \\
 
-To build a mobile keyboard in iOS, you have to implement what is called an `App Extension'. App Extensions differ from normal applications in iOS in that they their functionality is system-wide. Apple insist that such ubiquitous components should be extremely responsive and light-weight, which means that they have much stricter memory and CPU limitations than normal applications. Although they do not specify exactly what these limitations are, many people in the developer community estimate that the memory limit is approximately 30 MB. \\
+To build a mobile keyboard in iOS, you have to implement what is called an `App Extension'. App Extensions differ from normal applications in iOS in that their functionality is system-wide. Apple insist that such ubiquitous components should be extremely responsive and light-weight, which means that they have much stricter memory and CPU limitations than normal applications. Although they do not specify exactly what these limitations are, many people in the developer community estimate that the memory limit is approximately 30 MB. \\
 
 In order to get an RNN-based language model to run under such memory and CPU limitations, I had to trade-off some of its prediction accuracy. In particular, I reduced the number of hidden layers, the number of hidden neurons and the size of the vocabulary to cut down both the CPU and memory pressure from the model at run time. The final model I used was a 1-layer vanilla RNN with 32 hidden neurons. I also removed the softmax layer, which is technically is not needed to rank the predictions, to further reduce the CPU overhead.
 
@@ -1913,7 +1917,7 @@ This is measured as the amount of time in milliseconds that the language model t
 
 \subsubsection{Penn Tree Bank (PTB) Dataset}
 
-The PTB~\cite{ptb:marcus1993} is a widely-adopted dataset of 887,521 words for measuring the quality of language models, derived from text from the Wall Street Journal. I used it for all tests in which the size of the training data is fixed.
+The PTB~\cite{ptb:marcus1993} is a widely-adopted dataset of 1,036,580 words for measuring the quality of language models, derived from text from the Wall Street Journal. I used it for all tests in which the size of the training data is fixed.
 
 \subsubsection{One Billion Word (1BW) Benchmark}
 
@@ -1921,7 +1925,7 @@ This is a much larger dataset produced by Google of approximately 1 billion word
 
 \subsubsection{First Certificate in English (FCE) Dataset}
 
-The FCE dataset is a subset of the Cambridge Learner Corpus, which is a dataset of 1,244 exam scripts written by candidates sitting an FCE examination in 2000 and 2001~\cite{clc:yannakoudakis2011}. In this project I make use of a preprocessed version of this dataset, in which error-prone and error-free versions of the exam scripts are aligned line by line in separate files. I used this dataset when exploring the performance of language models on error-prone text.
+The FCE dataset is a subset of the Cambridge Learner Corpus, which is a dataset of exam scripts written by candidates sitting an FCE examination in 2000 and 2001~\cite{clc:yannakoudakis2011}. In this project I make use of a preprocessed version of this dataset, consisting of 88,130 words, in which error-prone and error-free versions of the exam scripts are aligned line by line in separate files. I used this dataset when exploring the performance of language models on error-prone text.
 
 \section{Results}
 
@@ -1971,42 +1975,62 @@ coordinates {(2, 7.54)(3, 7.22)(4, 7.17)(5, 7.16)};
 \caption{The cross-entropy of $n$-gram models trained on the PTB dataset.}
 \end{figure}
 
-Cross-entropy is the binary logarithm of perplexity, and lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that modified Kneser-Ney smoothing offers the best prediction performance amongst the $n$-gram models. \\
+Cross-entropy is the binary logarithm of perplexity, and lower perplexity scores indicate better prediction accuracy. With this in mind, it is clear that Kneser-Ney-based smoothing offers the best prediction performance amongst the $n$-gram models. \\
 
 The change in performance with the value of $n$ is interesting, because one might expect that increasing $n$ will always yield better results. For $n$-gram models with add-one or no smoothing, this is not the case, because they do not employ backoff. At higher values of $n$, $n$-grams are much more sparse, so without any backoff these models can only rely on sparse counts, resulting is lower probabilities being assigned to plausible sequences of words. Katz smoothing does employ backoff, and achieves much better performance, but it still distributes too much probability to rare $n$-grams, which is why its performance also drops with $n$.
 
 \subsubsection*{A comparison of RNN-based models with $n$-gram models}
 
-I also implemented three RNN-based language models which differ in their cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory. \\
+I implemented three RNN-based language models which differ in their cell architecture: vanilla RNN, Gated Recurrent Unit and Long Short-Term Memory. \\
 
-\begin{figure}[h]
-\captionsetup{justification=centering}
-\centering
-\begin{subfigure}{0.5\linewidth}
-	\centering
-	\begin{tabular}{L{7cm}}
-		\hline
-		\tbf{money is the root of} a new york city. \\ \hline
-		\tbf{the meaning of life is} a unit of the company's shares outstanding. \\ \hline
-		\tbf{science} and was up N N from \$ N million or N cents a share. \\ \hline
-	\end{tabular}
-	\caption{5gram + modified Kneser-Ney smoothing}
-\end{subfigure}%
-\begin{subfigure}{0.5\linewidth}
-	\centering
-	\begin{tabular}{L{7cm}}
-		\hline
-		\tbf{money is the root of} the nation's largest public bank. \\ \hline
-		\tbf{the meaning of life is} the best way to get the way to the public. \\ \hline
-		\tbf{science}'s most recent issue of the nation's largest economic indicators. \\ \hline
-	\end{tabular}
-	\caption{2-layer LSTM with 256 hidden neurons}
-\end{subfigure}
-\caption{Sentences generated from two different language models trained on the PTB dataset. The bold words were given to the model, and the non-bold words were generated until a full stop was predicted.}
-\label{fig:generated_sentences}
-\end{figure}
+Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce results that are comparable with the work of other authors, I have tested my language models on the PTB dataset, as shown in Table~\ref{table:ptb}. The RNN-based models used 2 hidden layers each with 256 neurons. Average-keys-saved, an expensive metric to compute, was only taken over the first 1000 words of the test set. \\
 
-At a qualitative level it can be seen that the RNN-based language models are better at making predictions with long-term word dependencies than the $n$-gram smoothed models. This is demonstrated in Figure~\ref{fig:generated_sentences}, and confirmed by the readings in Figure~\ref{fig:cross_entropy_training_set_size}. \\
+\begin{table}[h]
+\begin{adjustbox}{center}
+\begin{tabular}{| L{5.2cm} | C{2.2cm} | C{2cm} | C{2cm} |  C{2cm} | C{2cm} |}
+	\hline
+	\tbf{Language Model} & \tbf{Perplexity} & \tbf{Average-Keys-Saved} & \tbf{Memory Usage (MB)} & \tbf{Training Time (min,secs)}$^*$ & \tbf{Average Inference Time (ms)} \\ \hline
+	3-gram & 4.54 $\times 10^5$ & 0.35014 & 266.91 & \tbf{11s} & 62 \\
+	3-gram + add-one & 3764.96 & 0.53063 & 266.94 & \tbf{11s} & 41 \\
+	3-gram + Katz & 256.95 & 0.68482 & 266.71 & 14s & 88 \\
+	3-gram + absolute disc. & 166.03 & 0.72178 & 266.78 & 13s & 63 \\
+	3-gram + KN & 150.73 & 0.72466 & 266.88 & 14s & 54 \\
+	3-gram + modified KN & 149.54 & 0.72355 & 266.97 & 14s & 54 \\
+	5-gram & 1.96 $\times 10^8$ & 0.07167 & 737.36 & 26s & 130 \\
+	5-gram + add-one & 8610.45 & 0.33886 & 737.30 & 26s & 63 \\
+	5-gram + Katz & 314.49 & 0.67154 & 737.43 & 41s & 156 \\
+	5-gram + absolute disc. & 167.38 & 0.72333 & 737.43 & 40s & 126 \\
+	5-gram + KN & 146.35 & 0.72598 & 737.37 & 44s & 114 \\
+	5-gram + modified KN & 142.68 & 0.72554 & 737.53 & 50s & 116 \\ \hline
+	Vanilla RNN & 131.03 & 0.72776 & \tbf{253.67} & 15m 10s & 39 \\
+	Gated Recurrent Units & 114.52 & 0.73993 & 271.39 & 28m 35s & \tbf{37} \\
+	Long Short-Term Memory & 112.47 & 0.73617 & 287.13 & 18m 59s & 38 \\ \hline
+	LSTM, 5-gram\ +\ MKN (av) & 96.07 & 0.75719 & 929.39 & 19m 49s & 189  \\
+	LSTM, 5-gram\ +\ MKN (int) & \tbf{94.70} & \tbf{0.75830} & 927.20 & 19m 49s & 190 \\ \hline
+\end{tabular}
+\end{adjustbox}
+\begin{center}
+	{\footnotesize\tit{$^*$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing service.}}
+\end{center}
+\caption{A benchmark of various language models on the PTB dataset.}
+\label{table:ptb}
+\end{table}
+
+There is a lot of information that can be drawn from Table~\ref{table:ptb}, so I will highlight only the most important and interesting points:
+\begin{itemize}
+\item
+	The RNN-based language models outperform the $n$-gram models in terms of prediction accuracy. In my implementation, they run slightly faster at inference time and also consume less memory, although this is partly because the $n$-gram models are entirely unpruned. Obtaining the correct hyperparameters and training the RNN-based language models, however, does take significantly longer.
+\item
+	Mikolov benchmarked 3-gram + MKN, 5-gram + MKN, a 1-layer vanilla RNN and a 1-layer LSTM model with 100 hidden neurons on the PTB dataset, for which he obtained perplexity scores of 148.3, 141.2, 124.7 and 115 respectively~\cite{rnn_ptb:mikolov2012, lstm_ptb:mikolov2014}. All of these results closely match my own, with slightly more deviation in the RNN-based results due to his models having a different number of neurons and hidden layers.
+\item
+	Ignoring insignificant differences in memory and time, absolute discounting, Kneser-Ney smoothing and modified Kneser-Ney smoothing equal or outperform add-one and Katz smoothing in every metric.
+\item
+	LSTM yields marginally better prediction accuracy than the GRU architecture, but requires more memory. Apart from the memory overhead, GRUs outperform the vanilla RNN architecture.
+\item
+	Interestingly, a substantial improvement in perplexity and average-keys-saved can be obtained by simply averaging the probabilities produced by an $n$-gram and an RNN-based language model. This seems to imply that the two classes of language model complement one another, in the sense that RNN-based models make strong predictions when some of the $n$-gram predictions are weak, and vice versa.
+\item
+	The combined language models can be improved even more by interpolating their probabilities rather than just averaging them. The result shown for the interpolation of 5-gram modified Kneser-Ney with LSTM used $\lambda = 0.38$, where the probability was calculated as $\lambda$($n$-gram probability) + (1 - $\lambda$)(LSTM probability). The perplexity as a function of $\lambda$ was approximately U-shaped, so I obtained the value $\lambda = 0.38$ by repeatedly evaluating the models on a subset of the test data and narrowing down the interval in which the minimum was positioned.
+\end{itemize}
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -2094,56 +2118,36 @@ coordinates {(1e3, 13.42)(1e4, 11.52)(1e5, 9.53)(1e6, 8.22)(1e7, 6.98)};
 \label{fig:cross_entropy_training_set_size}
 \end{figure}
 
-As can be seen in Figure~\ref{fig:cross_entropy_training_set_size}, the RNN-based language models consistently outperform the $n$-gram based models in terms of prediction accuracy. This difference is most significant for small training sets, and starts to become more pronounced again once the training set grows large beyond $10^6$ words. \\
+As shown in Figure~\ref{fig:cross_entropy_training_set_size}, I also investigated the effect of the training set size on prediction accuracy. The RNN-based language models consistently outperform the $n$-gram models. This difference is most significant for small training sets, and starts to become more pronounced again once the training set grows large beyond $10^6$ words. \\
 
-Some datasets are more predictable than others, which means that metrics like perplexity and average-keys-saved depend on which dataset is used. In order to produce results that are comparable with the work of other authors, I have tested my language models on the PTB dataset, as shown in Table~\ref{table:ptb}. The RNN-based models used 2 hidden layers each with 256 neurons. Average-keys-saved, an expensive metric to compute, was only taken over the first 1000 words of the test set. \\
+Finally, I present a qualitative comparison of a smoothed $n$-gram model with an RNN-based model in Figure~\ref{fig:generated_sentences}. \\
 
-\begin{table}[h]
-\begin{adjustbox}{center}
-\begin{tabular}{| L{5.2cm} | C{2.2cm} | C{2cm} | C{2cm} |  C{2cm} | C{2cm} |}
-	\hline
-	\tbf{Language Model} & \tbf{Perplexity} & \tbf{Average-Keys-Saved} & \tbf{Memory Usage (MB)} & \tbf{Training Time (min,secs)}$^*$ & \tbf{Average Inference Time (ms)} \\ \hline
-	3-gram & 4.54 $\times 10^5$ & 0.35014 & 266.91 & \tbf{11s} & 62 \\
-	3-gram + add-one & 3764.96 & 0.53063 & 266.94 & \tbf{11s} & 41 \\
-	3-gram + Katz & 256.95 & 0.68482 & 266.71 & 14s & 88 \\
-	3-gram + absolute disc. & 166.03 & 0.72178 & 266.78 & 13s & 63 \\
-	3-gram + KN & 150.73 & 0.72466 & 266.88 & 14s & 54 \\
-	3-gram + modified KN & 149.54 & 0.72355 & 266.97 & 14s & 54 \\
-	5-gram & 1.96 $\times 10^8$ & 0.07167 & 737.36 & 26s & 130 \\
-	5-gram + add-one & 8610.45 & 0.33886 & 737.30 & 26s & 63 \\
-	5-gram + Katz & 314.49 & 0.67154 & 737.43 & 41s & 156 \\
-	5-gram + absolute disc. & 167.38 & 0.72333 & 737.43 & 40s & 126 \\
-	5-gram + KN & 146.35 & 0.72598 & 737.37 & 44s & 114 \\
-	5-gram + modified KN & 142.68 & 0.72554 & 737.53 & 50s & 116 \\ \hline
-	Vanilla RNN & 131.03 & 0.72776 & \tbf{253.67} & 15m 10s & 39 \\
-	Gated Recurrent Units & 114.52 & 0.73993 & 271.39 & 28m 35s & \tbf{37} \\
-	Long Short-Term Memory & 112.47 & 0.73617 & 287.13 & 18m 59s & 38 \\ \hline
-	LSTM, 5-gram\ +\ MKN (av) & 96.07 & 0.75719 & 929.39 & 19m 49s & 189  \\
-	LSTM, 5-gram\ +\ MKN (int) & \tbf{94.70} & \tbf{0.75830} & 927.20 & 19m 49s & 190 \\ \hline
-\end{tabular}
-\end{adjustbox}
-\begin{center}
-	{\footnotesize\tit{$^*$The $n$-gram models were trained on my laptop, whereas the neural models were trained on a GPU cluster on the High Performance Computing service.}}
-\end{center}
-\caption{A benchmark of various language models on the PTB dataset.}
-\label{table:ptb}
-\end{table}
-
-There is a lot of information that can be drawn from Table~\ref{table:ptb}, so I will highlight only the most important and interesting points:
-\begin{itemize}
-\item
-	The RNN-based language models outperform the $n$-gram models in terms of prediction accuracy. In my implementation, they run slightly faster at inference time and also consume less memory, although this is partly because the $n$-gram models are entirely unpruned. Obtaining the correct hyperparameters and training the RNN-based language models, however, does take significantly longer.
-\item
-	Mikolov benchmarked 3-gram + MKN, 5-gram + MKN, a 1-layer vanilla RNN and a 1-layer LSTM model with 100 hidden neurons on the PTB dataset, for which he obtained perplexity scores of 148.3, 141.2, 124.7 and 115 respectively~\cite{rnn_ptb:mikolov2012, lstm_ptb:mikolov2014}. All of these results closely match my own, with slightly more deviation in the RNN-based results due to his models having a different number of neurons and hidden layers.
-\item
-	Ignoring insignificant differences in memory and time, absolute discounting, Kneser-Ney smoothing and modified Kneser-Ney smoothing equal or outperform add-one and Katz smoothing in every metric.
-\item
-	LSTM yields marginally better prediction accuracy than the GRU architecture, but requires more memory. Apart from the memory overhead, GRUs significantly outperform the vanilla RNN architecture.
-\item
-	Interestingly, a substantial improvement in perplexity and average-keys-saved can be obtained by simply averaging the probabilities produced by an $n$-gram and an RNN-based language model. This seems to imply that the two classes of language model complement one another, in the sense that RNN-based models make strong predictions when some of the $n$-gram predictions are weak, and vice versa.
-\item
-	The combined language models can be improved even more by interpolating their probabilities rather than just averaging them. The result shown for the interpolation of 5-gram modified Kneser-Ney with LSTM used $\lambda = 0.38$, where the probability was calculated as $\lambda$($n$-gram probability) + (1 - $\lambda$)(LSTM probability). The perplexity as a function of $\lambda$ was approximately U-shaped, so I obtained the value $\lambda = 0.38$ by repeatedly evaluating the models on a subset of the test data and narrowing down the interval in which the minimum was positioned.
-\end{itemize}
+\begin{figure}[h]
+\captionsetup{justification=centering}
+\centering
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tabular}{L{7cm}}
+		\hline
+		\tbf{money is the root of} a new york city. \\ \hline
+		\tbf{the meaning of life is} a unit of the company's shares outstanding. \\ \hline
+		\tbf{science} and was up N N from \$ N million or N cents a share. \\ \hline
+	\end{tabular}
+	\caption{5gram + modified Kneser-Ney smoothing}
+\end{subfigure}%
+\begin{subfigure}{0.5\linewidth}
+	\centering
+	\begin{tabular}{L{7cm}}
+		\hline
+		\tbf{money is the root of} the nation's largest public bank. \\ \hline
+		\tbf{the meaning of life is} the best way to get the way to the public. \\ \hline
+		\tbf{science}'s most recent issue of the nation's largest economic indicators. \\ \hline
+	\end{tabular}
+	\caption{2-layer LSTM with 256 hidden neurons}
+\end{subfigure}
+\caption{Sentences generated from two different language models trained on the PTB dataset. The bold words were given to the model, and the non-bold words were generated until a full stop was predicted.}
+\label{fig:generated_sentences}
+\end{figure}
 
 \subsection{On a Mobile Device}
 
@@ -2253,7 +2257,7 @@ Of course, there are several other techniques that can be used to lower the memo
 
 \subsection{On Error-Prone Text} \label{error_prone_evaluation}
 
-In this section I present my findings for the performance of language models on error-prone text. The goal is to produce a language model whose predictions are not deterred by errors in the input text, as illustrated in Figure~\ref{fig:error_prone_to_error_free_rnn}. \\
+In this section I present the performance of my language model extension on error-prone text. The goal is to produce a language model whose predictions are not deterred by errors in the input text, as illustrated in Figure~\ref{fig:error_prone_to_error_free_rnn}. \\
 
 Normally, language models are evaluated by feeding them a sequence of input words (the \tit{inputs}) and seeing how well they predict that same sequence of input words shifted forward in time by one word (the \tit{targets}). When evaluating my error-correcting language models, I did exactly the same thing, except that the inputs were allowed to contain errors in them and the targets were not. \\
 
@@ -2318,7 +2322,7 @@ I used the FCE dataset, which consisted of six files:
 	\ttt{test.correct} & \ttt{test.incorrect}
 \end{tabular}
 \end{center}
-The training, validation and test sets all consisted of one file containing uncorrected text and another file containing the corresponding corrected text. I trained an 2-layer LSTM-based language model with 256 hidden neurons on \ttt{train.correct}, and used \ttt{valid.correct} to guide the learning rate decay. In order to focus the evaluation on the error-correcting ability of my language models, I removed any pairs of lines from the test set files that were identical. I also removed any pairs of lines that contained corrections that involve the insertion or deletion of words, because my model was not designed to handle these types of errors, as explained in Section~\ref{error_correcting_lm}. This left 6672 words in each of the test files. \\
+The training, validation and test sets all consisted of one file containing uncorrected text and another file containing the corresponding corrected text. I trained a 2-layer LSTM-based language model with 256 hidden neurons on \ttt{train.correct}, and used \ttt{valid.correct} to guide the learning rate decay. In order to focus the evaluation on the error-correcting ability of my language models, I removed any pairs of lines from the test set files that were identical. I also removed any pairs of lines that contained corrections that involve the insertion or deletion of words, because my model was not designed to handle these types of errors, as explained in Section~\ref{error_correcting_lm}. This left 6672 words in each of the test files. \\
 
 The ideal error-correcting language model would predict words as if the input were not error-prone, therefore, to obtain an \tit{upper bound} in performance, I evaluated the LSTM-based language model using \ttt{test.correct} for the input words and \ttt{test.correct} for the target words. In order to establish a \tit{lower bound}, I evaluated the performance of the same model using \ttt{test.incorrect} for the input words and \ttt{test.correct} for the target words. This model did not contain any error-correcting capabilities. \\
 
@@ -2391,9 +2395,9 @@ There is still a gap to be closed, which is demonstrated in Figure~\ref{fig:erro
 
 The project was a success: I implemented a variety of $n$-gram and RNN-based language models, and benchmarked them in terms of both their prediction performance and their applicability to running on a mobile platform, as set out in my project proposal. Additionally, I built a mobile keyboard for iOS that uses my language models as a library, and proposed a novel extension to an existing language model that improves its performance on error-prone text. \\
 
-My implementation of existing language models saw a level of performance that was comparable with measures made by existing authors. For example, my modified Kneser-Ney smoothing $n$-gram model, vanilla RNN model and LSTM model all matched the results from Mikolov on the Penn Tree Bank dataset~\cite{rnn_ptb:mikolov2012, lstm_ptb:mikolov2014}. This allowed me to make comprehensive and reliable comparisons between each of my models, and assess the trade-offs between accuracy and resource consumption. My work also saw such models complement one another, in that the interpolation of their probability distributions surpassed the performance of all of my stand-alone models. \\
+My implementation of existing language models saw a level of performance that was comparable with measures made by existing authors. For example, my modified Kneser-Ney smoothing $n$-gram model, vanilla RNN model and LSTM model all matched the results from Mikolov on the Penn Tree Bank dataset~\cite{rnn_ptb:mikolov2012, lstm_ptb:mikolov2014}. This allowed me to make comprehensive and reliable comparisons between each of my models, and assess the trade-offs between accuracy and resource consumption. My work also saw such models complement one another, in that the interpolation of their probability distributions surpassed the performance of all of my stand-alone models, achieving state-of-the-art prediction accuracy. \\
 
-I explicitly demonstrated that language model performance is deterred by error-prone text. Whilst I made some modifications to an existing model that saw an increase in performance on such text, there is still room for improvement. If I were given more time to work on the project, I would investigate ways to cater for non-spelling corrections. From the CoNLL shared tasks of 2013~\cite{error_correction2013:ng2013} and 2014~\cite{error_correction2014:ng2014}, it is clear that there is a plethora of methods that already exist for grammatical error-correction. It would be interesting to see which of these could be applied to improve the performance of language models on error-prone text. \\
+I explicitly demonstrated that language model performance is compromised by error-prone text. Whilst I made some modifications to an existing model that saw an increase in performance on such text, there is still room for improvement. If I were given more time to work on the project, I would investigate ways to cater for non-spelling corrections. From the CoNLL shared tasks of 2013~\cite{error_correction2013:ng2013} and 2014~\cite{error_correction2014:ng2014}, it is clear that there is a plethora of methods that already exist for grammatical error-correction. It would be interesting to see which of these could be applied to improve the performance of language models on error-prone text. \\
 
 Throughout this dissertation, I have learnt a great deal about language modelling, but what have my language models learnt from me? Here is a one line summary of my work, in the words of an LSTM-based language model, trained on the significantly small training set that is the text of this \LaTeX\ file:
 
