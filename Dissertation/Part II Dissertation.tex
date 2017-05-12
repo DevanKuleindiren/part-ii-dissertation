@@ -285,11 +285,11 @@ My project focuses on language modelling in the context of text prediction. For 
 
 In this project, I focused in depth on the two most prominent types of language model: $n$-gram models and recurrent neural network (RNN)-based models. I implemented and benchmarked $n$-gram models coupled with five different smoothing techniques and RNN models of three different flavours on a variety of datasets. I also assessed the trade-offs between prediction accuracy and resource consumption for my model implementations, which became relevant when I applied them in the context of a mobile keyboard. \\
 
-One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with error-prone text. Unfortunately, humans are error-prone and inevitably do make mistakes when typing. For this reason, I also investigated ways to narrow the gap in performance between language model predictions on error-prone text and language model predictions on error-free text. I present a novel extension to an existing RNN-based language model that improves its predictions on error-prone text.
+One problem with existing language models is that their next-word predictions tend to be less accurate when they are presented with text containing errors. Unfortunately, humans are error-prone and inevitably do make mistakes when typing. In this dissertation, I present a novel extension to an RNN-based language model that improves its predictions on error-prone text.
 
 \chapter{Preparation} \label{preparation}
 
-My preparation consisted of background reading to thoroughly understand $n$-gram and RNN-based language models, as well as planning how to tie them all together in an efficient implementation.
+My preparation consisted of background reading and thoroughly understanding various language models, as well as planning how to tie them together in an efficient implementation.
 
 \section{$n$-gram Models} \label{ngram_models}
 
@@ -464,7 +464,7 @@ In this section I give a brief introduction to neural networks, recurrent neural
 
 \subsection{An Overview of Neural Networks}
 
-The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}. Despite the fact that they are oversimplified to the point of almost no resemblance to actual biological neurons, they provide an effective tool for classification and regression in modern-day machine learning. \\
+The human brain is a furiously complicated organ, packed with a network of approximately 86 billion neurons\footnote{According to a study by Azevedo et al.~\cite{brain_size:azevedo2009}.} that propagate electrochemical signals across connections called synapses. Artificial neural networks were originally developed as a mathematical model of the brain~\cite{nn_calculus:mcculloch1943}. Despite the fact that they are oversimplified to the point of little resemblance to actual biological neurons, they provide an effective tool for classification and regression in machine learning. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -530,7 +530,7 @@ The human brain is a furiously complicated organ, packed with a network of appro
 \caption{Two alternative notations for the same network.}
 \end{figure}
 
-Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. \\
+Neural networks consist of a series of nodes which are joined by directed and weighted connections. Inputs are supplied to some subset of the nodes and then propagated along the weighted connections until they reach the designated output nodes. The nodes and weighted connections are loosely analogous to neurons and synapses respectively. \\
 
 An important distinction to be made is whether the neural network is cyclic or not. Acyclic neural networks are called feed-forward neural networks (FNNs), whereas cyclic neural networks are denoted recurrent neural networks (RNNs) which are covered in Section~\ref{rnns}. There are a variety of FNNs, but the most prominent is the multilayer perceptron (MLP)~\cite{backprop:rumelhart1985}.
 
@@ -572,7 +572,7 @@ The constant-valued input 1 is known as a \tit{bias} input, which is weighted by
 
 It is important that the activation function, $\phi$, is chosen to be non-linear. Any combination of linear operators is linear, which means that any linear MLP with multiple hidden layers is equivalent to an MLP with a single hidden layer. Non-linear neural networks, on the other hand, are more powerful, and can gain considerable performance by adding successive hidden layers to re-represent the input data at higher levels of abstraction~\cite{dbn:hinton2006, scaling:bengio2007}. In fact, it has been shown that a non-linear MLP with a single hidden layer containing a sufficient number of neurons can approximate any continuous function on a compact input domain to arbitrary precision~\cite{universal_approximators:hornik1989}. \\
 
-Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. Another important property of these functions is that they are differentiable, which allows for the network to be trained using \tit{gradient descent}, which is discussed below. \\
+Frequently used activation functions include the sigmoid and the hyperbolic tangent functions. Their step-like shape is attributed to the fact that activation functions were originally designed to model the firing activity of neurons. Another important property of these functions is that they are differentiable, which allows for the network to be trained using \tit{gradient descent}, which is discussed below. \\
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
@@ -2346,7 +2346,7 @@ The ideal error-correcting language model would predict words as if the input we
 \label{table:error_correcting_results}
 \end{table}
 
-The performance of my error-correcting language model that was outlined in Section~\ref{error_correcting_lm} is outlined in Table~\ref{table:error_correcting_results}. It can be seen that it improves the performance of language model predictions on text containing errors that do not require the insertion or deletion of words. The best result arises from an edit distance threshold of 1, which seems attributed to the fact that a larger threshold allows for more false corrections, as shown in Figure~\ref{fig:error_correcting_false}.
+The performance of my error-correcting language model that was outlined in Section~\ref{error_correcting_lm} is given in Table~\ref{table:error_correcting_results}. It can be seen that it improves predictions on text containing errors that do not require the insertion or deletion of words. The best result arises from an edit distance threshold of 1, which seems attributed to the fact that a larger threshold allows for more false corrections, as shown in Figure~\ref{fig:error_correcting_false}.
 
 \begin{figure}[h]
 \captionsetup{justification=centering}
