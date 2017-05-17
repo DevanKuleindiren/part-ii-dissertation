@@ -642,10 +642,10 @@ The end product of the \tit{backpropagation} algorithm is the partial derivative
 \begin{gather*}
 	\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)
 \end{gather*}
-for every weight $w_{i,j}^l$ in the neural network. It is a two stage algorithm that works as follows:
+for every weight $w_{i,j}^l$ in the neural network. It is a two-stage algorithm that works as follows:
 \begin{enumerate}
 \item
-	Calculate, $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$.
+	Calculate $f_{\mathbf{w}}(\mathbf{x}_k)$ for each input example $\mathbf{x}_k$, and use those values to derive $\mathcal{L}_{\text{\scshape total}}$.
 \item
 	Given $\mathcal{L}_{\text{\scshape total}}$, calculate $\frac{\partial}{\partial w_{i,j}^l} \big( \mathcal{L}_{\text{\scshape total}} \big)$ for each weight in each layer of the network by applying the chain rule backwards from the output layer to the input layer.
 \end{enumerate}
